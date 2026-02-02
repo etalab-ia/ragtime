@@ -11,14 +11,18 @@ RAG Facile provides a foundation for building RAG (Retrieval-Augmented Generatio
 
 ### 1. Install Prerequisites
 
-Ensure you have `uv` installed:
+Ensure you have `uv` and basic build tools installed:
 
 ```bash
-# Install uv (package manager)
+# macOS (most dependencies pre-installed)
+brew install uv
+
+# Ubuntu/Debian
+sudo apt-get install -y git curl xz-utils
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-> **Note**: The CLI will automatically install `proto` and `moon` if needed.
+> **Note**: The CLI will automatically install `proto` and `moon` if needed. Proto requires `git` and `xz` for fetching and unpacking tools.
 
 ### 2. Install the CLI
 
