@@ -1,0 +1,10 @@
+default:
+    @just --list
+
+# Sync dependencies
+sync:
+    uv sync --python 3.13
+
+# Run the Reflex application
+run:
+    uv run reflex run

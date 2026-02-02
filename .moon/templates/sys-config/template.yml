@@ -1,0 +1,4 @@
+title: System Configuration
+description: RAG Facile workspace configuration (toolchain + workspace). Designed to patch moon init defaults.
+destination: .
+variables: {}

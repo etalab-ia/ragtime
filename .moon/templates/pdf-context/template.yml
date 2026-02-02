@@ -1,0 +1,4 @@
+title: PDF Context
+description: PDF text extraction and context formatting for LLM applications
+destination: packages/pdf-context
+variables: {}

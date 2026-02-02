@@ -9,6 +9,7 @@ dependencies = [
     "rich>=13.0.0",
     "libcst>=1.8.6",
     "pyyaml>=6.0.2",
+    "questionary>=2.0.0",
 ]
 
 [project.scripts]

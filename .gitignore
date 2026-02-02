@@ -216,4 +216,3 @@ marimo/_lsp/
 
 # Moon local files
 .moon/cache
-.moon/templates
