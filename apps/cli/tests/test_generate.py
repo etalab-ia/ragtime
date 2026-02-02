@@ -116,11 +116,15 @@ class TestWorkspaceCommand:
     @pytest.fixture
     def mock_generation(self, mocker, tmp_path):
         """Mock all external calls for workspace generation."""
+        # Mock shutil.which to pretend moon is installed
+        mocker.patch("shutil.which", return_value="/usr/bin/moon")
+
         # Mock questionary interactions
         mock_q = mocker.patch("cli.commands.generate.questionary")
         mock_q.select.return_value.ask.return_value = "Chainlit"
         mock_q.checkbox.return_value.ask.return_value = ["PDF"]
         mock_q.confirm.return_value.ask.return_value = True
+        mock_q.text.return_value.ask.return_value = "test-value"
 
         # Mock subprocess.run for moon commands
         mock_run = mocker.patch("subprocess.run")
@@ -133,6 +137,9 @@ class TestWorkspaceCommand:
         mocker.patch("yaml.safe_load", return_value={})
         mocker.patch("yaml.dump")
 
+        # Mock open for .env file writing
+        mocker.patch("builtins.open", mocker.mock_open())
+
         return {
             "questionary": mock_q,
             "subprocess_run": mock_run,
@@ -143,6 +150,8 @@ class TestWorkspaceCommand:
     def test_workspace_generation_flow(self, mock_generation, tmp_path):
         """Should execute the full generation flow."""
         target = tmp_path / "test-app"
+        # Create the app directory structure that moon generate would create
+        (target / "apps" / "chainlit-chat").mkdir(parents=True)
 
         result = runner.invoke(main_app, ["generate", "workspace", str(target)])
 
