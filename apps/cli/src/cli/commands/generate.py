@@ -132,53 +132,22 @@ MODULES = {
 }
 
 
-TEMPLATES_REPO = "https://github.com/etalab-ia/rag-facile.git"
-TEMPLATES_CACHE = Path.home() / ".cache" / "rag-facile" / "templates"
-
-
 def get_templates_dir() -> Path:
-    """Get the templates directory, downloading from GitHub if needed."""
-    # First check if we're in the rag-facile repo (development mode)
+    """Get the templates directory bundled with the CLI package."""
+    # Templates are bundled in the package at cli/templates
+    package_templates = Path(__file__).resolve().parent.parent / "templates"
+    if package_templates.exists():
+        return package_templates
+
+    # Fallback: check if we're in the rag-facile repo (development mode)
     repo_root = Path(__file__).resolve().parents[5]
     local_templates = repo_root / ".moon" / "templates"
     if local_templates.exists():
         return local_templates
 
-    # Otherwise, use cached templates (download if needed)
-    if not TEMPLATES_CACHE.exists():
-        console.print("[yellow]Downloading templates...[/yellow]")
-        TEMPLATES_CACHE.parent.mkdir(parents=True, exist_ok=True)
-
-        # Clone just the .moon/templates directory using sparse checkout
-        import tempfile
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmppath = Path(tmpdir) / "repo"
-            result = subprocess.run(
-                ["git", "clone", "--depth=1", "--filter=blob:none", "--sparse", TEMPLATES_REPO, str(tmppath)],
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode != 0:
-                console.print(f"[red]Failed to clone templates: {result.stderr}[/red]")
-                return local_templates  # Fall back, will fail later with clear error
-
-            subprocess.run(
-                ["git", "sparse-checkout", "set", ".moon/templates"],
-                cwd=tmppath,
-                capture_output=True,
-            )
-
-            # Copy templates to cache
-            src = tmppath / ".moon" / "templates"
-            if src.exists():
-                shutil.copytree(src, TEMPLATES_CACHE)
-                console.print("[green]✓ Templates downloaded[/green]")
-            else:
-                console.print("[red]Templates not found in repository[/red]")
-                return local_templates
-
-    return TEMPLATES_CACHE
+    raise FileNotFoundError(
+        "Templates not found. This is a packaging error - please reinstall the CLI."
+    )
 
 
 def run_command(cmd: list[str], description: str, cwd: Path | None = None) -> bool:

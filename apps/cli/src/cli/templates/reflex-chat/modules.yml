@@ -1,0 +1,10 @@
+# RAG Facile Module Configuration
+# Auto-generated based on selected modules
+
+context_providers:
+{%- if use_pdf %}
+  pdf: pdf_context
+{%- endif %}
+{%- if use_chroma %}
+  chroma: chroma_context
+{%- endif %}

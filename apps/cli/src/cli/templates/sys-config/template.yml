@@ -1,0 +1,8 @@
+title: System Configuration
+description: RAG Facile workspace configuration. Designed to patch moon init defaults.
+destination: .
+variables:
+  project_name:
+    type: string
+    default: my-rag-project
+    prompt: What is the name of your project?

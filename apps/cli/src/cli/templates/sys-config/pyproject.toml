@@ -1,0 +1,15 @@
+[project]
+name = "{{ project_name }}"
+version = "0.1.0"
+description = "RAG Facile workspace"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = []
+
+[tool.uv]
+managed = true
+
+[tool.uv.workspace]
+members = ["apps/*", "packages/*"]

@@ -1,0 +1,7 @@
+type: application
+language: python
+
+tasks:
+  dev:
+    command: uv run chainlit run app.py -w
+    local: true

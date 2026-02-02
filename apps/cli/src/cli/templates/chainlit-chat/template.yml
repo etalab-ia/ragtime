@@ -1,0 +1,37 @@
+title: Chainlit Chat
+description: A Chainlit Chat Application
+destination: apps/chainlit-chat
+variables:
+  project_name:
+    type: string
+    default: my-chainlit-app
+    prompt: What is the name of your project?
+  description:
+    type: string
+    default: A Chainlit Chat
+    prompt: Short description of the project
+  openai_api_key:
+    type: string
+    prompt: What is your Albert API Key? (Get one at https://albert.sites.beta.gouv.fr/access/)
+  openai_base_url:
+    type: string
+    default: https://albert.api.etalab.gouv.fr/v1
+    prompt: What is your OpenAI Base URL?
+  openai_model:
+    type: string
+    default: openweight-large
+    prompt: Default OpenAI model to use
+  system_prompt:
+    type: string
+    default: You are a helpful assistant.
+    prompt: Initial system prompt for the assistant
+  use_pdf:
+    type: boolean
+    default: false
+  use_chroma:
+    type: boolean
+    default: false
+  welcome_message:
+    type: string
+    default: Welcome to Chainlit! 🚀🤖
+    prompt: Header text for the welcome screen
