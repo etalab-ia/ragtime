@@ -108,16 +108,16 @@ After generation, use the justfile commands:
 
 ```bash
 cd my-rag-app
-just dev                    # Run all apps
-just run-app chainlit-chat  # Run a specific app
+just run                    # Run all apps
+just run chainlit-chat      # Run a specific app
 ```
 
 ### Available Commands
 
 | Command | Description |
 |---------|-------------|
-| `just dev` | Run all apps with a dev task |
-| `just run-app <name>` | Run a specific app (e.g., `chainlit-chat`) |
+| `just run` | Run all apps with a dev task |
+| `just run <name>` | Run a specific app (e.g., `chainlit-chat`) |
 | `just format` | Format code with ruff |
 | `just lint` | Run linter |
 | `just check` | Run all checks (format, lint, type-check) |
