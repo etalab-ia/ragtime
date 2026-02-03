@@ -47,6 +47,9 @@ def search_huggingface(
     query: str | None = None,
     *,
     author: str | None = None,
+    task: str | None = None,
+    task_id: str | None = None,
+    language: str | None = None,
     limit: int = 20,
     sort: str = "downloads",
 ) -> list[DatasetResult]:
@@ -55,6 +58,9 @@ def search_huggingface(
     Args:
         query: Search query string (optional)
         author: Filter by author/organization (e.g., "AgentPublic")
+        task: Filter by task category (e.g., "question-answering")
+        task_id: Filter by specific task (e.g., "question-answering")
+        language: Filter by language code (e.g., "fr" for French, "en" for English)
         limit: Maximum number of results to return
         sort: Sort order ("downloads", "likes", "created", "modified")
 
@@ -64,9 +70,13 @@ def search_huggingface(
     api = HfApi()
 
     # list_datasets returns an iterator (sorting is always descending)
+    # Modern huggingface_hub API (>=1.0) accepts filter parameters directly
     datasets_iter = api.list_datasets(
         search=query if query else None,
         author=author,
+        task_categories=task,
+        task_ids=task_id,
+        language=language,
         sort=sort,
         limit=limit,
     )
@@ -116,6 +126,22 @@ def search_hf(
         Optional[str],
         typer.Option("--author", "-a", help="Filter by author/organization"),
     ] = None,
+    task: Annotated[
+        Optional[str],
+        typer.Option(
+            "--task", "-t", help="Filter by task (e.g., 'question-answering')"
+        ),
+    ] = None,
+    task_id: Annotated[
+        Optional[str],
+        typer.Option("--task-id", help="Filter by specific task ID"),
+    ] = None,
+    language: Annotated[
+        Optional[str],
+        typer.Option(
+            "--language", "-l", help="Filter by language code (e.g., 'fr', 'en')"
+        ),
+    ] = None,
     limit: Annotated[
         int,
         typer.Option("--limit", "-n", help="Maximum number of results"),
@@ -132,6 +158,7 @@ def search_hf(
     Examples:
         rag-eval search hf "french QA"
         rag-eval search hf "RAG evaluation" --author AgentPublic
+        rag-eval search hf "question" --task question-answering --language fr
         rag-eval search hf "legislation" -a AgentPublic -n 10
         rag-eval search hf "french" --sort likes
     """
@@ -144,7 +171,15 @@ def search_hf(
 
     with console.status(f"[cyan]Searching HuggingFace for '{query}'..."):
         try:
-            datasets = search_huggingface(query, author=author, limit=limit, sort=sort)
+            datasets = search_huggingface(
+                query,
+                author=author,
+                task=task,
+                task_id=task_id,
+                language=language,
+                limit=limit,
+                sort=sort,
+            )
         except HfHubHTTPError as e:
             console.print(f"[red]Error searching HuggingFace: {e}[/red]")
             raise typer.Exit(1)
@@ -152,6 +187,10 @@ def search_hf(
     title = f"HuggingFace Datasets: '{query}'"
     if author:
         title += f" (author: {author})"
+    if task:
+        title += f" (task: {task})"
+    if language:
+        title += f" (language: {language})"
 
     display_datasets(datasets, title=title)
 
@@ -161,6 +200,18 @@ def search_agent_public(
     query: Annotated[
         Optional[str],
         typer.Argument(help="Optional search query within AgentPublic datasets"),
+    ] = None,
+    task: Annotated[
+        Optional[str],
+        typer.Option(
+            "--task", "-t", help="Filter by task (e.g., 'question-answering')"
+        ),
+    ] = None,
+    language: Annotated[
+        Optional[str],
+        typer.Option(
+            "--language", "-l", help="Filter by language code (e.g., 'fr', 'en')"
+        ),
     ] = None,
     limit: Annotated[
         int,
@@ -175,19 +226,28 @@ def search_agent_public(
     Examples:
         rag-eval search agent-public
         rag-eval search agent-public "legislation"
+        rag-eval search agent-public --task question-answering --language fr
     """
     with console.status("[cyan]Searching AgentPublic datasets..."):
         try:
             datasets = search_huggingface(
                 query,
                 author="AgentPublic",
+                task=task,
+                language=language,
                 limit=limit,
             )
         except HfHubHTTPError as e:
             console.print(f"[red]Error searching HuggingFace: {e}[/red]")
             raise typer.Exit(1)
 
-    display_datasets(datasets, title="AgentPublic Datasets (MediaTech Collection)")
+    title = "AgentPublic Datasets (MediaTech Collection)"
+    if task:
+        title += f" - {task}"
+    if language:
+        title += f" ({language})"
+
+    display_datasets(datasets, title=title)
 
 
 @app.command(name="comparia")
@@ -195,6 +255,18 @@ def search_comparia(
     query: Annotated[
         Optional[str],
         typer.Argument(help="Optional search query within Compar:IA datasets"),
+    ] = None,
+    task: Annotated[
+        Optional[str],
+        typer.Option(
+            "--task", "-t", help="Filter by task (e.g., 'question-answering')"
+        ),
+    ] = None,
+    language: Annotated[
+        Optional[str],
+        typer.Option(
+            "--language", "-l", help="Filter by language code (e.g., 'fr', 'en')"
+        ),
     ] = None,
     limit: Annotated[
         int,
@@ -214,16 +286,25 @@ def search_comparia(
     Examples:
         rag-eval search comparia
         rag-eval search comparia "votes"
+        rag-eval search comparia --task question-answering --language fr
     """
     with console.status("[cyan]Searching Compar:IA datasets..."):
         try:
             datasets = search_huggingface(
                 query,
                 author="ministere-culture",
+                task=task,
+                language=language,
                 limit=limit,
             )
         except HfHubHTTPError as e:
             console.print(f"[red]Error searching HuggingFace: {e}[/red]")
             raise typer.Exit(1)
 
-    display_datasets(datasets, title="Compar:IA Datasets (ministere-culture)")
+    title = "Compar:IA Datasets (ministere-culture)"
+    if task:
+        title += f" - {task}"
+    if language:
+        title += f" ({language})"
+
+    display_datasets(datasets, title=title)
