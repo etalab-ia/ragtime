@@ -658,8 +658,8 @@ class TestWorkspaceCommand:
         mock_q = mocker.patch("cli.commands.generate.questionary")
         # Use side_effect to return different values for different select calls
         mock_q.select.return_value.ask.side_effect = [
-            "Chainlit",  # First call: frontend selection
-            "Monorepo (for multi-app projects)",  # Second call: structure selection
+            "Monorepo (for multi-app projects)",  # First call: structure selection
+            "Chainlit",  # Second call: frontend selection
         ]
         mock_q.checkbox.return_value.ask.return_value = ["PDF"]
         mock_q.confirm.return_value.ask.return_value = True
@@ -695,8 +695,8 @@ class TestWorkspaceCommand:
         # Mock questionary interactions - select standalone mode
         mock_q = mocker.patch("cli.commands.generate.questionary")
         mock_q.select.return_value.ask.side_effect = [
-            "Chainlit",  # First call: frontend selection
-            "Simple (recommended for getting started)",  # Second call: structure selection
+            "Simple (recommended for getting started)",  # First call: structure selection
+            "Chainlit",  # Second call: frontend selection
         ]
         mock_q.checkbox.return_value.ask.return_value = ["PDF"]
         mock_q.confirm.return_value.ask.return_value = True
@@ -801,8 +801,8 @@ class TestStandaloneWorkspaceCommand:
         # Mock questionary interactions - select standalone mode
         mock_q = mocker.patch("cli.commands.generate.questionary")
         mock_q.select.return_value.ask.side_effect = [
-            "Chainlit",  # First call: frontend selection
-            "Simple (recommended for getting started)",  # Second call: structure selection
+            "Simple (recommended for getting started)",  # First call: structure selection
+            "Chainlit",  # Second call: frontend selection
         ]
         mock_q.checkbox.return_value.ask.return_value = []  # No modules
         mock_q.confirm.return_value.ask.return_value = True
@@ -894,10 +894,10 @@ class TestPathNormalization:
         """Should normalize /private/tmp to /tmp in output."""
         # Create a path that looks like macOS /private/tmp
         mock_q = mocker.patch("cli.commands.generate.questionary")
-        # Need to handle both select calls (frontend and structure)
+        # Need to handle both select calls (structure and frontend)
         mock_q.select.return_value.ask.side_effect = [
-            "Chainlit",
             "Simple (recommended for getting started)",
+            "Chainlit",
         ]
         mock_q.checkbox.return_value.ask.return_value = []
         mock_q.confirm.return_value.ask.return_value = False  # Abort early
@@ -915,12 +915,12 @@ class TestPathNormalization:
 class TestStructureSelectionPrompt:
     """Tests for the project structure selection prompt."""
 
-    def test_structure_prompt_appears_after_frontend(self, mocker):
-        """Should ask for structure after frontend selection."""
+    def test_structure_prompt_appears_before_frontend(self, mocker):
+        """Should ask for structure before frontend selection."""
         mock_q = mocker.patch("cli.commands.generate.questionary")
         mock_q.select.return_value.ask.side_effect = [
-            "Chainlit",  # Frontend
-            None,  # Structure - return None to abort
+            "Simple (recommended for getting started)",  # Structure
+            None,  # Frontend - return None to abort
         ]
 
         runner.invoke(main_app, ["generate", "workspace", "/tmp/test"])
@@ -928,19 +928,18 @@ class TestStructureSelectionPrompt:
         # Should have been called twice for select
         assert mock_q.select.call_count == 2
 
-        # First call should be for frontend
+        # First call should be for structure
         first_call_prompt = mock_q.select.call_args_list[0][0][0]
-        assert "frontend" in first_call_prompt.lower()
+        assert "structure" in first_call_prompt.lower()
 
-        # Second call should be for structure
+        # Second call should be for frontend
         second_call_prompt = mock_q.select.call_args_list[1][0][0]
-        assert "structure" in second_call_prompt.lower()
+        assert "frontend" in second_call_prompt.lower()
 
     def test_aborts_when_structure_not_selected(self, mocker):
         """Should abort when user doesn't select a structure."""
         mock_q = mocker.patch("cli.commands.generate.questionary")
         mock_q.select.return_value.ask.side_effect = [
-            "Chainlit",
             None,  # No structure selected
         ]
 

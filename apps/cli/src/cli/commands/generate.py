@@ -490,16 +490,7 @@ def workspace(
             console.print("[yellow]Aborted.[/yellow]")
             raise typer.Exit(0)
 
-    # Select frontend
-    frontend_choice = questionary.select(
-        "Select your frontend app:",
-        choices=list(FRONTENDS.keys()),
-    ).ask()
-    if not frontend_choice:
-        console.print("[red]Aborted.[/red]")
-        raise typer.Exit(1)
-
-    # Select project structure
+    # Select project structure first
     structure_choice = questionary.select(
         "What type of project structure do you want?",
         choices=list(PROJECT_STRUCTURES.keys()),
@@ -509,6 +500,15 @@ def workspace(
         raise typer.Exit(1)
 
     is_standalone = PROJECT_STRUCTURES[structure_choice] == "standalone"
+
+    # Select frontend
+    frontend_choice = questionary.select(
+        "Select your frontend app:",
+        choices=list(FRONTENDS.keys()),
+    ).ask()
+    if not frontend_choice:
+        console.print("[red]Aborted.[/red]")
+        raise typer.Exit(1)
 
     # Select modules (multi-select)
     module_choices = questionary.checkbox(
