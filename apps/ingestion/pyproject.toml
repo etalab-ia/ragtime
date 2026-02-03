@@ -1,7 +1,0 @@
-[project]
-name = "ingestion"
-version = "0.1.0"
-description = "Data Ingestion Pipeline"
-readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []

@@ -193,12 +193,83 @@ just run                    # Run all apps
 | `just sync` | Sync dependencies with uv |
 | `just add <template>` | Add a new app from template |
 
-## Documentation
+## Evaluating Your RAG Application
 
-| Guide | Description |
-|-------|-------------|
-| [Evaluation Guide](docs/evaluation.md) | How to evaluate your RAG application |
-| [Contributing Guide](CONTRIBUTING.md) | Architecture overview and development setup |
+Before deploying, you need to know if your RAG application works well. Evaluation helps answer: Is my chatbot giving correct answers? Does it find the right documents? Is it hallucinating?
+
+### Explore Available Datasets
+
+```bash
+# List known dataset sources
+rag-facile eval sources
+
+# Search for French QA datasets
+rag-facile eval search hf "french QA"
+
+# Browse official French government datasets
+rag-facile eval search agent-public
+
+# Browse preference datasets from Compar:IA
+rag-facile eval search comparia
+```
+
+### Key Dataset Sources
+
+#### AgentPublic (MediaTech Collection)
+Official French government datasets:
+- **`AgentPublic/legi`** - French legislation
+- **`AgentPublic/travail-emploi`** - Labor code and employment
+- **`AgentPublic/service-public`** - Public service information
+
+#### Compar:IA (Preference Data)
+Real user interactions from the French Ministry of Culture:
+- **`ministere-culture/comparia-conversations`** - 289k+ real Q&A conversations
+- **`ministere-culture/comparia-votes`** - 97k+ user preferences
+- **`ministere-culture/comparia-reactions`** - 59k+ message-level reactions
+
+### Basic Evaluation Workflow
+
+```bash
+# Find datasets matching your use case
+rag-facile eval search hf "french administrative" --sort downloads
+```
+
+```python
+from datasets import load_dataset
+
+# Load a dataset
+dataset = load_dataset("AgentPublic/service-public")
+
+# Run your RAG pipeline on each question
+results = []
+for example in dataset["train"]:
+    answer = your_rag_pipeline(example["question"])
+    results.append({
+        "question": example["question"],
+        "expected": example["ground_truth"],
+        "actual": answer,
+    })
+
+# Measure accuracy
+accuracy = sum(1 for r in results if r["expected"] == r["actual"]) / len(results) if results else 0.0
+```
+
+### What to Measure
+
+| Metric | What it Measures |
+|--------|------------------|
+| **Accuracy** | Correct answers / Total questions |
+| **Retrieval Recall** | Did we find the right documents? |
+| **Faithfulness** | Does the answer match the sources? |
+| **Latency** | Response time |
+
+For sovereign AI, also consider: sovereignty (only *.gouv.fr sources), energy score, and French language quality.
+
+### Learn More
+
+- [Letta Evals](https://github.com/letta-ai/letta-evals) - Framework for testing AI agents
+- [MTEB Leaderboard](https://huggingface.co/spaces/mteb/leaderboard) - Embedding model benchmarks
+- [BEIR Benchmark](https://github.com/beir-cellar/beir) - Information retrieval benchmarks
 
 ## Contributing
 

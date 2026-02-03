@@ -6,7 +6,7 @@ from typing import Annotated, Optional
 
 import typer
 from dotenv import load_dotenv
-from huggingface_hub import HfApi, DatasetInfo
+from huggingface_hub import DatasetInfo, HfApi
 from huggingface_hub.utils import HfHubHTTPError
 from rich.console import Console
 from rich.table import Table
@@ -14,7 +14,11 @@ from rich.table import Table
 load_dotenv()
 
 console = Console()
-app = typer.Typer(help="Search for evaluation datasets")
+app = typer.Typer(
+    help="Search for evaluation datasets",
+    invoke_without_command=True,
+    no_args_is_help=True,
+)
 
 
 @dataclass
@@ -156,11 +160,11 @@ def search_hf(
     """Search HuggingFace for evaluation datasets.
 
     Examples:
-        rag-eval search hf "french QA"
-        rag-eval search hf "RAG evaluation" --author AgentPublic
-        rag-eval search hf "question" --task question-answering --language fr
-        rag-eval search hf "legislation" -a AgentPublic -n 10
-        rag-eval search hf "french" --sort likes
+        rag-facile eval search hf "french QA"
+        rag-facile eval search hf "RAG evaluation" --author AgentPublic
+        rag-facile eval search hf "question" --task question-answering --language fr
+        rag-facile eval search hf "legislation" -a AgentPublic -n 10
+        rag-facile eval search hf "french" --sort likes
     """
     hf_token = os.getenv("HF_TOKEN")
     if not hf_token:
@@ -224,9 +228,9 @@ def search_agent_public(
     AgentPublic organization, which hosts French government datasets.
 
     Examples:
-        rag-eval search agent-public
-        rag-eval search agent-public "legislation"
-        rag-eval search agent-public --task question-answering --language fr
+        rag-facile eval search agent-public
+        rag-facile eval search agent-public "legislation"
+        rag-facile eval search agent-public --task question-answering --language fr
     """
     with console.status("[cyan]Searching AgentPublic datasets..."):
         try:
@@ -284,9 +288,9 @@ def search_comparia(
     - comparia-reactions: 59k+ message-level reactions
 
     Examples:
-        rag-eval search comparia
-        rag-eval search comparia "votes"
-        rag-eval search comparia --task question-answering --language fr
+        rag-facile eval search comparia
+        rag-facile eval search comparia "votes"
+        rag-facile eval search comparia --task question-answering --language fr
     """
     with console.status("[cyan]Searching Compar:IA datasets..."):
         try:

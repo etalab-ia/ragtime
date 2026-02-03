@@ -10,7 +10,10 @@ import questionary
 import typer
 from rich.console import Console
 
-app = typer.Typer()
+app = typer.Typer(
+    invoke_without_command=True,
+    no_args_is_help=True,
+)
 console = Console()
 
 

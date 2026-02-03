@@ -96,14 +96,14 @@ def list_sources():
                     "\n[bold cyan]AgentPublic Datasets (MediaTech Collection):[/bold cyan]"
                 )
                 for dataset in source["datasets"]:
-                    console.print(f"  • {dataset}")
+                    console.print(f"  - {dataset}")
             elif source["name"] == "Compar:IA":
                 console.print(
                     "\n[bold cyan]Compar:IA Datasets (Preference Data):[/bold cyan]"
                 )
                 for dataset in source["datasets"]:
-                    console.print(f"  • {dataset}")
+                    console.print(f"  - {dataset}")
 
     console.print(
-        "\n[dim]Use 'rag-eval search hf <query>' to search HuggingFace datasets[/dim]"
+        "\n[dim]Use 'rag-facile eval search hf <query>' to search HuggingFace datasets[/dim]"
     )
