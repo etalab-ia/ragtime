@@ -135,6 +135,12 @@ MODULES = {
     "Chroma": {"template": "chroma-context", "available": False},
 }
 
+# Project structure options
+PROJECT_STRUCTURES = {
+    "Simple (recommended for getting started)": "standalone",
+    "Monorepo (for multi-app projects)": "monorepo",
+}
+
 
 def get_templates_dir() -> Path:
     """Get the templates directory bundled with the CLI package."""
@@ -152,6 +158,278 @@ def get_templates_dir() -> Path:
     raise FileNotFoundError(
         "Templates not found. This is a packaging error - please reinstall the CLI."
     )
+
+
+def get_pdf_context_source() -> Path:
+    """Get the pdf-context source directory for inline copying."""
+    # In development mode, use the packages directory
+    repo_root = Path(__file__).resolve().parents[5]
+    local_source = repo_root / "packages" / "pdf-context" / "src" / "pdf_context"
+    if local_source.exists():
+        return local_source
+
+    # For installed CLI, pdf_context is bundled at cli/pdf_context_src
+    package_source = Path(__file__).resolve().parent.parent / "pdf_context_src"
+    if package_source.exists():
+        return package_source
+
+    raise FileNotFoundError(
+        "pdf-context source not found. This is a packaging error - please reinstall the CLI."
+    )
+
+
+def render_template_file(template_path: Path, variables: dict[str, str | bool]) -> str:
+    """Render a template file with Tera-style variables.
+
+    Handles simple variable substitution like {{ var }} and conditionals.
+    For complex templates, we copy and do simple replacements.
+    """
+    content = template_path.read_text()
+
+    # Simple variable substitution (Tera-style: {{ var }})
+    for key, value in variables.items():
+        if isinstance(value, bool):
+            continue  # Skip booleans, handled by conditionals
+        content = content.replace("{{ " + key + " }}", str(value))
+        # Also handle filter syntax like {{ project_name | replace(from='-', to='_') }}
+        snake_key = str(value).replace("-", "_")
+        content = content.replace(
+            "{{ " + key + " | replace(from='-', to='_') }}", snake_key
+        )
+
+    # Handle Tera conditionals: {%- if var %}...{%- endif %}
+    import re
+
+    # Process each conditional block
+    for key, value in variables.items():
+        if not isinstance(value, bool):
+            continue
+
+        # Pattern for {%- if var %}...{%- endif %}
+        pattern = rf"\{{% ?-? ?if {key} ?%\}}(.*?)\{{% ?-? ?endif ?%\}}"
+        if value:
+            # Keep the content, remove the tags
+            content = re.sub(pattern, r"\1", content, flags=re.DOTALL)
+        else:
+            # Remove the entire block
+            content = re.sub(pattern, "", content, flags=re.DOTALL)
+
+    return content
+
+
+def generate_standalone(
+    target_path: Path,
+    target_display: str,
+    frontend_choice: str,
+    selected_modules: list[str],
+    env_config: dict[str, str],
+    force: bool,
+) -> None:
+    """Generate a standalone (non-monorepo) project structure."""
+    templates_dir = get_templates_dir()
+    frontend_template = FRONTENDS[frontend_choice]
+    template_dir = templates_dir / frontend_template
+
+    # Template variables
+    project_name = target_path.name
+    variables: dict[str, str | bool] = {
+        "project_name": project_name,
+        "description": f"{project_name} - RAG application",
+        "openai_api_key": env_config["openai_api_key"],
+        "openai_base_url": env_config["openai_base_url"],
+        "openai_model": env_config["openai_model"],
+        "system_prompt": "You are a helpful assistant.",
+        "use_pdf": "PDF" in selected_modules,
+        "use_chroma": "Chroma" in selected_modules,
+        "welcome_message": f"Welcome to {project_name}!",
+    }
+
+    # Step 1: Create target directory
+    console.print()
+    console.print("[bold green]Step 1:[/bold green] Creating project directory...")
+    if not target_path.exists():
+        target_path.mkdir(parents=True)
+    console.print("[green]✓[/green] Directory created")
+
+    # Step 2: Generate standalone pyproject.toml
+    console.print()
+    console.print("[bold green]Step 2:[/bold green] Generating project files...")
+
+    # Create pyproject.toml for standalone mode
+    pdf_dep = '\n    "pypdf>=5.0.0",' if "PDF" in selected_modules else ""
+    setuptools_packages = (
+        'packages = ["pdf_context"]' if "PDF" in selected_modules else ""
+    )
+
+    # For standalone, we don't need workspace sources - pdf_context is local
+    pyproject_content = f'''[project]
+name = "{project_name}"
+version = "0.1.0"
+description = "{variables["description"]}"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "chainlit>=1.3.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0",{pdf_dep}
+]
+
+[tool.setuptools]
+py-modules = ["app", "context_loader"]
+{setuptools_packages}
+
+[tool.uv]
+package = true
+'''
+
+    if frontend_choice == "Reflex":
+        pyproject_content = f'''[project]
+name = "{project_name}"
+version = "0.1.0"
+description = "{variables["description"]}"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "reflex>=0.7.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0",{pdf_dep}
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.uv]
+package = true
+'''
+
+    (target_path / "pyproject.toml").write_text(pyproject_content)
+    console.print("[dim]  ✓ pyproject.toml[/dim]")
+
+    # Copy and render app files from template
+    files_to_copy = ["context_loader.py", ".env.template", "README.md"]
+
+    if frontend_choice == "Chainlit":
+        files_to_copy.extend(["app.py", "chainlit.md"])
+    else:
+        files_to_copy.extend(["rxconfig.py"])
+
+    for filename in files_to_copy:
+        src = template_dir / filename
+        if src.exists():
+            content = render_template_file(src, variables)
+            (target_path / filename).write_text(content)
+            console.print(f"[dim]  ✓ {filename}[/dim]")
+
+    # For Reflex, we also need to copy the app package directory
+    if frontend_choice == "Reflex":
+        # The template uses [project_name | replace(from='-', to='_')] as dir name
+        template_app_dir_name = "[project_name | replace(from='-', to='_')]"
+        template_app_dir = template_dir / template_app_dir_name
+        if template_app_dir.exists():
+            snake_name = project_name.replace("-", "_")
+            target_app_dir = target_path / snake_name
+            target_app_dir.mkdir(exist_ok=True)
+
+            for src_file in template_app_dir.rglob("*"):
+                if src_file.is_file():
+                    rel_path = src_file.relative_to(template_app_dir)
+                    # Rename files/dirs that contain the placeholder
+                    rel_path_str = str(rel_path).replace(
+                        "[project_name | replace(from='-', to='_')]", snake_name
+                    )
+                    target_file = target_app_dir / rel_path_str
+                    target_file.parent.mkdir(parents=True, exist_ok=True)
+                    content = render_template_file(src_file, variables)
+                    target_file.write_text(content)
+                    console.print(f"[dim]  ✓ {snake_name}/{rel_path_str}[/dim]")
+
+    # Generate modules.yml with proper content
+    modules_yml_content = "# RAG Facile Module Configuration\n"
+    modules_yml_content += "# Auto-generated based on selected modules\n\n"
+    modules_yml_content += "context_providers:\n"
+    if "PDF" in selected_modules:
+        modules_yml_content += "  pdf: pdf_context\n"
+    if "Chroma" in selected_modules:
+        modules_yml_content += "  chroma: chroma_context\n"
+
+    (target_path / "modules.yml").write_text(modules_yml_content)
+    console.print("[dim]  ✓ modules.yml[/dim]")
+
+    console.print("[green]✓[/green] Project files generated")
+
+    # Step 3: Copy pdf_context as local module if selected
+    if "PDF" in selected_modules:
+        console.print()
+        console.print("[bold green]Step 3:[/bold green] Adding PDF context module...")
+
+        try:
+            pdf_source = get_pdf_context_source()
+            target_pdf = target_path / "pdf_context"
+            if target_pdf.exists():
+                shutil.rmtree(target_pdf)
+            shutil.copytree(pdf_source, target_pdf)
+            # Remove __pycache__ if copied
+            pycache = target_pdf / "__pycache__"
+            if pycache.exists():
+                shutil.rmtree(pycache)
+            console.print("[green]✓[/green] PDF context module added")
+        except FileNotFoundError as e:
+            console.print(f"[yellow]Warning: {e}[/yellow]")
+            console.print(
+                "[yellow]You'll need to install pdf-context manually.[/yellow]"
+            )
+
+    # Step 4: Create .env file
+    step_num = 4 if "PDF" in selected_modules else 3
+    console.print()
+    console.print(
+        f"[bold green]Step {step_num}:[/bold green] Creating environment file..."
+    )
+
+    env_content = f"""\
+OPENAI_API_KEY={env_config["openai_api_key"]}
+OPENAI_BASE_URL={env_config["openai_base_url"]}
+OPENAI_MODEL={env_config["openai_model"]}
+"""
+    (target_path / ".env").write_text(env_content)
+    console.print("[green]✓[/green] Created .env file")
+
+    # Step 5: Create .python-version
+    (target_path / ".python-version").write_text("3.13\n")
+    console.print("[dim]  ✓ .python-version[/dim]")
+
+    # Done with generation!
+    console.print()
+    console.print("[bold green]✨ Project generation complete![/bold green]")
+
+    # Step 6: Install dependencies
+    step_num += 1
+    console.print()
+    console.print(
+        f"[bold green]Step {step_num}:[/bold green] Installing dependencies..."
+    )
+    if not run_command(["uv", "sync"], "install dependencies", cwd=target_path):
+        console.print("[yellow]Warning: uv sync failed. Run it manually.[/yellow]")
+
+    # Step 7: Start the dev server
+    step_num += 1
+    console.print()
+    console.print(
+        f"[bold green]Step {step_num}:[/bold green] Starting {frontend_choice} dev server..."
+    )
+    console.print()
+    console.print(f"[dim]Your app is at: {target_display}[/dim]")
+    console.print()
+
+    # Run dev server with uv (no moon in standalone mode)
+    if frontend_choice == "Chainlit":
+        dev_cmd = ["uv", "run", "chainlit", "run", "app.py", "-w"]
+    else:
+        dev_cmd = ["uv", "run", "reflex", "run"]
+
+    subprocess.run(dev_cmd, cwd=target_path)
 
 
 def run_command(cmd: list[str], description: str, cwd: Path | None = None) -> bool:
@@ -221,6 +499,17 @@ def workspace(
         console.print("[red]Aborted.[/red]")
         raise typer.Exit(1)
 
+    # Select project structure
+    structure_choice = questionary.select(
+        "What type of project structure do you want?",
+        choices=list(PROJECT_STRUCTURES.keys()),
+    ).ask()
+    if not structure_choice:
+        console.print("[red]Aborted.[/red]")
+        raise typer.Exit(1)
+
+    is_standalone = PROJECT_STRUCTURES[structure_choice] == "standalone"
+
     # Select modules (multi-select)
     module_choices = questionary.checkbox(
         "Select modules to include:",
@@ -280,6 +569,9 @@ def workspace(
     console.print()
     console.print("[bold blue]Configuration Summary[/bold blue]")
     console.print(f"  Target: {target_display}")
+    console.print(
+        f"  Structure: {'Simple (standalone)' if is_standalone else 'Monorepo'}"
+    )
     console.print(f"  Frontend: {frontend_choice}")
     console.print(
         f"  Modules: {', '.join(selected_modules) if selected_modules else 'None'}"
@@ -291,6 +583,20 @@ def workspace(
     if not questionary.confirm("Proceed with generation?", default=True).ask():
         console.print("[yellow]Aborted.[/yellow]")
         raise typer.Exit(0)
+
+    # Branch based on project structure choice
+    if is_standalone:
+        generate_standalone(
+            target_path=target_path,
+            target_display=target_display,
+            frontend_choice=frontend_choice,
+            selected_modules=selected_modules,
+            env_config=env_config,
+            force=force,
+        )
+        return  # Exit after standalone generation
+
+    # ========== MONOREPO GENERATION (existing flow) ==========
 
     # Get templates directory
     templates_dir = get_templates_dir()

@@ -30,3 +30,4 @@ packages = ["src/cli"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "../../.moon/templates" = "cli/templates"
+"../../packages/pdf-context/src/pdf_context" = "cli/pdf_context_src"

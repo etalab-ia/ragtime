@@ -334,7 +334,7 @@ wheels = [
 
 [[package]]
 name = "chainlit-chat"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "apps/chainlit-chat" }
 dependencies = [
     { name = "chainlit" },
@@ -1897,7 +1897,7 @@ wheels = [
 
 [[package]]
 name = "pdf-context"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "packages/pdf-context" }
 dependencies = [
     { name = "pypdf" },
@@ -2380,7 +2380,7 @@ dev = [
 
 [[package]]
 name = "rag-facile-cli"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "apps/cli" }
 dependencies = [
     { name = "libcst" },
@@ -2463,7 +2463,7 @@ wheels = [
 
 [[package]]
 name = "reflex-chat"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "apps/reflex-chat" }
 dependencies = [
     { name = "openai" },
