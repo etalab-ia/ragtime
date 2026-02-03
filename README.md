@@ -98,17 +98,31 @@ my-rag-app/
 ├── packages/
 │   └── pdf-context/    # Selected modules
 ├── .python-version     # Pinned to Python 3.13
+├── justfile            # Common commands (just dev, just check, etc.)
 └── pyproject.toml      # Workspace dependencies
 ```
 
 ## Running Your App
 
-After generation, use moon to run your app:
+After generation, use the justfile commands:
 
 ```bash
 cd my-rag-app
-moon run chainlit-chat:dev  # or reflex-chat:dev
+just dev                    # Run all apps
+just run-app chainlit-chat  # Run a specific app
 ```
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `just dev` | Run all apps with a dev task |
+| `just run-app <name>` | Run a specific app (e.g., `chainlit-chat`) |
+| `just format` | Format code with ruff |
+| `just lint` | Run linter |
+| `just check` | Run all checks (format, lint, type-check) |
+| `just sync` | Sync dependencies with uv |
+| `just add <template>` | Add a new app from template |
 
 ## Contributing
 
