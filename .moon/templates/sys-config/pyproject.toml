@@ -8,6 +8,19 @@ dependencies = []
 [dependency-groups]
 dev = ["ruff>=0.9", "ty>=0.0.1a7"]
 
+[tool.ruff]
+# Exclude moon templates (contain Jinja2 syntax, not valid Python/TOML)
+extend-exclude = [".moon/templates"]
+
+[tool.ruff.lint]
+exclude = [".moon/templates"]
+
+[tool.ruff.format]
+exclude = [".moon/templates"]
+
+[tool.ty.src]
+exclude = [".moon/templates"]
+
 [tool.uv]
 managed = true
 
