@@ -7,8 +7,8 @@ tasks:
     options:
       runFromWorkspaceRoot: true
     inputs:
-      - "src/**/*"
-      - "tests/**/*"
+      - "apps/rag-eval/src/**/*"
+      - "apps/rag-eval/tests/**/*"
 
   run:
     command: uv run rag-eval

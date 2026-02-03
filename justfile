@@ -6,7 +6,8 @@ default:
 
 # Format code (write changes)
 format:
-    moon run tools:f i
+    moon run tools:format
+    
 # Check formatting without writing
 format-check:
     moon run tools:format-check

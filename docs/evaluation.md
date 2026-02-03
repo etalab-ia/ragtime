@@ -21,7 +21,7 @@ The `rag-eval` CLI helps you find and manage evaluation datasets:
 
 ```bash
 # From your rag-facile workspace
-cd your-workspace
+cd my-rag-app
 uv pip install -e apps/rag-eval
 ```
 

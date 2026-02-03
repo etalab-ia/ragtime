@@ -75,13 +75,22 @@ def list_sources():
 
     console.print(table)
 
-    # Show highlighted datasets from key sources
-    console.print("\n[bold cyan]AgentPublic Datasets (MediaTech Collection):[/bold cyan]")
-    for dataset in KNOWN_SOURCES[0]["datasets"]:
-        console.print(f"  • {dataset}")
+    # Show highlighted datasets from key sources (find by name, not index)
+    for source in KNOWN_SOURCES:
+        if source.get("datasets"):
+            if source["name"] == "AgentPublic":
+                console.print(
+                    "\n[bold cyan]AgentPublic Datasets (MediaTech Collection):[/bold cyan]"
+                )
+                for dataset in source["datasets"]:
+                    console.print(f"  • {dataset}")
+            elif source["name"] == "Compar:IA":
+                console.print(
+                    "\n[bold cyan]Compar:IA Datasets (Preference Data):[/bold cyan]"
+                )
+                for dataset in source["datasets"]:
+                    console.print(f"  • {dataset}")
 
-    console.print("\n[bold cyan]Compar:IA Datasets (Preference Data):[/bold cyan]")
-    for dataset in KNOWN_SOURCES[1]["datasets"]:
-        console.print(f"  • {dataset}")
-
-    console.print("\n[dim]Use 'rag-eval search hf <query>' to search HuggingFace datasets[/dim]")
+    console.print(
+        "\n[dim]Use 'rag-eval search hf <query>' to search HuggingFace datasets[/dim]"
+    )

@@ -47,23 +47,28 @@ tasks:
     command: uv run ruff format .
     options:
       runFromWorkspaceRoot: true
+      cache: false
 
   format-check:
     command: uv run ruff format --check .
     options:
       runFromWorkspaceRoot: true
+      cache: false
 
   lint:
     command: uv run ruff check .
     options:
       runFromWorkspaceRoot: true
+      cache: false
 
   lint-fix:
     command: uv run ruff check --fix .
     options:
       runFromWorkspaceRoot: true
+      cache: false
 
   type-check:
     command: uv run ty check .
     options:
       runFromWorkspaceRoot: true
+      cache: false

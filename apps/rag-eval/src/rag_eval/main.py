@@ -14,13 +14,17 @@ BANNER = """[cyan]
  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     ╚══════╝  ╚═══╝  ╚═╝  ╚═╝╚══════╝
 [/cyan]"""
 
-# Print banner on every invocation
-console.print(BANNER)
-
 app = typer.Typer(
     add_completion=False,
     help="RAG Evaluation CLI - Search and manage evaluation datasets",
 )
+
+
+@app.callback()
+def main_callback():
+    """Print banner when CLI is invoked."""
+    console.print(BANNER)
+
 
 app.add_typer(search.app, name="search")
 app.command(name="sources")(sources.list_sources)

@@ -71,9 +71,7 @@ def search_huggingface(
         limit=limit,
     )
 
-    results = []
-    for info in datasets_iter:
-        results.append(DatasetResult.from_dataset_info(info))
+    results = [DatasetResult.from_dataset_info(info) for info in datasets_iter]
 
     return results
 
@@ -124,7 +122,9 @@ def search_hf(
     ] = 20,
     sort: Annotated[
         str,
-        typer.Option("--sort", "-s", help="Sort by: downloads, likes, created, modified"),
+        typer.Option(
+            "--sort", "-s", help="Sort by: downloads, likes, created, modified"
+        ),
     ] = "downloads",
 ):
     """Search HuggingFace for evaluation datasets.
