@@ -1,43 +1,18 @@
 {
-  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-  "release-type": "python",
-  "changelog-path": "CHANGELOG.md",
-  "packages": {
-    "apps/cli": {
-      "changelog-path": "CHANGELOG.md",
-      "version-file": "pyproject.toml",
-      "release-type": "python",
-      "component": "cli"
-    },
-    "apps/chainlit-chat": {
-      "changelog-path": "CHANGELOG.md",
-      "version-file": "pyproject.toml",
-      "release-type": "python",
-      "component": "chainlit-chat"
-    },
-    "apps/reflex-chat": {
-      "changelog-path": "CHANGELOG.md",
-      "version-file": "pyproject.toml",
-      "release-type": "python",
-      "component": "reflex-chat"
-    },
-    "packages/pdf-context": {
-      "changelog-path": "CHANGELOG.md",
-      "version-file": "pyproject.toml",
-      "release-type": "python",
-      "component": "pdf-context"
-    }
-  },
-  "plugins": [
-    {
-      "type": "linked-versions",
-      "groupName": "rag-facile",
-      "components": [
-        "cli",
-        "chainlit-chat",
-        "reflex-chat",
-        "pdf-context"
-      ]
-    }
-  ]
+	"$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+	"release-type": "python",
+	"changelog-path": "CHANGELOG.md",
+	"packages": {
+		".": {
+			"release-type": "python",
+			"changelog-path": "CHANGELOG.md",
+			"version-file": "pyproject.toml",
+			"extra-files": [
+				"apps/cli/pyproject.toml",
+				"apps/chainlit-chat/pyproject.toml",
+				"apps/reflex-chat/pyproject.toml",
+				"packages/pdf-context/pyproject.toml"
+			]
+		}
+	}
 }
