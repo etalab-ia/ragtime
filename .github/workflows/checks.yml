@@ -48,7 +48,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Run type checker
-        run: uv run ty check --exclude ".moon/templates" --exclude "apps/cli/src/cli/templates" .
+        run: uv run ty check .
 
   test:
     name: Tests

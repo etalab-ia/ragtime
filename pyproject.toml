@@ -33,6 +33,9 @@ dev = [
 [tool.uv.workspace]
 members = ["apps/*", "packages/*"]
 
+[tool.ty.src]
+exclude = [".moon/templates", "apps/cli/src/cli/templates"]
+
 [tool.ty.rules]
 # Disable rules with false positives from metaprogramming (Reflex, Chainlit)
 call-non-callable = "ignore"
