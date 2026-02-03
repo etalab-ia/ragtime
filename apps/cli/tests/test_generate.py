@@ -1,6 +1,5 @@
 """Tests for the generate command."""
 
-import shutil
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -922,7 +921,7 @@ class TestStructureSelectionPrompt:
             None,  # Structure - return None to abort
         ]
 
-        result = runner.invoke(main_app, ["generate", "workspace", "/tmp/test"])
+        runner.invoke(main_app, ["generate", "workspace", "/tmp/test"])
 
         # Should have been called twice for select
         assert mock_q.select.call_count == 2
