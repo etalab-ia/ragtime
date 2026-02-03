@@ -1,5 +1,8 @@
 # RAG Facile
 
+[![Release](https://img.shields.io/github/v/release/etalab-ia/rag-facile?style=flat-square)](https://github.com/etalab-ia/rag-facile/releases)
+[![License](https://img.shields.io/github/license/etalab-ia/rag-facile?style=flat-square)](LICENSE)
+
 ```
  ██████╗  █████╗  ██████╗     ███████╗ █████╗  ██████╗██╗██╗     ███████╗
  ██╔══██╗██╔══██╗██╔════╝     ██╔════╝██╔══██╗██╔════╝██║██║     ██╔════╝
@@ -189,6 +192,13 @@ just run                    # Run all apps
 | `just check` | Run all checks (format, lint, type-check) |
 | `just sync` | Sync dependencies with uv |
 | `just add <template>` | Add a new app from template |
+
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [Evaluation Guide](docs/evaluation.md) | How to evaluate your RAG application |
+| [Contributing Guide](CONTRIBUTING.md) | Architecture overview and development setup |
 
 ## Contributing
 
