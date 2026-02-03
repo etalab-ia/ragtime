@@ -1,3 +1,5 @@
+from importlib.metadata import version as get_version
+
 import typer
 from rich.console import Console
 
@@ -31,8 +33,6 @@ app.add_typer(eval.app, name="eval")
 @app.command()
 def version():
     """Show the CLI version."""
-    from importlib.metadata import version as get_version
-
     print(f"rag-facile v{get_version('rag-facile-cli')}")
 
 

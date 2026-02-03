@@ -251,7 +251,7 @@ for example in dataset["train"]:
     })
 
 # Measure accuracy
-accuracy = sum(1 for r in results if r["expected"] == r["actual"]) / len(results)
+accuracy = sum(1 for r in results if r["expected"] == r["actual"]) / len(results) if results else 0.0
 ```
 
 ### What to Measure
