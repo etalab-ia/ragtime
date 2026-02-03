@@ -874,15 +874,17 @@ class TestStandaloneWorkspaceCommand:
         uv_calls = [c for c in calls if "uv" in str(c[0][0])]
         assert len(uv_calls) >= 1
 
-    def test_standalone_shows_simple_structure_in_summary(
+    def test_standalone_shows_project_generation_complete(
         self, mock_standalone_cli, tmp_path
     ):
-        """Should show 'Simple (standalone)' in configuration summary."""
+        """Should show 'Project generation complete' (standalone-specific message)."""
         target = tmp_path / "standalone-app"
 
         result = runner.invoke(main_app, ["generate", "workspace", str(target)])
 
-        assert "Simple (standalone)" in result.output
+        # Standalone mode shows "Project generation complete"
+        # Monorepo mode shows "Workspace generation complete"
+        assert "Project generation complete" in result.output
 
 
 class TestPathNormalization:
