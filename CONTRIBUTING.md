@@ -15,13 +15,18 @@ Install required tools via proto:
 proto install moon uv
 ```
 
-Optionally install [just](https://github.com/casey/just) (task runner):
-```bash
-# macOS
-brew install just
+The installer includes [just](https://github.com/casey/just) (task runner) automatically. No additional setup needed!
 
-# Linux (prebuilt binaries)
-curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
+### System Dependencies
+
+For Reflex frontend support, you need `unzip`. On Ubuntu/Debian:
+```bash
+sudo apt-get install unzip
+```
+
+On macOS:
+```bash
+brew install unzip
 ```
 
 ### 2. Clone and setup
@@ -34,9 +39,9 @@ uv sync
 
 ## Code Quality
 
-### Using Just (recommended)
+### Using Just
 
-If you have [just](https://github.com/casey/just) installed:
+With [just](https://github.com/casey/just) installed:
 
 ```bash
 just format       # Format code
@@ -71,7 +76,7 @@ rag-facile/
 │   └── moon.yml             # Code quality tasks
 ├── .moon/                   # Moon workspace config
 │   └── templates/           # Moon templates (source of truth)
-├── Justfile                 # Developer task runner
+├── justfile                 # Developer task runner
 └── pyproject.toml           # Workspace config
 ```
 

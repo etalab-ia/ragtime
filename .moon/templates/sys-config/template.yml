@@ -1,5 +1,5 @@
 title: System Configuration
-description: RAG Facile workspace configuration. Designed to patch moon init defaults.
+description: RAG Facile workspace config (patches moon init defaults).
 destination: .
 variables:
   project_name:

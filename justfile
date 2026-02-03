@@ -1,9 +1,12 @@
 # RAG Facile development tasks
 
+# Display available commands
+default:
+    @just --list
+
 # Format code (write changes)
 format:
-    moon run tools:format
-
+    moon run tools:f i
 # Check formatting without writing
 format-check:
     moon run tools:format-check

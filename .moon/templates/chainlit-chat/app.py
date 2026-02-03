@@ -4,10 +4,10 @@ import os
 
 import chainlit as cl
 import engineio
+import engineio.payload
+from context_loader import process_file
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-
-from context_loader import process_file
 
 # Increase the number of packets allowed in a single payload to prevent "Too
 # many packets in payload" errors. This is especially helpful during streaming

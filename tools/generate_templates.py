@@ -106,7 +106,20 @@ requires-python = ">=3.13"
 dependencies = []
 
 [dependency-groups]
-dev = []
+dev = ["ruff>=0.9", "ty>=0.0.1a7"]
+
+[tool.ruff]
+# Exclude moon templates (contain Jinja2 syntax, not valid Python/TOML)
+extend-exclude = [".moon/templates"]
+
+[tool.ruff.lint]
+exclude = [".moon/templates"]
+
+[tool.ruff.format]
+exclude = [".moon/templates"]
+
+[tool.ty.src]
+exclude = [".moon/templates"]
 
 [tool.uv]
 managed = true
@@ -118,6 +131,55 @@ members = ["apps/*", "packages/*"]
 
     # Pin Python version for uv
     (target / ".python-version").write_text("3.13\n")
+
+    # Create justfile for common commands
+    justfile = """\
+# {{ project_name }} - RAG Facile project
+
+# Display available commands
+default:
+    @just --list
+
+# Run all apps or a specific app (e.g., just run or just run chainlit-chat)
+run app="":
+    @if [ -z "{{ "{{ app }}" }}" ]; then \\
+        moon run :dev; \\
+    else \\
+        moon run {{ "{{ app }}" }}:dev; \\
+    fi
+
+# Format code (write changes)
+format:
+    uv run ruff format .
+
+# Check formatting without writing
+format-check:
+    uv run ruff format --check .
+
+# Run linter
+lint:
+    uv run ruff check .
+
+# Run linter with auto-fix
+lint-fix:
+    uv run ruff check --fix .
+
+# Run type checker
+type-check:
+    uv run ty check .
+
+# Run all checks (format-check, lint, type-check)
+check: format-check lint type-check
+
+# Sync dependencies
+sync:
+    uv sync
+
+# Add a new app from template (e.g., just add chainlit-chat)
+add template:
+    moon generate {% raw %}{{template}}{% endraw %}
+"""
+    (target / "justfile").write_text(justfile)
 
     console.print("[green]✓[/green] sys-config generated")
 

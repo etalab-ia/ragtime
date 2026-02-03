@@ -6,7 +6,7 @@ Users can enable/disable providers by editing modules.yml without regenerating.
 
 import importlib
 from pathlib import Path
-from typing import Any, Callable, Protocol
+from typing import Any, Protocol
 
 import yaml
 
@@ -64,11 +64,14 @@ def _initialize_providers() -> None:
             if hasattr(module, "extract_text_from_bytes"):
                 # Wrap to include formatting
                 if hasattr(module, "format_as_context"):
+
                     def make_bytes_processor(mod: Any) -> BytesContextProvider:
                         def processor(data: bytes, filename: str) -> str:
                             text = mod.extract_text_from_bytes(data)
                             return mod.format_as_context(text, filename)
+
                         return processor
+
                     _bytes_processors[name] = make_bytes_processor(module)
 
         except ImportError:

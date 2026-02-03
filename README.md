@@ -23,11 +23,11 @@ RAG Facile provides a foundation for building RAG (Retrieval-Augmented Generatio
 One command installs the entire toolchain (proto, moon, uv) and the CLI:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh)
+curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 source ~/.bashrc  # or restart your terminal
 ```
 
-> **Note**: On Ubuntu/Debian, the installer will automatically install prerequisites (git, curl, xz-utils) if needed.
+> **Note**: On Ubuntu/Debian, the installer will automatically install prerequisites (git, curl, xz-utils, unzip) if needed.
 
 Verify the installation:
 
@@ -77,7 +77,7 @@ Your app will open in the browser, ready to use!
 To upgrade to the latest version, re-run the installer:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh)
+curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 ```
 
 ## Generated Workspace Structure
@@ -98,17 +98,31 @@ my-rag-app/
 ├── packages/
 │   └── pdf-context/    # Selected modules
 ├── .python-version     # Pinned to Python 3.13
+├── justfile            # Common commands (just dev, just check, etc.)
 └── pyproject.toml      # Workspace dependencies
 ```
 
 ## Running Your App
 
-After generation, use moon to run your app:
+After generation, use the justfile commands:
 
 ```bash
 cd my-rag-app
-moon run chainlit-chat:dev  # or reflex-chat:dev
+just run                    # Run all apps
+just run chainlit-chat      # Run a specific app
 ```
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `just run` | Run all apps |
+| `just run <name>` | Run a specific app (e.g., `just run chainlit-chat`) |
+| `just format` | Format code with ruff |
+| `just lint` | Run linter |
+| `just check` | Run all checks (format, lint, type-check) |
+| `just sync` | Sync dependencies with uv |
+| `just add <template>` | Add a new app from template |
 
 ## Contributing
 
