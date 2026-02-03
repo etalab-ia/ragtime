@@ -87,14 +87,25 @@ moon run cli:test
 
 ## Testing install.sh from a branch
 
-To test the install script from a feature branch:
+To test the install script in a clean Docker environment:
 
 ```bash
+# Start a fresh Ubuntu container
+docker run -it ubuntu:24.04
+
+# Install curl (required to download the script)
+apt-get update && apt-get install -y curl
+
+# Run the installer from a branch
 export RAG_FACILE_BRANCH=my-feature-branch
 curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/$RAG_FACILE_BRANCH/install.sh | bash
+source ~/.bashrc
+
+# Test workspace generation
+rf generate workspace my-rag-app
 ```
 
-This installs the CLI from the specified branch instead of main.
+The install script will automatically install other prerequisites (git, xz-utils) on Debian/Ubuntu.
 
 ## CI Checks
 
