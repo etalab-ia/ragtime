@@ -1,6 +1,5 @@
 """Tests for the eval generate command."""
 
-import json
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch

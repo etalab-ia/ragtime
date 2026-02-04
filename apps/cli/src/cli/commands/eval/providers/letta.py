@@ -76,7 +76,7 @@ class LettaProvider:
             )
             with open(doc_path, "rb") as f:
                 self.client.folders.files.upload(file=f, folder_id=folder.id)
-                logger.debug(f"  Upload successful")
+                logger.debug("  Upload successful")
 
         # Attach folder to the agent
         self.client.agents.folders.attach(
@@ -135,7 +135,7 @@ class LettaProvider:
         if buffer:
             yield from self._process_line(buffer, seen_samples)
 
-        logger.info(f"Completed Letta generation")
+        logger.info("Completed Letta generation")
         logger.debug(
             f"Total response ({len(total_response)} chars):\n{total_response}\n"
         )

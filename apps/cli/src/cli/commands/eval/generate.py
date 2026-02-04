@@ -159,7 +159,7 @@ def run(
         ],
     )
     logger = logging.getLogger("eval-generate")
-    logger.info(f"Starting eval generate session")
+    logger.info("Starting eval generate session")
     logger.info(f"Provider: {provider}")
     logger.info(f"Debug mode: {'enabled' if debug else 'disabled'}")
     logger.info(f"Input directory: {input_dir}")

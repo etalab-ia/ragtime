@@ -132,7 +132,7 @@ class AlbertApiProvider:
                     )
                     logger.error(error_msg)
                     raise RuntimeError(error_msg)
-                logger.debug(f"  Upload successful")
+                logger.debug("  Upload successful")
                 doc_response.raise_for_status()
 
     def generate(self, num_samples: int) -> Iterator[GeneratedSample]:
@@ -185,7 +185,7 @@ class AlbertApiProvider:
             if buffer:
                 yield from self._process_line(buffer, seen_samples)
 
-            logger.info(f"Completed Albert generation")
+            logger.info("Completed Albert generation")
             logger.debug(
                 f"Total response ({len(total_response)} chars):\n{total_response}\n"
             )
