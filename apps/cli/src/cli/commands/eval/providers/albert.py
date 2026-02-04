@@ -191,44 +191,35 @@ class AlbertApiProvider:
             pass  # Non-critical
 
     def _build_prompt(self, num_samples: int) -> str:
-        """Build the generation prompt for the LLM.
+        """Build the generation prompt for the LLM."""
+        return f"""⚠️ AUTOMATED CONVERSATION - STRICT OUTPUT FORMAT REQUIRED ⚠️
 
-        The prompt instructs the LLM to:
-        1. Use the hybrid search API to find relevant contexts
-        2. Generate Q/A pairs from those contexts
-        3. Return results in JSON format
-        """
-        return f"""You are a Q/A dataset generator for French government documents.
+This is an automated system that parses your response programmatically.
+You MUST follow the output format exactly - any deviation will break the system.
 
-Your task: Generate {num_samples} high-quality Question/Answer pairs in French.
-
-For each Q/A pair, you MUST:
-1. Use the hybrid search API to retrieve relevant document passages
-   - Call: POST {self.base_url}/search
-   - Body: {{"query": "<your-query>", "collection_id": "{self.collection_id}", "limit": 5}}
-   - Merge results from semantic and keyword search
-2. Create questions that are answerable from the retrieved contexts
-3. Answers must be grounded in the actual document text
+Generate {num_samples} Question/Answer pairs from the uploaded documents.
 
 Requirements:
-- Questions and answers MUST be in French
-- Each answer must cite specific text from the documents
+- Questions and answers must be in French
+- Each answer must be fully grounded in the document context
 - Ensure diversity - avoid similar questions about the same topics
-- Return each Q/A pair as JSON on its own line (JSONL format)
 
-Return format (one JSON object per line):
+🔴 CRITICAL OUTPUT FORMAT 🔴
+Return ONLY valid JSONL with NO additional text, comments, explanations, or preamble.
+Do not output anything before the first JSON object or after the last JSON object.
+Each line must be a complete, valid JSON object with this exact structure:
 {{
   "user_input": "Question in French?",
-  "retrieved_contexts": ["Exact passage from document...", "Another relevant passage..."],
-  "reference": "Complete answer in French, grounded in the context.",
+  "retrieved_contexts": ["The exact text passage that answers the question..."],
+  "reference": "The answer in French, fully grounded in the context.",
   "_metadata": {{
-    "source_file": "document_name.pdf",
+    "source_file": "filename.pdf",
     "quality_score": 0.95,
     "topic_summary": "Brief topic for diversity tracking"
   }}
 }}
 
-Generate {num_samples} Q/A pairs now. Output each as a complete JSON object on its own line."""
+NOW OUTPUT ONLY THE JSONL - NO PREAMBLE, NO EXPLANATIONS, NO TEXT BEFORE OR AFTER."""
 
     def _extract_samples(self, line: str) -> Iterator[GeneratedSample]:
         """Extract JSON sample from a single line."""
