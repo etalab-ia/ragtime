@@ -6,6 +6,7 @@ government documents.
 """
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Annotated
@@ -144,6 +145,26 @@ def run(
     console.print(f"  Provider: {provider}")
     console.print(f"  Target: {samples} Q/A pairs")
     console.print(f"  Output: {output}\n")
+
+    # Setup logging to trace provider interactions
+    log_file = Path(str(output) + ".log")
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler(),
+        ],
+    )
+    logger = logging.getLogger("eval-generate")
+    logger.info(f"Starting eval generate session")
+    logger.info(f"Provider: {provider}")
+    logger.info(f"Input directory: {input_dir}")
+    logger.info(f"Output file: {output}")
+    logger.info(f"Log file: {log_file}")
+    logger.info(f"Documents found: {len(documents)}")
+    for doc in documents:
+        logger.debug(f"  - {doc.name}")
 
     # Get provider instance
     try:

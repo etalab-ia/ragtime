@@ -5,6 +5,7 @@ and OpenAI-compatible LLM for Q/A generation.
 """
 
 import json
+import logging
 from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +24,8 @@ except ImportError as e:
 
 from .document_preprocessor import DocumentPreprocessor
 from .schema import GeneratedSample
+
+logger = logging.getLogger(__name__)
 
 
 class AlbertApiProvider:
@@ -61,8 +64,13 @@ class AlbertApiProvider:
             document_paths: List of paths to documents (PDF, MD, TXT)
                            PDFs are automatically converted to markdown text.
         """
+        logger.info(f"Starting document upload to Albert API ({len(document_paths)} documents)")
+        for doc_path in document_paths:
+            logger.debug(f"  - {doc_path}")
+
         # Preprocess documents (extract PDFs to text)
         processed_paths = self.preprocessor.process_documents(document_paths)
+        logger.info(f"Preprocessed {len(processed_paths)} documents")
 
         # Create a collection
         collection_name = (
@@ -85,8 +93,11 @@ class AlbertApiProvider:
         if not self.collection_id:
             raise ValueError("Failed to create collection: no ID in response")
 
+        logger.info(f"Created Albert collection: {self.collection_id}")
+
         # Upload each processed document
-        for doc_path in processed_paths:
+        for i, doc_path in enumerate(processed_paths, 1):
+            logger.info(f"Uploading document {i}/{len(processed_paths)}: {Path(doc_path).name}")
             with open(doc_path, "rb") as f:
                 # Determine MIME type based on file extension
                 mime_types = {
@@ -96,6 +107,7 @@ class AlbertApiProvider:
                 }
                 ext = Path(doc_path).suffix.lower()
                 mime_type = mime_types.get(ext, "application/octet-stream")
+                logger.debug(f"  MIME type: {mime_type}, Size: {Path(doc_path).stat().st_size} bytes")
 
                 # Send file and collection in multipart form data
                 files = {
@@ -112,7 +124,9 @@ class AlbertApiProvider:
                         f"Failed to upload {doc_path}: "
                         f"{doc_response.status_code} {doc_response.text}"
                     )
+                    logger.error(error_msg)
                     raise RuntimeError(error_msg)
+                logger.debug(f"  Upload successful")
                 doc_response.raise_for_status()
 
     def generate(self, num_samples: int) -> Iterator[GeneratedSample]:
@@ -131,11 +145,14 @@ class AlbertApiProvider:
 
         # Build the generation prompt
         prompt = self._build_prompt(num_samples)
+        logger.debug(f"Generation prompt ({len(prompt)} chars):\n{prompt}\n")
 
         # Stream the response from LLM
         # The LLM will be responsible for calling search internally
+        logger.info(f"Sending prompt to Albert API (collection: {self.collection_id})")
         seen_samples: set[str] = set()
         buffer = ""
+        total_response = ""
 
         try:
             stream = self.llm_client.chat.completions.create(
@@ -147,6 +164,7 @@ class AlbertApiProvider:
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
+                    total_response += content
                     buffer += content
 
                     # Split into lines, keeping the last (possibly incomplete) line
@@ -160,7 +178,11 @@ class AlbertApiProvider:
             # Process any remaining content in the buffer
             if buffer:
                 yield from self._process_line(buffer, seen_samples)
+
+            logger.info(f"Completed Albert generation")
+            logger.debug(f"Total response ({len(total_response)} chars):\n{total_response}\n")
         except Exception as e:
+            logger.error(f"LLM generation failed: {e}", exc_info=True)
             raise RuntimeError(f"LLM generation failed: {e}") from e
 
     def _process_line(
