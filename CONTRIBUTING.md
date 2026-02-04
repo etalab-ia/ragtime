@@ -90,6 +90,68 @@ Templates live in `.moon/templates/` and are automatically bundled into the CLI 
 moon run cli:test
 ```
 
+### Testing the Eval Generate Command
+
+The eval generate command supports pluggable providers. To test locally:
+
+```bash
+# Test with Letta provider
+export LETTA_API_KEY="test-key"
+export DATA_FOUNDRY_AGENT_ID="test-agent"
+python -m pytest apps/cli/tests/test_eval_generate.py
+
+# Test with Albert provider
+export OPENAI_API_KEY="test-key"
+export OPENAI_BASE_URL="http://localhost:8000"
+export OPENAI_MODEL="mistral-7b"
+python -m pytest apps/cli/tests/test_eval_generate.py
+```
+
+### Adding a New Data Foundry Provider
+
+To add support for a new provider (e.g., another LLM service):
+
+1. **Create provider class** in `apps/cli/src/cli/commands/eval/providers/{name}.py`:
+   ```python
+   from collections.abc import Iterator
+   from .schema import GeneratedSample
+
+   class MyProvider:
+       def __init__(self, **kwargs):
+           # Initialize with credentials
+           pass
+
+       def upload_documents(self, document_paths: list[str]) -> None:
+           # Upload docs to your service
+           pass
+
+       def generate(self, num_samples: int) -> Iterator[GeneratedSample]:
+           # Generate samples
+           yield sample
+
+       def cleanup(self) -> None:
+           # Clean up resources
+           pass
+   ```
+
+2. **Update factory** in `apps/cli/src/cli/commands/eval/providers/__init__.py`:
+   ```python
+   elif provider_name == "myservice":
+       from .myservice import MyProvider
+       return MyProvider(**kwargs)
+   ```
+
+3. **Add CLI option** in `apps/cli/src/cli/commands/eval/generate.py`:
+   - Add validation for provider-specific env vars
+   - Route to factory with correct credentials
+
+4. **Add tests** in `apps/cli/tests/test_eval_generate.py`
+
+All providers must:
+- Implement the `DataFoundryProvider` protocol
+- Output Ragas-compatible JSON (user_input, retrieved_contexts, reference, _metadata)
+- Support French content
+
 ## Testing install.sh from a branch
 
 To test the install script in a clean Docker environment:

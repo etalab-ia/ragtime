@@ -70,20 +70,49 @@ See the main [README](../../README.md) for detailed comparison of project struct
 
 ### `eval generate`
 
-Generate synthetic Q/A evaluation datasets from your documents using Letta Cloud.
+Generate synthetic Q/A evaluation datasets from your documents. Supports multiple providers: Letta Cloud or self-hosted Albert API.
 
 ```bash
-rag-facile eval generate ./docs -o golden_dataset.jsonl -n 50
+rag-facile eval generate ./docs -o golden_dataset.jsonl -n 50 --provider letta
 ```
 
 **Options:**
+- `-p, --provider` - Provider to use (`letta` or `albert`) - **required**
 - `-o, --output` - Output JSONL file path (default: `golden_dataset.jsonl`)
 - `-n, --samples` - Target number of Q/A pairs (default: 50)
-- `--agent-id` - Data Foundry agent ID (or set `DATA_FOUNDRY_AGENT_ID` env var)
+- `--agent-id` - Data Foundry agent ID for Letta (or set `DATA_FOUNDRY_AGENT_ID` env var)
 
-**Environment variables:**
-- `LETTA_API_KEY` - Your Letta Cloud API key ([get one here](https://app.letta.com/api-keys))
-- `DATA_FOUNDRY_AGENT_ID` - Pre-configured Data Foundry agent ID
+**For Letta Cloud Provider:**
+
+```bash
+export LETTA_API_KEY="your-api-key"           # Get at https://app.letta.com/api-keys
+export DATA_FOUNDRY_AGENT_ID="agent-xxx"      # Pre-configured agent ID
+
+rag-facile eval generate ./docs -o golden_dataset.jsonl --provider letta
+```
+
+**For Albert API Provider (Self-Hosted):**
+
+```bash
+export OPENAI_API_KEY="your-api-key"          # Albert API key
+export OPENAI_BASE_URL="http://localhost:8000"  # Albert API endpoint
+export OPENAI_MODEL="mistral-7b"              # Model to use
+
+rag-facile eval generate ./docs -o golden_dataset.jsonl --provider albert
+```
+
+**Output:**
+
+Creates a Ragas-compatible JSONL file with French Q/A pairs:
+
+```json
+{
+  "user_input": "Quel est le délai de recours administratif?",
+  "retrieved_contexts": ["Le délai de recours est de deux mois..."],
+  "reference": "Le délai de recours administratif est de deux mois.",
+  "_metadata": {"source_file": "code.pdf", "quality_score": 0.95}
+}
+```
 
 ## Development
 

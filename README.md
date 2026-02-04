@@ -199,7 +199,9 @@ Before deploying, you need to know if your RAG application works well. Evaluatio
 
 ### Generate Synthetic Evaluation Datasets
 
-Don't have evaluation data? Generate it automatically from your documents using the **Data Foundry** feature:
+Don't have evaluation data? Generate it automatically from your documents using the **Data Foundry** feature. Choose between Letta Cloud or self-hosted Albert API:
+
+#### Option 1: Letta Cloud (Easiest)
 
 ```bash
 # Set up Letta Cloud credentials
@@ -207,10 +209,24 @@ export LETTA_API_KEY="your-letta-api-key"           # Get at https://app.letta.c
 export DATA_FOUNDRY_AGENT_ID="agent-xxx"            # Pre-configured agent ID
 
 # Generate Q/A pairs from your documents
-rag-facile eval generate ./my-docs -o golden_dataset.jsonl -n 50
+rag-facile eval generate ./my-docs -o golden_dataset.jsonl -n 50 --provider letta
 ```
 
-This creates a Ragas-compatible JSONL file with French Q/A pairs:
+#### Option 2: Albert API (Self-Hosted)
+
+```bash
+# Set up Albert API credentials
+export OPENAI_API_KEY="your-api-key"                # Albert API key
+export OPENAI_BASE_URL="http://localhost:8000"      # Albert API endpoint
+export OPENAI_MODEL="mistral-7b"                    # Model to use
+
+# Generate Q/A pairs using your Albert instance
+rag-facile eval generate ./my-docs -o golden_dataset.jsonl -n 50 --provider albert
+```
+
+#### Output Format
+
+Both providers create Ragas-compatible JSONL files with French Q/A pairs:
 
 ```json
 {
