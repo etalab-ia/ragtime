@@ -219,7 +219,9 @@ class AlbertApiProvider:
 This is an automated system that parses your response programmatically.
 You MUST follow the output format exactly - any deviation will break the system.
 
-Generate {num_samples} Question/Answer pairs from the uploaded documents.
+🔴 CRITICAL: GENERATE EXACTLY {num_samples} SAMPLES - NO MORE, NO LESS 🔴
+You MUST generate exactly {num_samples} Question/Answer pairs. Not 3, not {num_samples + 1}, not fewer.
+Output exactly {num_samples} JSON objects, one per line.
 
 Requirements:
 - Questions and answers must be in French
@@ -241,7 +243,7 @@ Each line must be a complete, valid JSON object with this exact structure:
   }}
 }}
 
-NOW OUTPUT ONLY THE JSONL - NO PREAMBLE, NO EXPLANATIONS, NO TEXT BEFORE OR AFTER."""
+NOW OUTPUT EXACTLY {num_samples} JSONL OBJECTS - NO PREAMBLE, NO EXPLANATIONS, NO TEXT BEFORE OR AFTER."""
 
     def _extract_samples(self, line: str) -> Iterator[GeneratedSample]:
         """Extract JSON sample from a single line."""

@@ -64,6 +64,13 @@ def run(
             help="Data Foundry agent ID on Letta Cloud (for Letta provider)",
         ),
     ] = "",
+    debug: Annotated[
+        bool,
+        typer.Option(
+            "--debug",
+            help="Enable debug logging (verbose output to file and console)",
+        ),
+    ] = False,
 ) -> None:
     """Generate synthetic Q/A evaluation dataset from documents.
 
@@ -148,17 +155,19 @@ def run(
 
     # Setup logging to trace provider interactions
     log_file = Path(str(output) + ".log")
+    log_level = logging.DEBUG if debug else logging.INFO
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=log_level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.FileHandler(log_file),
-            logging.StreamHandler(),
+            logging.StreamHandler() if debug else logging.NullHandler(),
         ],
     )
     logger = logging.getLogger("eval-generate")
     logger.info(f"Starting eval generate session")
     logger.info(f"Provider: {provider}")
+    logger.info(f"Debug mode: {'enabled' if debug else 'disabled'}")
     logger.info(f"Input directory: {input_dir}")
     logger.info(f"Output file: {output}")
     logger.info(f"Log file: {log_file}")
