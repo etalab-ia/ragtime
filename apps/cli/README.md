@@ -85,8 +85,6 @@ rag-facile eval generate ./docs -o golden_dataset.jsonl -n 50
 - `LETTA_API_KEY` - Your Letta Cloud API key ([get one here](https://app.letta.com/api-keys))
 - `DATA_FOUNDRY_AGENT_ID` - Pre-configured Data Foundry agent ID
 
-
-
 ## Development
 
 The CLI is built with [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/).
