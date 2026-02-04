@@ -101,12 +101,17 @@ class LettaProvider:
                         yield sample
 
     def cleanup(self) -> None:
-        """Detach folder from agent."""
+        """Detach and delete folder from Letta Cloud."""
         if self.folder_id:
             try:
                 self.client.agents.folders.detach(
                     agent_id=self.agent_id, folder_id=self.folder_id
                 )
+            except Exception:
+                pass  # Non-critical
+
+            try:
+                self.client.folders.delete(folder_id=self.folder_id)
             except Exception:
                 pass  # Non-critical
 
