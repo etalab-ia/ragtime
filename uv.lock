@@ -287,7 +287,7 @@ wheels = [
 
 [[package]]
 name = "chainlit-chat"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "apps/chainlit-chat" }
 dependencies = [
     { name = "chainlit" },
@@ -876,6 +876,23 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/24/2c/b55c4a27a56dd9a00bb2812c404b57f8b7aec0cdbff9fdc61acdd73359bc/Lazify-0.4.0.tar.gz", hash = "sha256:7102bfe63e56de2ab62b3bc661a7190c4056771a8624f04a8b785275c3dd1f9b", size = 2968, upload-time = "2018-06-14T13:12:20.752Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/03/a5/866b44697cee47d1cae429ed370281d937ad4439f71af82a6baaa139d26a/Lazify-0.4.0-py2.py3-none-any.whl", hash = "sha256:c2c17a7a33e9406897e3f66fde4cd3f84716218d580330e5af10cfe5a0cd195a", size = 3107, upload-time = "2018-06-14T13:12:22.273Z" },
+]
+
+[[package]]
+name = "letta-client"
+version = "1.7.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b3/b2/1f15fbaec9f77bf9dcebc5e8562c4aff90d1e8ab1702116d78d570ae2bb4/letta_client-1.7.7.tar.gz", hash = "sha256:c344a8e714584bbb845fae161a4b996f6c36ef4f673d0d941ac83b1aa9312284", size = 257992, upload-time = "2026-01-30T23:27:37.429Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/f1/1e7d2d1a1c3d66f3ab97d70a3f98c5b77a4ee9e8aede2999c18f9c87bc9c/letta_client-1.7.7-py3-none-any.whl", hash = "sha256:efaa521710f35fed27af1a02bb709e469af08605549c8cafd500616338dd467b", size = 377831, upload-time = "2026-01-30T23:27:36.118Z" },
 ]
 
 [[package]]
@@ -1868,7 +1885,7 @@ wheels = [
 
 [[package]]
 name = "pdf-context"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "packages/pdf-context" }
 dependencies = [
     { name = "pypdf" },
@@ -2264,7 +2281,7 @@ wheels = [
 
 [[package]]
 name = "rag-facile"
-version = "0.4.0"
+version = "0.5.0"
 source = { virtual = "." }
 dependencies = [
     { name = "chainlit-chat" },
@@ -2301,11 +2318,12 @@ dev = [
 
 [[package]]
 name = "rag-facile-cli"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "apps/cli" }
 dependencies = [
     { name = "datasets" },
     { name = "huggingface-hub" },
+    { name = "letta-client" },
     { name = "libcst" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
@@ -2324,6 +2342,7 @@ dev = [
 requires-dist = [
     { name = "datasets", specifier = ">=3.0.0" },
     { name = "huggingface-hub", specifier = ">=1.3.0" },
+    { name = "letta-client", specifier = ">=0.1.0" },
     { name = "libcst", specifier = ">=1.8.6" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
@@ -2390,7 +2409,7 @@ wheels = [
 
 [[package]]
 name = "reflex-chat"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "apps/reflex-chat" }
 dependencies = [
     { name = "openai" },

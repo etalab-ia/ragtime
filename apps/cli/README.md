@@ -68,6 +68,41 @@ The CLI will guide you through:
 
 See the main [README](../../README.md) for detailed comparison of project structures.
 
+### `eval generate`
+
+Generate synthetic Q/A evaluation datasets from your documents using Letta Cloud.
+
+```bash
+rag-facile eval generate ./docs -o golden_dataset.jsonl -n 50
+```
+
+**Options:**
+- `-o, --output` - Output JSONL file path (default: `golden_dataset.jsonl`)
+- `-n, --samples` - Target number of Q/A pairs (default: 50)
+- `--agent-id` - Data Foundry agent ID (or set `DATA_FOUNDRY_AGENT_ID` env var)
+
+**Environment variables:**
+- `LETTA_API_KEY` - Your Letta Cloud API key ([get one here](https://app.letta.com/api-keys))
+- `DATA_FOUNDRY_AGENT_ID` - Pre-configured Data Foundry agent ID
+
+### `eval search`
+
+Search for evaluation datasets on HuggingFace.
+
+```bash
+rag-facile eval search hf "french QA"
+rag-facile eval search agent-public
+rag-facile eval search comparia
+```
+
+### `eval sources`
+
+List known evaluation dataset sources.
+
+```bash
+rag-facile eval sources
+```
+
 ## Development
 
 The CLI is built with [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/).

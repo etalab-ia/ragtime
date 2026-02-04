@@ -197,6 +197,30 @@ just run                    # Run all apps
 
 Before deploying, you need to know if your RAG application works well. Evaluation helps answer: Is my chatbot giving correct answers? Does it find the right documents? Is it hallucinating?
 
+### Generate Synthetic Evaluation Datasets
+
+Don't have evaluation data? Generate it automatically from your documents using the **Data Foundry** feature:
+
+```bash
+# Set up Letta Cloud credentials
+export LETTA_API_KEY="your-letta-api-key"           # Get at https://app.letta.com/api-keys
+export DATA_FOUNDRY_AGENT_ID="agent-xxx"            # Pre-configured agent ID
+
+# Generate Q/A pairs from your documents
+rag-facile eval generate ./my-docs -o golden_dataset.jsonl -n 50
+```
+
+This creates a Ragas-compatible JSONL file with French Q/A pairs:
+
+```json
+{
+  "user_input": "Quel est le délai de recours administratif?",
+  "retrieved_contexts": ["Le délai de recours est de deux mois..."],
+  "reference": "Le délai de recours administratif est de deux mois.",
+  "_metadata": {"source_file": "code.pdf", "quality_score": 0.95}
+}
+```
+
 ### Explore Available Datasets
 
 ```bash
