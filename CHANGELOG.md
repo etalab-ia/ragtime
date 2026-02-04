@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/etalab-ia/rag-facile/compare/v0.5.0...v0.6.0) (2026-02-04)
+
+
+### Features
+
+* add --debug flag and strengthen Albert sample count requirement ([a2a85d3](https://github.com/etalab-ia/rag-facile/commit/a2a85d30d292765e1522bfffc2cb1086b316ceb8))
+* add Albert API provider for eval generate command ([467f8be](https://github.com/etalab-ia/rag-facile/commit/467f8be563b68cb3bd22f32f1ba75aa4b52407a7))
+* add comprehensive logging for provider interactions and debugging ([a6d5f14](https://github.com/etalab-ia/rag-facile/commit/a6d5f146194cafd70eb151403c1642cbea8bfa2d))
+* add debug output for provider IDs during eval generate ([52e48d7](https://github.com/etalab-ia/rag-facile/commit/52e48d7ae4a509a9332ed1c39430bad236443eaf))
+* add document preprocessing with PDF extraction for eval providers ([e97504b](https://github.com/etalab-ia/rag-facile/commit/e97504b0af3a12a9dbfc6f71802738fb0b50583f))
+* add new PDF sample files for testing and demonstration purposes. ([da9ea82](https://github.com/etalab-ia/rag-facile/commit/da9ea826e218492165082063461ae52b69bbb0e7))
+* comprehensive eval generate improvements (PDF extraction, logging, debug flag) ([a6e431a](https://github.com/etalab-ia/rag-facile/commit/a6e431a75e7eeb722740c44442894a554c56a25c))
+* **eval:** add Data Foundry synthetic Q/A generation ([6371225](https://github.com/etalab-ia/rag-facile/commit/63712250a8ea6883aff5caddeea0979e66b0e2cc))
+* **eval:** add Data Foundry synthetic Q/A generation ([0fc3f4a](https://github.com/etalab-ia/rag-facile/commit/0fc3f4aa77a42e96c23e4f01a5f2927c3f924048))
+
+
+### Bug Fixes
+
+* **eval:** delete folder after generation to avoid storage limits ([2f53765](https://github.com/etalab-ia/rag-facile/commit/2f5376520cfbdce9ecfc258b7e424f07af0beb40))
+* remove extra blank lines in cli README ([fc3eb90](https://github.com/etalab-ia/rag-facile/commit/fc3eb9079acfdc72ac7ee995168380d2db24f0d8))
+* remove search and sources (list) commands from eval ([d171427](https://github.com/etalab-ia/rag-facile/commit/d1714277615370f7be1719427290d082e48cecb0))
+* resolve ruff formatting issues ([b457b5c](https://github.com/etalab-ia/rag-facile/commit/b457b5ccde42421337f791aee76a31b6091cb494))
+* strengthen Albert provider prompt to enforce JSONL-only output ([d735430](https://github.com/etalab-ia/rag-facile/commit/d735430f1740718449b2eeb50612e3bc4526baa5))
+* strengthen Letta provider prompt to enforce JSONL-only output ([c6f1bba](https://github.com/etalab-ia/rag-facile/commit/c6f1bbae1474eb8b1829f95beb3fd791c4c392a3))
+
+
+### Performance Improvements
+
+* **eval:** use buffer for efficient streaming JSON parsing ([58fad11](https://github.com/etalab-ia/rag-facile/commit/58fad11adadf032c5a296923406b4086518807cb))
+
+
+### Documentation
+
+* add Albert API provider documentation ([b1f56d4](https://github.com/etalab-ia/rag-facile/commit/b1f56d45197ee81ff12111a65dad9f612afb1ea4))
+* add eval generate command documentation ([027cb19](https://github.com/etalab-ia/rag-facile/commit/027cb19f5c445279ce996769648b474ec1a9c6c6))
+* update documentation for eval generate improvements ([041b8fc](https://github.com/etalab-ia/rag-facile/commit/041b8fcfb31f00fd00144a3ec805c174887633b4))
+
 ## [0.5.0](https://github.com/etalab-ia/rag-facile/compare/v0.4.0...v0.5.0) (2026-02-03)
 
 
