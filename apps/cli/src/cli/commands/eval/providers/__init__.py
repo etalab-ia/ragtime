@@ -60,6 +60,9 @@ def get_provider(provider_name: str, **kwargs) -> DataFoundryProvider:
         from .letta import LettaProvider
 
         return LettaProvider(**kwargs)
-    # Future: add "albert" provider here
+    elif provider_name == "albert":
+        from .albert import AlbertApiProvider
+
+        return AlbertApiProvider(**kwargs)
     else:
         raise ValueError(f"Unknown provider: {provider_name}")
