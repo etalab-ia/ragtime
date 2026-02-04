@@ -81,6 +81,7 @@ rag-facile eval generate ./docs -o golden_dataset.jsonl -n 50 --provider letta
 - `-o, --output` - Output JSONL file path (default: `golden_dataset.jsonl`)
 - `-n, --samples` - Target number of Q/A pairs (default: 50)
 - `--agent-id` - Data Foundry agent ID for Letta (or set `DATA_FOUNDRY_AGENT_ID` env var)
+- `--debug` - Enable debug logging (verbose output to console + file)
 
 **For Letta Cloud Provider:**
 
@@ -103,16 +104,38 @@ rag-facile eval generate ./docs -o golden_dataset.jsonl --provider albert
 
 **Output:**
 
-Creates a Ragas-compatible JSONL file with French Q/A pairs:
+Creates two files:
 
-```json
-{
-  "user_input": "Quel est le délai de recours administratif?",
-  "retrieved_contexts": ["Le délai de recours est de deux mois..."],
-  "reference": "Le délai de recours administratif est de deux mois.",
-  "_metadata": {"source_file": "code.pdf", "quality_score": 0.95}
-}
+1. **JSONL dataset** (`golden_dataset.jsonl`) - Ragas-compatible format with French Q/A pairs:
+   ```json
+   {
+     "user_input": "Quel est le délai de recours administratif?",
+     "retrieved_contexts": ["Le délai de recours est de deux mois..."],
+     "reference": "Le délai de recours administratif est de deux mois.",
+     "_metadata": {"source_file": "code.pdf", "quality_score": 0.95}
+   }
+   ```
+
+2. **Debug log** (`golden_dataset.jsonl.log`) - Trace of all interactions:
+   - INFO level: Document uploads, provider IDs, session progress
+   - DEBUG level (with `--debug` flag): Full prompts and responses
+
+**Debug Mode:**
+
+```bash
+# Standard mode - clean output, INFO logs only to file
+rag-facile eval generate ./docs -o output.jsonl --provider albert
+
+# Debug mode - verbose console + file logging
+rag-facile eval generate ./docs -o output.jsonl --provider albert --debug
 ```
+
+**Debug Features:**
+- See exact prompts sent to LLM
+- View complete LLM responses
+- Track provider IDs (Letta Folder ID, Albert Collection ID, Conversation ID)
+- Monitor document uploads
+- Full error traces for troubleshooting
 
 ## Development
 

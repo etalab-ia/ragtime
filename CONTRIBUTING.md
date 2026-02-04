@@ -151,6 +151,9 @@ All providers must:
 - Implement the `DataFoundryProvider` protocol
 - Output Ragas-compatible JSON (user_input, retrieved_contexts, reference, _metadata)
 - Support French content
+- Use `DocumentPreprocessor` for PDF extraction (prevents upload timeouts)
+- Add logging via `logger = logging.getLogger(__name__)` for debugging
+- Enforce strict JSONL-only output (no preamble or extraneous text)
 
 ## Testing install.sh from a branch
 
