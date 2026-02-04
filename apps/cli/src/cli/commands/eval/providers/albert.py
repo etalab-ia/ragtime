@@ -7,6 +7,7 @@ and OpenAI-compatible LLM for Q/A generation.
 import json
 from collections.abc import Iterator
 from datetime import datetime, timezone
+from pathlib import Path
 
 try:
     import requests
@@ -20,6 +21,7 @@ try:
 except ImportError as e:
     raise ImportError("openai package is required. Install with: uv add openai") from e
 
+from .document_preprocessor import DocumentPreprocessor
 from .schema import GeneratedSample
 
 
@@ -46,6 +48,9 @@ class AlbertApiProvider:
         # Initialize OpenAI client for Albert API
         self.llm_client = OpenAI(api_key=api_key, base_url=self.base_url)
 
+        # Initialize document preprocessor for PDF extraction
+        self.preprocessor = DocumentPreprocessor()
+
         # Track resources for cleanup
         self.collection_id: str | None = None
 
@@ -54,7 +59,11 @@ class AlbertApiProvider:
 
         Args:
             document_paths: List of paths to documents (PDF, MD, TXT)
+                           PDFs are automatically converted to markdown text.
         """
+        # Preprocess documents (extract PDFs to text)
+        processed_paths = self.preprocessor.process_documents(document_paths)
+
         # Create a collection
         collection_name = (
             f"data_foundry_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
@@ -65,7 +74,7 @@ class AlbertApiProvider:
             "description": "RAG Facile Data Foundry",
         }
         response = requests.post(
-            f"{self.base_url}/v1/collections",
+            f"{self.base_url}/collections",
             json=collection_data,
             headers={"Authorization": f"Bearer {self.api_key}"},
         )
@@ -76,16 +85,34 @@ class AlbertApiProvider:
         if not self.collection_id:
             raise ValueError("Failed to create collection: no ID in response")
 
-        # Upload each document
-        for doc_path in document_paths:
+        # Upload each processed document
+        for doc_path in processed_paths:
             with open(doc_path, "rb") as f:
-                files = {"file": (doc_path, f)}
+                # Determine MIME type based on file extension
+                mime_types = {
+                    ".pdf": "application/pdf",
+                    ".txt": "text/plain",
+                    ".md": "text/markdown",
+                }
+                ext = Path(doc_path).suffix.lower()
+                mime_type = mime_types.get(ext, "application/octet-stream")
+
+                # Send file and collection in multipart form data
+                files = {
+                    "file": (Path(doc_path).name, f, mime_type),
+                    "collection": (None, str(self.collection_id)),
+                }
                 doc_response = requests.post(
-                    f"{self.base_url}/v1/documents",
+                    f"{self.base_url}/documents",
                     files=files,
-                    data={"collection_id": self.collection_id},
                     headers={"Authorization": f"Bearer {self.api_key}"},
                 )
+                if doc_response.status_code != 201:
+                    error_msg = (
+                        f"Failed to upload {doc_path}: "
+                        f"{doc_response.status_code} {doc_response.text}"
+                    )
+                    raise RuntimeError(error_msg)
                 doc_response.raise_for_status()
 
     def generate(self, num_samples: int) -> Iterator[GeneratedSample]:
@@ -147,15 +174,21 @@ class AlbertApiProvider:
                 yield sample
 
     def cleanup(self) -> None:
-        """Delete collection from Albert API."""
+        """Delete collection from Albert API and clean up temporary files."""
         if self.collection_id:
             try:
                 requests.delete(
-                    f"{self.base_url}/v1/collections/{self.collection_id}",
+                    f"{self.base_url}/collections/{self.collection_id}",
                     headers={"Authorization": f"Bearer {self.api_key}"},
                 )
             except Exception:
                 pass  # Non-critical
+
+        # Clean up temporary files created during preprocessing
+        try:
+            self.preprocessor.cleanup()
+        except Exception:
+            pass  # Non-critical
 
     def _build_prompt(self, num_samples: int) -> str:
         """Build the generation prompt for the LLM.
@@ -171,7 +204,7 @@ Your task: Generate {num_samples} high-quality Question/Answer pairs in French.
 
 For each Q/A pair, you MUST:
 1. Use the hybrid search API to retrieve relevant document passages
-   - Call: POST {self.base_url}/v1/search
+   - Call: POST {self.base_url}/search
    - Body: {{"query": "<your-query>", "collection_id": "{self.collection_id}", "limit": 5}}
    - Merge results from semantic and keyword search
 2. Create questions that are answerable from the retrieved contexts

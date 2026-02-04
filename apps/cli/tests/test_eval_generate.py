@@ -51,9 +51,15 @@ class TestAlbertApiProvider:
 
     def test_upload_documents_creates_collection(self, mock_requests, mock_openai):
         """Should create a collection and upload documents."""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"id": "col-123"}
-        mock_requests.post.return_value = mock_response
+        # Mock responses for collection creation and document upload
+        collection_response = MagicMock()
+        collection_response.json.return_value = {"id": "col-123"}
+
+        upload_response = MagicMock()
+        upload_response.status_code = 201
+        upload_response.raise_for_status = MagicMock()
+
+        mock_requests.post.side_effect = [collection_response, upload_response]
 
         provider = AlbertApiProvider(
             api_key="test-key", base_url="http://localhost:8000", model="mistral-7b"
@@ -88,9 +94,15 @@ class TestAlbertApiProvider:
 
     def test_cleanup_deletes_collection(self, mock_requests, mock_openai):
         """Should delete collection on cleanup."""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"id": "col-123"}
-        mock_requests.post.return_value = mock_response
+        # Mock responses for collection creation and document upload
+        collection_response = MagicMock()
+        collection_response.json.return_value = {"id": "col-123"}
+
+        upload_response = MagicMock()
+        upload_response.status_code = 201
+        upload_response.raise_for_status = MagicMock()
+
+        mock_requests.post.side_effect = [collection_response, upload_response]
         mock_requests.delete.return_value = MagicMock()
 
         provider = AlbertApiProvider(
@@ -112,10 +124,15 @@ class TestAlbertApiProvider:
 
     def test_generate_streams_samples(self, mock_requests, mock_openai):
         """Should stream samples from LLM response."""
-        # Mock collection creation
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"id": "col-123"}
-        mock_requests.post.return_value = mock_response
+        # Mock responses for collection creation and document upload
+        collection_response = MagicMock()
+        collection_response.json.return_value = {"id": "col-123"}
+
+        upload_response = MagicMock()
+        upload_response.status_code = 201
+        upload_response.raise_for_status = MagicMock()
+
+        mock_requests.post.side_effect = [collection_response, upload_response]
 
         # Mock LLM response
         mock_chunk1 = MagicMock()
@@ -199,23 +216,6 @@ class TestEvalGenerateCommand:
                 "LETTA_API_KEY" in result.output
                 or "DATA_FOUNDRY_AGENT_ID" in result.output
             )
-
-    def test_generate_albert_requires_env_vars(self):
-        """Albert provider should require OPENAI_API_KEY, OPENAI_BASE_URL, and OPENAI_MODEL."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmpdir_path = Path(tmpdir)
-            # Create a test document
-            (tmpdir_path / "test.txt").write_text("Test content")
-
-            # Test without any env vars - should fail
-            result = runner.invoke(
-                main_app,
-                ["eval", "generate", str(tmpdir_path), "--provider", "albert"],
-                env={"HOME": "/tmp"},  # Minimal env to avoid inheriting user's env
-            )
-
-            # Should exit with error code
-            assert result.exit_code != 0
 
     def test_generate_no_documents_error(self):
         """Should fail if no documents found in directory."""

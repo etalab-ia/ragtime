@@ -7,6 +7,7 @@ import json
 from collections.abc import Iterator
 from datetime import datetime, timezone
 
+from .document_preprocessor import DocumentPreprocessor
 from .schema import GeneratedSample
 
 
@@ -36,12 +37,19 @@ class LettaProvider:
         self.folder_id: str | None = None
         self.conversation_id: str | None = None
 
+        # Initialize document preprocessor for PDF extraction
+        self.preprocessor = DocumentPreprocessor()
+
     def upload_documents(self, document_paths: list[str]) -> None:
         """Upload documents to Letta Cloud and attach to agent.
 
         Args:
-            document_paths: List of paths to documents
+            document_paths: List of paths to documents (PDF, MD, TXT)
+                           PDFs are automatically converted to markdown text.
         """
+        # Preprocess documents (extract PDFs to text)
+        processed_paths = self.preprocessor.process_documents(document_paths)
+
         # Create a unique folder for this run
         folder_name = (
             f"data_foundry_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
@@ -49,8 +57,8 @@ class LettaProvider:
         folder = self.client.folders.create(name=folder_name)
         self.folder_id = folder.id
 
-        # Upload each document
-        for doc_path in document_paths:
+        # Upload each processed document
+        for doc_path in processed_paths:
             with open(doc_path, "rb") as f:
                 self.client.folders.files.upload(file=f, folder_id=folder.id)
 
@@ -117,7 +125,7 @@ class LettaProvider:
                 yield sample
 
     def cleanup(self) -> None:
-        """Detach and delete folder from Letta Cloud."""
+        """Detach and delete folder from Letta Cloud and clean up temporary files."""
         if self.folder_id:
             try:
                 self.client.agents.folders.detach(
@@ -130,6 +138,12 @@ class LettaProvider:
                 self.client.folders.delete(folder_id=self.folder_id)
             except Exception:
                 pass  # Non-critical
+
+        # Clean up temporary files created during preprocessing
+        try:
+            self.preprocessor.cleanup()
+        except Exception:
+            pass  # Non-critical
 
     def _build_prompt(self, num_samples: int) -> str:
         """Build the generation prompt for the agent."""
