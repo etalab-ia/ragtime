@@ -171,12 +171,35 @@ def run(
         provider_instance.upload_documents([str(doc) for doc in documents])
         progress.remove_task(task)
 
+    # Print debug info (provider-specific IDs for debugging)
+    if hasattr(provider_instance, "folder_id") and provider_instance.folder_id:
+        console.print(
+            f"[dim]Debug - Letta Folder ID: {provider_instance.folder_id}[/dim]"
+        )
+    if hasattr(provider_instance, "collection_id") and provider_instance.collection_id:
+        console.print(
+            f"[dim]Debug - Albert Collection ID: {provider_instance.collection_id}[/dim]"
+        )
+
     # Generate samples
     console.print("[cyan]Generating samples...[/cyan]\n")
 
     generated_samples = []
+    samples_started = False
     try:
         for sample in provider_instance.generate(samples):
+            # Print conversation ID on first sample (for Letta provider debugging)
+            if (
+                not samples_started
+                and hasattr(provider_instance, "conversation_id")
+                and provider_instance.conversation_id
+            ):
+                console.print(
+                    f"[dim]Debug - Letta Conversation ID: "
+                    f"{provider_instance.conversation_id}[/dim]\n"
+                )
+                samples_started = True
+
             generated_samples.append(sample)
             console.print(
                 f"  [green]Sample {len(generated_samples)}:[/green] "
