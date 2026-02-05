@@ -90,21 +90,21 @@ Templates live in `.moon/templates/` and are automatically bundled into the CLI 
 moon run cli:test
 ```
 
-### Testing the Eval Generate Command
+### Testing the Generate Dataset Command
 
-The eval generate command supports pluggable providers. To test locally:
+The generate-dataset command supports pluggable providers. To test locally:
 
 ```bash
 # Test with Letta provider
 export LETTA_API_KEY="test-key"
 export DATA_FOUNDRY_AGENT_ID="test-agent"
-python -m pytest apps/cli/tests/test_eval_generate.py
+python -m pytest apps/cli/tests/test_generate_dataset.py
 
 # Test with Albert provider
 export OPENAI_API_KEY="test-key"
 export OPENAI_BASE_URL="http://localhost:8000"
 export OPENAI_MODEL="mistral-7b"
-python -m pytest apps/cli/tests/test_eval_generate.py
+python -m pytest apps/cli/tests/test_generate_dataset.py
 ```
 
 ### Adding a New Data Foundry Provider
@@ -141,11 +141,11 @@ To add support for a new provider (e.g., another LLM service):
        return MyProvider(**kwargs)
    ```
 
-3. **Add CLI option** in `apps/cli/src/cli/commands/eval/generate.py`:
+3. **Add CLI option** in `apps/cli/src/cli/commands/generate_dataset.py`:
    - Add validation for provider-specific env vars
    - Route to factory with correct credentials
 
-4. **Add tests** in `apps/cli/tests/test_eval_generate.py`
+4. **Add tests** in `apps/cli/tests/test_generate_dataset.py`
 
 All providers must:
 - Implement the `DataFoundryProvider` protocol
@@ -171,8 +171,8 @@ export RAG_FACILE_BRANCH=my-feature-branch
 curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/$RAG_FACILE_BRANCH/install.sh | bash
 source ~/.bashrc
 
-# Test workspace generation
-rag-facile generate workspace my-rag-app
+# Test workspace setup
+rag-facile setup my-rag-app
 ```
 
 The install script will automatically install other prerequisites (git, xz-utils) on Debian/Ubuntu.

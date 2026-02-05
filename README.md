@@ -38,12 +38,12 @@ Verify the installation:
 rag-facile --help
 ```
 
-### 2. Generate Your Workspace
+### 2. Setup Your Workspace
 
 One command gets you to a running RAG app:
 
 ```bash
-rag-facile generate workspace my-rag-app
+rag-facile setup my-rag-app
 ```
 
 The CLI will guide you through:
@@ -53,7 +53,7 @@ The CLI will guide you through:
 4. **Environment configuration** - Set your Albert API key and preferences
 
 After configuration, the CLI automatically:
-- Generates your workspace with the selected components
+- Sets up your workspace with the selected components
 - Creates your `.env` file with your credentials
 - Installs all dependencies with `uv sync`
 - Starts the development server
@@ -209,7 +209,7 @@ export LETTA_API_KEY="your-letta-api-key"           # Get at https://app.letta.c
 export DATA_FOUNDRY_AGENT_ID="agent-xxx"            # Pre-configured agent ID
 
 # Generate Q/A pairs from your documents
-rag-facile eval generate ./my-docs -o golden_dataset.jsonl -n 50 --provider letta
+rag-facile generate-dataset ./my-docs -o golden_dataset.jsonl -n 50 --provider letta
 ```
 
 #### Option 2: Albert API (Self-Hosted)
@@ -221,7 +221,7 @@ export OPENAI_BASE_URL="http://localhost:8000"      # Albert API endpoint
 export OPENAI_MODEL="mistral-7b"                    # Model to use
 
 # Generate Q/A pairs using your Albert instance
-rag-facile eval generate ./my-docs -o golden_dataset.jsonl -n 50 --provider albert
+rag-facile generate-dataset ./my-docs -o golden_dataset.jsonl -n 50 --provider albert
 ```
 
 #### Output Format

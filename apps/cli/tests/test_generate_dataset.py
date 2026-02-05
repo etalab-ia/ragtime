@@ -1,12 +1,12 @@
-"""Tests for the eval generate command."""
+"""Tests for the generate-dataset command."""
 
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from cli.commands.eval.providers.albert import AlbertApiProvider
-from cli.commands.eval.providers.schema import GeneratedSample, SampleMetadata
+from cli.commands.providers.albert import AlbertApiProvider
+from cli.commands.providers.schema import GeneratedSample, SampleMetadata
 from cli.main import app as main_app
 from typer.testing import CliRunner
 
@@ -19,13 +19,13 @@ class TestAlbertApiProvider:
     @pytest.fixture
     def mock_requests(self, mocker):
         """Mock the requests library."""
-        mock_req = mocker.patch("cli.commands.eval.providers.albert.requests")
+        mock_req = mocker.patch("cli.commands.providers.albert.requests")
         return mock_req
 
     @pytest.fixture
     def mock_openai(self, mocker):
         """Mock the OpenAI client."""
-        mock_client = mocker.patch("cli.commands.eval.providers.albert.OpenAI")
+        mock_client = mocker.patch("cli.commands.providers.albert.OpenAI")
         return mock_client
 
     def test_provider_initialization(self, mock_requests, mock_openai):
@@ -177,14 +177,14 @@ class TestAlbertApiProvider:
         mock_openai.assert_called()
 
 
-class TestEvalGenerateCommand:
-    """Tests for the eval generate CLI command."""
+class TestGenerateDatasetCommand:
+    """Tests for the generate-dataset CLI command."""
 
     def test_generate_command_requires_provider(self):
         """Should fail if --provider is not specified."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = runner.invoke(
-                main_app, ["eval", "generate", tmpdir, "--provider", ""]
+                main_app, ["generate-dataset", tmpdir, "--provider", ""]
             )
             assert result.exit_code != 0
 
@@ -192,7 +192,7 @@ class TestEvalGenerateCommand:
         """Should fail with invalid provider name."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = runner.invoke(
-                main_app, ["eval", "generate", tmpdir, "--provider", "invalid"]
+                main_app, ["generate-dataset", tmpdir, "--provider", "invalid"]
             )
             assert result.exit_code != 0
             assert "Unknown provider" in result.output or "invalid" in result.output
@@ -206,7 +206,7 @@ class TestEvalGenerateCommand:
 
             result = runner.invoke(
                 main_app,
-                ["eval", "generate", str(tmpdir_path), "--provider", "letta"],
+                ["generate-dataset", str(tmpdir_path), "--provider", "letta"],
                 env={},
             )
 
@@ -221,7 +221,7 @@ class TestEvalGenerateCommand:
         with tempfile.TemporaryDirectory() as tmpdir:
             result = runner.invoke(
                 main_app,
-                ["eval", "generate", tmpdir, "--provider", "letta"],
+                ["generate-dataset", tmpdir, "--provider", "letta"],
                 env={"LETTA_API_KEY": "test-key", "DATA_FOUNDRY_AGENT_ID": "test-id"},
             )
 
@@ -235,7 +235,7 @@ class TestEvalGenerateCommand:
             # Create a test document
             (tmpdir_path / "test.txt").write_text("Test content")
 
-            with patch("cli.commands.eval.providers.get_provider") as mock_get_provider:
+            with patch("cli.commands.providers.get_provider") as mock_get_provider:
                 # Mock provider to fail early (we just want to check output)
                 mock_provider = MagicMock()
                 mock_provider.upload_documents.side_effect = Exception("Test error")
@@ -243,7 +243,7 @@ class TestEvalGenerateCommand:
 
                 result = runner.invoke(
                     main_app,
-                    ["eval", "generate", str(tmpdir_path), "--provider", "albert"],
+                    ["generate-dataset", str(tmpdir_path), "--provider", "albert"],
                     env={
                         "OPENAI_API_KEY": "test-key",
                         "OPENAI_BASE_URL": "http://localhost:8000",

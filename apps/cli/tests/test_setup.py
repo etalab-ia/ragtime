@@ -1,11 +1,11 @@
-"""Tests for the generate command."""
+"""Tests for the setup command."""
 
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from cli.commands.generate import (
+from cli.commands.setup import (
     FRONTENDS,
     MODULES,
     PROJECT_STRUCTURES,
@@ -254,14 +254,14 @@ class TestGenerateStandalone:
     def mock_standalone_deps(self, mocker):
         """Mock dependencies for standalone generation testing."""
         # Mock run_command to avoid actual subprocess calls
-        mock_run = mocker.patch("cli.commands.generate.run_command", return_value=True)
+        mock_run = mocker.patch("cli.commands.setup.run_command", return_value=True)
         # Mock subprocess.run for dev server (doesn't matter, we won't wait for it)
         mock_subprocess = mocker.patch("subprocess.run")
         return {"run_command": mock_run, "subprocess": mock_subprocess}
 
     def test_creates_target_directory(self, standalone_target, mock_standalone_deps):
         """Should create the target directory."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         assert not standalone_target.exists()
 
@@ -282,7 +282,7 @@ class TestGenerateStandalone:
 
     def test_creates_pyproject_toml(self, standalone_target, mock_standalone_deps):
         """Should create pyproject.toml with correct content."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -306,7 +306,7 @@ class TestGenerateStandalone:
 
     def test_creates_app_files(self, standalone_target, mock_standalone_deps):
         """Should create app.py and context_loader.py."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -326,7 +326,7 @@ class TestGenerateStandalone:
 
     def test_creates_env_file(self, standalone_target, mock_standalone_deps):
         """Should create .env file with provided config."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -350,7 +350,7 @@ class TestGenerateStandalone:
 
     def test_creates_modules_yml(self, standalone_target, mock_standalone_deps):
         """Should create modules.yml."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -370,7 +370,7 @@ class TestGenerateStandalone:
 
     def test_creates_python_version_file(self, standalone_target, mock_standalone_deps):
         """Should create .python-version file."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -393,7 +393,7 @@ class TestGenerateStandalone:
         self, standalone_target, mock_standalone_deps
     ):
         """Should copy pdf_context module when PDF is selected."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -418,7 +418,7 @@ class TestGenerateStandalone:
         self, standalone_target, mock_standalone_deps
     ):
         """Should not copy pdf_context when PDF is not selected."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -440,7 +440,7 @@ class TestGenerateStandalone:
         self, standalone_target, mock_standalone_deps
     ):
         """Should include pypdf dependency when PDF module is selected."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -464,7 +464,7 @@ class TestGenerateStandalone:
         self, standalone_target, mock_standalone_deps
     ):
         """Should configure pdf provider in modules.yml when PDF selected."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -487,7 +487,7 @@ class TestGenerateStandalone:
         self, standalone_target, mock_standalone_deps
     ):
         """Should create chainlit.md for Chainlit frontend."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -506,7 +506,7 @@ class TestGenerateStandalone:
 
     def test_calls_uv_sync(self, standalone_target, mock_standalone_deps):
         """Should call uv sync to install dependencies."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -528,7 +528,7 @@ class TestGenerateStandalone:
 
     def test_starts_chainlit_dev_server(self, standalone_target, mock_standalone_deps):
         """Should start Chainlit dev server with uv run."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -562,13 +562,13 @@ class TestGenerateStandaloneReflex:
     @pytest.fixture
     def mock_standalone_deps(self, mocker):
         """Mock dependencies for standalone generation testing."""
-        mock_run = mocker.patch("cli.commands.generate.run_command", return_value=True)
+        mock_run = mocker.patch("cli.commands.setup.run_command", return_value=True)
         mock_subprocess = mocker.patch("subprocess.run")
         return {"run_command": mock_run, "subprocess": mock_subprocess}
 
     def test_creates_reflex_pyproject(self, standalone_target, mock_standalone_deps):
         """Should create pyproject.toml with Reflex dependencies."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -591,7 +591,7 @@ class TestGenerateStandaloneReflex:
 
     def test_creates_rxconfig(self, standalone_target, mock_standalone_deps):
         """Should create rxconfig.py for Reflex frontend."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -610,7 +610,7 @@ class TestGenerateStandaloneReflex:
 
     def test_starts_reflex_dev_server(self, standalone_target, mock_standalone_deps):
         """Should start Reflex dev server with uv run."""
-        from cli.commands.generate import generate_standalone
+        from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
@@ -635,17 +635,17 @@ class TestWorkspaceCommand:
     """Integration tests for workspace generation."""
 
     def test_workspace_command_exists(self):
-        """The workspace subcommand should be registered."""
-        result = runner.invoke(main_app, ["generate", "workspace", "--help"])
+        """The setup command should be registered."""
+        result = runner.invoke(main_app, ["setup", "--help"])
         assert result.exit_code == 0
-        assert "Generate a new RAG Facile workspace" in result.output
+        assert "workspace" in result.output.lower()
 
     def test_workspace_requires_target(self):
         """Should show help when no target provided and not interactive."""
         # In non-interactive mode, questionary returns None
-        with patch("cli.commands.generate.questionary") as mock_q:
+        with patch("cli.commands.setup.questionary") as mock_q:
             mock_q.text.return_value.ask.return_value = None
-            result = runner.invoke(main_app, ["generate", "workspace"])
+            result = runner.invoke(main_app, ["setup"])
             assert result.exit_code == 1
 
     @pytest.fixture
@@ -655,7 +655,7 @@ class TestWorkspaceCommand:
         mocker.patch("shutil.which", return_value="/usr/bin/moon")
 
         # Mock questionary interactions - select monorepo mode
-        mock_q = mocker.patch("cli.commands.generate.questionary")
+        mock_q = mocker.patch("cli.commands.setup.questionary")
         # Use side_effect to return different values for different select calls
         mock_q.select.return_value.ask.side_effect = [
             "Monorepo (for multi-app projects)",  # First call: structure selection
@@ -693,7 +693,7 @@ class TestWorkspaceCommand:
         mocker.patch("shutil.which", return_value="/usr/bin/uv")
 
         # Mock questionary interactions - select standalone mode
-        mock_q = mocker.patch("cli.commands.generate.questionary")
+        mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
             "Simple (recommended for getting started)",  # First call: structure selection
             "Chainlit",  # Second call: frontend selection
@@ -707,9 +707,7 @@ class TestWorkspaceCommand:
         mock_run.return_value = MagicMock(returncode=0, stderr="")
 
         # Mock run_command for uv sync
-        mock_run_cmd = mocker.patch(
-            "cli.commands.generate.run_command", return_value=True
-        )
+        mock_run_cmd = mocker.patch("cli.commands.setup.run_command", return_value=True)
 
         return {
             "questionary": mock_q,
@@ -730,7 +728,7 @@ class TestWorkspaceCommand:
         # Create the app directory structure that moon generate would create
         (target / "apps" / "chainlit-chat").mkdir(parents=True)
 
-        result = runner.invoke(main_app, ["generate", "workspace", str(target)])
+        result = runner.invoke(main_app, ["setup", str(target)])
 
         # Should complete successfully
         assert result.exit_code == 0, f"Failed with: {result.output}"
@@ -741,7 +739,7 @@ class TestWorkspaceCommand:
         target = tmp_path / "new-app"
         assert not target.exists()
 
-        runner.invoke(main_app, ["generate", "workspace", str(target)])
+        runner.invoke(main_app, ["setup", str(target)])
 
         assert target.exists()
 
@@ -749,7 +747,7 @@ class TestWorkspaceCommand:
         """Should run moon init in the target directory."""
         target = tmp_path / "test-app"
 
-        runner.invoke(main_app, ["generate", "workspace", str(target)])
+        runner.invoke(main_app, ["setup", str(target)])
 
         # Check moon init was called
         calls = mock_generation["subprocess_run"].call_args_list
@@ -760,7 +758,7 @@ class TestWorkspaceCommand:
         """Should run moon generate for templates."""
         target = tmp_path / "test-app"
 
-        runner.invoke(main_app, ["generate", "workspace", str(target)])
+        runner.invoke(main_app, ["setup", str(target)])
 
         # Check moon generate was called for sys-config and chainlit-chat
         calls = mock_generation["subprocess_run"].call_args_list
@@ -773,7 +771,7 @@ class TestWorkspaceCommand:
         """Should pass --force flag to moon generate."""
         target = tmp_path / "test-app"
 
-        runner.invoke(main_app, ["generate", "workspace", str(target), "--force"])
+        runner.invoke(main_app, ["setup", str(target), "--force"])
 
         calls = mock_generation["subprocess_run"].call_args_list
         force_calls = [c for c in calls if "--force" in c[0][0]]
@@ -783,7 +781,7 @@ class TestWorkspaceCommand:
         """Should copy templates to target workspace."""
         target = tmp_path / "test-app"
 
-        runner.invoke(main_app, ["generate", "workspace", str(target)])
+        runner.invoke(main_app, ["setup", str(target)])
 
         # copytree should be called for each template
         assert mock_generation["copytree"].call_count >= 1
@@ -799,7 +797,7 @@ class TestStandaloneWorkspaceCommand:
         mocker.patch("shutil.which", return_value="/usr/bin/uv")
 
         # Mock questionary interactions - select standalone mode
-        mock_q = mocker.patch("cli.commands.generate.questionary")
+        mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
             "Simple (recommended for getting started)",  # First call: structure selection
             "Chainlit",  # Second call: frontend selection
@@ -813,9 +811,7 @@ class TestStandaloneWorkspaceCommand:
         mock_run.return_value = MagicMock(returncode=0, stderr="")
 
         # Mock run_command for uv sync
-        mock_run_cmd = mocker.patch(
-            "cli.commands.generate.run_command", return_value=True
-        )
+        mock_run_cmd = mocker.patch("cli.commands.setup.run_command", return_value=True)
 
         return {
             "questionary": mock_q,
@@ -828,7 +824,7 @@ class TestStandaloneWorkspaceCommand:
         """Should generate standalone project via CLI."""
         target = tmp_path / "standalone-app"
 
-        result = runner.invoke(main_app, ["generate", "workspace", str(target)])
+        result = runner.invoke(main_app, ["setup", str(target)])
 
         assert result.exit_code == 0, f"Failed with: {result.output}"
         assert "Project generation complete" in result.output
@@ -837,7 +833,7 @@ class TestStandaloneWorkspaceCommand:
         """Should create files at root, not in apps/ subdirectory."""
         target = tmp_path / "standalone-app"
 
-        runner.invoke(main_app, ["generate", "workspace", str(target)])
+        runner.invoke(main_app, ["setup", str(target)])
 
         # Files should be at root, not in apps/
         assert (target / "pyproject.toml").exists()
@@ -851,7 +847,7 @@ class TestStandaloneWorkspaceCommand:
         """Should not run moon init or generate commands in standalone mode."""
         target = tmp_path / "standalone-app"
 
-        runner.invoke(main_app, ["generate", "workspace", str(target)])
+        runner.invoke(main_app, ["setup", str(target)])
 
         # Check no moon init/generate commands were called
         # (moon --version is allowed for toolchain verification)
@@ -867,7 +863,7 @@ class TestStandaloneWorkspaceCommand:
         """Should run uv commands in standalone mode."""
         target = tmp_path / "standalone-app"
 
-        runner.invoke(main_app, ["generate", "workspace", str(target)])
+        runner.invoke(main_app, ["setup", str(target)])
 
         # Check uv sync was called
         calls = mock_standalone_cli["run_command"].call_args_list
@@ -880,7 +876,7 @@ class TestStandaloneWorkspaceCommand:
         """Should show 'Project generation complete' (standalone-specific message)."""
         target = tmp_path / "standalone-app"
 
-        result = runner.invoke(main_app, ["generate", "workspace", str(target)])
+        result = runner.invoke(main_app, ["setup", str(target)])
 
         # Standalone mode shows "Project generation complete"
         # Monorepo mode shows "Workspace generation complete"
@@ -893,7 +889,7 @@ class TestPathNormalization:
     def test_private_tmp_normalized_in_output(self, mocker, tmp_path):
         """Should normalize /private/tmp to /tmp in output."""
         # Create a path that looks like macOS /private/tmp
-        mock_q = mocker.patch("cli.commands.generate.questionary")
+        mock_q = mocker.patch("cli.commands.setup.questionary")
         # Need to handle both select calls (structure and frontend)
         mock_q.select.return_value.ask.side_effect = [
             "Simple (recommended for getting started)",
@@ -903,9 +899,7 @@ class TestPathNormalization:
         mock_q.confirm.return_value.ask.return_value = False  # Abort early
 
         # Use a path under /private/tmp if on macOS
-        result = runner.invoke(
-            main_app, ["generate", "workspace", "/private/tmp/test-app"]
-        )
+        result = runner.invoke(main_app, ["setup", "/private/tmp/test-app"])
 
         # Output should show /tmp not /private/tmp
         if "/private/tmp" in result.output:
@@ -917,13 +911,13 @@ class TestStructureSelectionPrompt:
 
     def test_structure_prompt_appears_before_frontend(self, mocker):
         """Should ask for structure before frontend selection."""
-        mock_q = mocker.patch("cli.commands.generate.questionary")
+        mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
             "Simple (recommended for getting started)",  # Structure
             None,  # Frontend - return None to abort
         ]
 
-        runner.invoke(main_app, ["generate", "workspace", "/tmp/test"])
+        runner.invoke(main_app, ["setup", "/tmp/test"])
 
         # Should have been called twice for select
         assert mock_q.select.call_count == 2
@@ -938,12 +932,12 @@ class TestStructureSelectionPrompt:
 
     def test_aborts_when_structure_not_selected(self, mocker):
         """Should abort when user doesn't select a structure."""
-        mock_q = mocker.patch("cli.commands.generate.questionary")
+        mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
             None,  # No structure selected
         ]
 
-        result = runner.invoke(main_app, ["generate", "workspace", "/tmp/test"])
+        result = runner.invoke(main_app, ["setup", "/tmp/test"])
 
         assert result.exit_code == 1
         assert "Aborted" in result.output

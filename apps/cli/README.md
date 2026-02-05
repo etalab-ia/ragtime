@@ -41,8 +41,8 @@ uvx --from git+https://github.com/etalab-ia/rag-facile.git#subdirectory=apps/cli
 # Show all available commands
 rag-facile --help
 
-# Generate a new workspace
-rag-facile generate workspace my-rag-app
+# Setup a new workspace
+rag-facile setup my-rag-app
 
 # Check version
 rag-facile version
@@ -50,12 +50,12 @@ rag-facile version
 
 ## Commands
 
-### `generate workspace`
+### `setup`
 
-Generates a new RAG workspace with your choice of structure, frontend, and modules.
+Setup a new RAG workspace with your choice of structure, frontend, and modules.
 
 ```bash
-rag-facile generate workspace <name>
+rag-facile setup <name>
 ```
 
 The CLI will guide you through:
@@ -68,12 +68,12 @@ The CLI will guide you through:
 
 See the main [README](../../README.md) for detailed comparison of project structures.
 
-### `eval generate`
+### `generate-dataset`
 
 Generate synthetic Q/A evaluation datasets from your documents. Supports multiple providers: Letta Cloud or self-hosted Albert API.
 
 ```bash
-rag-facile eval generate ./docs -o golden_dataset.jsonl -n 50 --provider letta
+rag-facile generate-dataset ./docs -o golden_dataset.jsonl -n 50 --provider letta
 ```
 
 **Options:**
@@ -89,7 +89,7 @@ rag-facile eval generate ./docs -o golden_dataset.jsonl -n 50 --provider letta
 export LETTA_API_KEY="your-api-key"           # Get at https://app.letta.com/api-keys
 export DATA_FOUNDRY_AGENT_ID="agent-xxx"      # Pre-configured agent ID
 
-rag-facile eval generate ./docs -o golden_dataset.jsonl --provider letta
+rag-facile generate-dataset ./docs -o golden_dataset.jsonl --provider letta
 ```
 
 **For Albert API Provider (Self-Hosted):**
@@ -99,7 +99,7 @@ export OPENAI_API_KEY="your-api-key"          # Albert API key
 export OPENAI_BASE_URL="http://localhost:8000"  # Albert API endpoint
 export OPENAI_MODEL="mistral-7b"              # Model to use
 
-rag-facile eval generate ./docs -o golden_dataset.jsonl --provider albert
+rag-facile generate-dataset ./docs -o golden_dataset.jsonl --provider albert
 ```
 
 **Output:**
@@ -124,10 +124,10 @@ Creates two files:
 
 ```bash
 # Standard mode - clean output, INFO logs only to file
-rag-facile eval generate ./docs -o output.jsonl --provider albert
+rag-facile generate-dataset ./docs -o output.jsonl --provider albert
 
 # Debug mode - verbose console + file logging
-rag-facile eval generate ./docs -o output.jsonl --provider albert --debug
+rag-facile generate-dataset ./docs -o output.jsonl --provider albert --debug
 ```
 
 **Debug Features:**

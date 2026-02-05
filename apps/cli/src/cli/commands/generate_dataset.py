@@ -78,38 +78,32 @@ def run(
     high-quality Question/Answer/Context triplets in French from your documents.
 
     Example with Letta Cloud:
-        rag-facile eval generate ./docs -o golden_dataset.jsonl -n 50 --provider letta
+        rag-facile generate-dataset ./docs -o golden_dataset.jsonl -n 50 --provider letta
 
     Example with Albert API:
-        rag-facile eval generate ./docs -o golden_dataset.jsonl -n 50 --provider albert
+        rag-facile generate-dataset ./docs -o golden_dataset.jsonl -n 50 --provider albert
     """
     # Validate and determine provider
     if not provider:
-        console.print("[red]Error: --provider is required (letta or albert)[/red]")
+        console.print("Error: --provider is required (letta or albert)")
         raise typer.Exit(1)
 
     if provider not in ("letta", "albert"):
-        console.print(
-            f"[red]Error: Unknown provider '{provider}'. Use 'letta' or 'albert'.[/red]"
-        )
+        console.print(f"Error: Unknown provider '{provider}'. Use 'letta' or 'albert'.")
         raise typer.Exit(1)
 
     # Validate provider-specific requirements
     if provider == "letta":
         api_key = os.getenv("LETTA_API_KEY")
         if not api_key:
-            console.print(
-                "[red]Error: LETTA_API_KEY environment variable is required.[/red]"
-            )
-            console.print(
-                "[dim]Get your API key at https://app.letta.com/api-keys[/dim]"
-            )
+            console.print("Error: LETTA_API_KEY environment variable is required.")
+            console.print("Get your API key at https://app.letta.com/api-keys")
             raise typer.Exit(1)
 
         if not agent_id:
             console.print(
-                "[red]Error: DATA_FOUNDRY_AGENT_ID environment variable "
-                "or --agent-id is required.[/red]"
+                "Error: DATA_FOUNDRY_AGENT_ID environment variable "
+                "or --agent-id is required."
             )
             raise typer.Exit(1)
     elif provider == "albert":
@@ -122,12 +116,13 @@ def run(
             "OPENAI_BASE_URL": base_url,
             "OPENAI_MODEL": model,
         }
-        for var_name, value in env_vars_to_check.items():
-            if not value:
-                console.print(
-                    f"[red]Error: {var_name} environment variable is required.[/red]"
-                )
-                raise typer.Exit(1)
+        missing = [k for k, v in env_vars_to_check.items() if not v]
+        if missing:
+            console.print(
+                f"Error: Missing environment variables for 'albert' provider: "
+                f"{', '.join(missing)}"
+            )
+            raise typer.Exit(1)
 
     # Find documents
     documents = [
@@ -137,8 +132,8 @@ def run(
     ]
 
     if not documents:
-        console.print(f"[yellow]No documents found in {input_dir}[/yellow]")
-        console.print(f"[dim]Supported formats: {', '.join(DOC_EXTENSIONS)}[/dim]")
+        console.print(f"No documents found in {input_dir}")
+        console.print(f"Supported formats: {', '.join(DOC_EXTENSIONS)}")
         raise typer.Exit(1)
 
     console.print("\n[cyan]Data Foundry[/cyan] - Synthetic RAG Evaluation Generator\n")
@@ -158,8 +153,8 @@ def run(
             logging.StreamHandler() if debug else logging.NullHandler(),
         ],
     )
-    logger = logging.getLogger("eval-generate")
-    logger.info("Starting eval generate session")
+    logger = logging.getLogger("generate-dataset")
+    logger.info("Starting generate-dataset session")
     logger.info(f"Provider: {provider}")
     logger.info(f"Debug mode: {'enabled' if debug else 'disabled'}")
     logger.info(f"Input directory: {input_dir}")
@@ -171,7 +166,7 @@ def run(
 
     # Get provider instance
     try:
-        from cli.commands.eval.providers import get_provider
+        from cli.commands.providers import get_provider
 
         if provider == "letta":
             provider_instance = get_provider(
@@ -182,7 +177,7 @@ def run(
                 "albert", api_key=api_key, base_url=base_url, model=model
             )
     except ImportError as e:
-        console.print(f"[red]Error: {e}[/red]")
+        console.print(f"Error: {e}")
         raise typer.Exit(1)
 
     with Progress(
@@ -196,14 +191,16 @@ def run(
         progress.remove_task(task)
 
     # Print debug info (provider-specific IDs for debugging)
-    if hasattr(provider_instance, "folder_id") and provider_instance.folder_id:
-        console.print(
-            f"[dim]Debug - Letta Folder ID: {provider_instance.folder_id}[/dim]"
-        )
-    if hasattr(provider_instance, "collection_id") and provider_instance.collection_id:
-        console.print(
-            f"[dim]Debug - Albert Collection ID: {provider_instance.collection_id}[/dim]"
-        )
+    if debug:
+        if hasattr(provider_instance, "folder_id") and provider_instance.folder_id:
+            console.print(f"Debug - Letta Folder ID: {provider_instance.folder_id}")
+        if (
+            hasattr(provider_instance, "collection_id")
+            and provider_instance.collection_id
+        ):
+            console.print(
+                f"Debug - Albert Collection ID: {provider_instance.collection_id}"
+            )
 
     # Generate samples
     console.print("[cyan]Generating samples...[/cyan]\n")
@@ -215,12 +212,13 @@ def run(
             # Print conversation ID on first sample (for Letta provider debugging)
             if (
                 not samples_started
+                and debug
                 and hasattr(provider_instance, "conversation_id")
                 and provider_instance.conversation_id
             ):
                 console.print(
-                    f"[dim]Debug - Letta Conversation ID: "
-                    f"{provider_instance.conversation_id}[/dim]\n"
+                    f"Debug - Letta Conversation ID: "
+                    f"{provider_instance.conversation_id}\n"
                 )
                 samples_started = True
 
@@ -242,9 +240,7 @@ def run(
         console.print(
             f"\n[green]Success![/green] Generated {len(generated_samples)} samples"
         )
-        console.print(f"[dim]Output saved to: {output}[/dim]")
+        console.print(f"Output saved to: {output}")
     else:
         console.print("\n[yellow]Warning: No samples were generated.[/yellow]")
-        console.print(
-            "[dim]The agent response may not have contained valid JSON samples.[/dim]"
-        )
+        console.print("The agent response may not have contained valid JSON samples.")

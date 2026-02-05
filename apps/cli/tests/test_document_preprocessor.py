@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from cli.commands.eval.providers.document_preprocessor import DocumentPreprocessor
+from cli.commands.providers.document_preprocessor import DocumentPreprocessor
 
 
 class TestDocumentPreprocessor:
@@ -41,7 +41,7 @@ class TestDocumentPreprocessor:
             # Should not create temporary files for non-PDFs
             assert len(preprocessor.processed_files) == 0
 
-    @patch("cli.commands.eval.providers.document_preprocessor.extract_text_from_pdf")
+    @patch("cli.commands.providers.document_preprocessor.extract_text_from_pdf")
     def test_process_pdf_documents(self, mock_extract):
         """Should extract PDF to markdown text file."""
         mock_extract.return_value = "Extracted PDF content\n\nMore content"
@@ -73,7 +73,7 @@ class TestDocumentPreprocessor:
             # Should track the temporary file
             assert len(preprocessor.processed_files) == 1
 
-    @patch("cli.commands.eval.providers.document_preprocessor.extract_text_from_pdf")
+    @patch("cli.commands.providers.document_preprocessor.extract_text_from_pdf")
     def test_mixed_document_types(self, mock_extract):
         """Should handle mix of PDF and non-PDF documents."""
         mock_extract.return_value = "Extracted content"
@@ -133,7 +133,7 @@ class TestDocumentPreprocessor:
             preprocessor.cleanup()
             assert not tmp_path.exists()
 
-    @patch("cli.commands.eval.providers.document_preprocessor.extract_text_from_pdf")
+    @patch("cli.commands.providers.document_preprocessor.extract_text_from_pdf")
     def test_cleanup_handles_missing_files(self, mock_extract):
         """Should handle missing files gracefully during cleanup."""
         preprocessor = DocumentPreprocessor()
@@ -144,7 +144,7 @@ class TestDocumentPreprocessor:
         # Should not raise an error
         preprocessor.cleanup()
 
-    @patch("cli.commands.eval.providers.document_preprocessor.extract_text_from_pdf")
+    @patch("cli.commands.providers.document_preprocessor.extract_text_from_pdf")
     def test_extraction_error_handling(self, mock_extract):
         """Should raise error when PDF extraction fails."""
         mock_extract.side_effect = RuntimeError("Failed to extract PDF")
@@ -166,7 +166,7 @@ class TestDocumentPreprocessor:
         with pytest.raises(FileNotFoundError, match="PDF file not found"):
             preprocessor.process_documents(["/nonexistent/file.pdf"])
 
-    @patch("cli.commands.eval.providers.document_preprocessor.extract_text_from_pdf")
+    @patch("cli.commands.providers.document_preprocessor.extract_text_from_pdf")
     def test_temp_dir_parameter(self, mock_extract):
         """Should use specified temp directory for extracted files."""
         mock_extract.return_value = "Extracted content"
