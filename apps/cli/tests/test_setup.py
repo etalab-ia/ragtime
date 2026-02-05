@@ -1,4 +1,4 @@
-"""Tests for the init command."""
+"""Tests for the setup command."""
 
 import tempfile
 from pathlib import Path
@@ -635,7 +635,7 @@ class TestWorkspaceCommand:
     """Integration tests for workspace generation."""
 
     def test_workspace_command_exists(self):
-        """The init command should be registered."""
+        """The setup command should be registered."""
         result = runner.invoke(main_app, ["setup", "--help"])
         assert result.exit_code == 0
         assert "workspace" in result.output.lower()

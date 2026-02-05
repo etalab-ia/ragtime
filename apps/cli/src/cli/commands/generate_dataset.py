@@ -116,10 +116,13 @@ def run(
             "OPENAI_BASE_URL": base_url,
             "OPENAI_MODEL": model,
         }
-        for var_name, value in env_vars_to_check.items():
-            if not value:
-                console.print(f"Error: {var_name} environment variable is required.")
-                raise typer.Exit(1)
+        missing = [k for k, v in env_vars_to_check.items() if not v]
+        if missing:
+            console.print(
+                f"Error: Missing environment variables for 'albert' provider: "
+                f"{', '.join(missing)}"
+            )
+            raise typer.Exit(1)
 
     # Find documents
     documents = [
@@ -163,7 +166,7 @@ def run(
 
     # Get provider instance
     try:
-        from cli.commands.eval.providers import get_provider
+        from cli.commands.providers import get_provider
 
         if provider == "letta":
             provider_instance = get_provider(
@@ -188,12 +191,16 @@ def run(
         progress.remove_task(task)
 
     # Print debug info (provider-specific IDs for debugging)
-    if hasattr(provider_instance, "folder_id") and provider_instance.folder_id:
-        console.print(f"Debug - Letta Folder ID: {provider_instance.folder_id}")
-    if hasattr(provider_instance, "collection_id") and provider_instance.collection_id:
-        console.print(
-            f"Debug - Albert Collection ID: {provider_instance.collection_id}"
-        )
+    if debug:
+        if hasattr(provider_instance, "folder_id") and provider_instance.folder_id:
+            console.print(f"Debug - Letta Folder ID: {provider_instance.folder_id}")
+        if (
+            hasattr(provider_instance, "collection_id")
+            and provider_instance.collection_id
+        ):
+            console.print(
+                f"Debug - Albert Collection ID: {provider_instance.collection_id}"
+            )
 
     # Generate samples
     console.print("[cyan]Generating samples...[/cyan]\n")
@@ -205,6 +212,7 @@ def run(
             # Print conversation ID on first sample (for Letta provider debugging)
             if (
                 not samples_started
+                and debug
                 and hasattr(provider_instance, "conversation_id")
                 and provider_instance.conversation_id
             ):

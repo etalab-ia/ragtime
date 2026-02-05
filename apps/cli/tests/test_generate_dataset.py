@@ -5,8 +5,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from cli.commands.eval.providers.albert import AlbertApiProvider
-from cli.commands.eval.providers.schema import GeneratedSample, SampleMetadata
+from cli.commands.providers.albert import AlbertApiProvider
+from cli.commands.providers.schema import GeneratedSample, SampleMetadata
 from cli.main import app as main_app
 from typer.testing import CliRunner
 
@@ -19,13 +19,13 @@ class TestAlbertApiProvider:
     @pytest.fixture
     def mock_requests(self, mocker):
         """Mock the requests library."""
-        mock_req = mocker.patch("cli.commands.eval.providers.albert.requests")
+        mock_req = mocker.patch("cli.commands.providers.albert.requests")
         return mock_req
 
     @pytest.fixture
     def mock_openai(self, mocker):
         """Mock the OpenAI client."""
-        mock_client = mocker.patch("cli.commands.eval.providers.albert.OpenAI")
+        mock_client = mocker.patch("cli.commands.providers.albert.OpenAI")
         return mock_client
 
     def test_provider_initialization(self, mock_requests, mock_openai):
@@ -235,7 +235,7 @@ class TestGenerateDatasetCommand:
             # Create a test document
             (tmpdir_path / "test.txt").write_text("Test content")
 
-            with patch("cli.commands.eval.providers.get_provider") as mock_get_provider:
+            with patch("cli.commands.providers.get_provider") as mock_get_provider:
                 # Mock provider to fail early (we just want to check output)
                 mock_provider = MagicMock()
                 mock_provider.upload_documents.side_effect = Exception("Test error")

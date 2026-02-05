@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from cli.commands.eval.providers.document_preprocessor import DocumentPreprocessor
+from cli.commands.providers.document_preprocessor import DocumentPreprocessor
 
 
 class TestDocumentPreprocessor:
