@@ -36,7 +36,7 @@ def main_callback(
 ) -> None:
     """RAG Facile CLI - Build RAG applications for the French government."""
     console.print(BANNER)
-    
+
     if version:
         cli_version = get_version("rag-facile-cli")
         console.print(f"[cyan]rag-facile v{cli_version}[/cyan]")

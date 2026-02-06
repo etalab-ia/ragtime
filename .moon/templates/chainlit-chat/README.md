@@ -24,7 +24,7 @@ This is a simple Chainlit-based chat application designed to benchmark the OpenG
 
 ## Running the App
 
-Use the `just` command runner to run the application.
+You can run the application using the `just` command runner.
 
 If you are at the **root of the monorepo**:
 ```bash
@@ -35,4 +35,9 @@ If you are in **this directory** (or using the generated template):
 ```bash
 just sync  # Setup dependencies (Python 3.13)
 just run   # Run the application
+```
+
+Or directly using `uv`:
+```bash
+uv run chainlit run app.py -w
 ```

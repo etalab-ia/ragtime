@@ -351,18 +351,19 @@ context_providers:
             rxconfig_path.write_text(content)
             console.print("  [green]✓[/green] rxconfig.py parameterized")
 
-        # Rename package directory for Moon path interpolation
+        # Rename package directory to static name (Windows-compatible)
+        # Moon only supports simple variable interpolation in paths: [varName]
+        # Filters like | replace() are NOT supported in directory names
         pkg_dir = target / "reflex_chat"
         if pkg_dir.exists():
-            # Rename main app file
+            # Rename main app file to static name
             main_app = pkg_dir / "reflex_chat.py"
             if main_app.exists():
-                new_app_name = "[project_name | replace(from='-', to='_')].py"
-                main_app.rename(pkg_dir / new_app_name)
+                # Use static name - actual module name is parameterized in rxconfig.py
+                main_app.rename(pkg_dir / "app.py")
 
-            # Rename package directory
-            new_pkg_dir_name = "[project_name | replace(from='-', to='_')]"
-            pkg_dir.rename(target / new_pkg_dir_name)
+            # Rename package directory to static name
+            pkg_dir.rename(target / "app")
             console.print("  [green]✓[/green] Reflex package structure parameterized")
 
     # Phase 6: Generate template.yml
