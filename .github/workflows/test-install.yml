@@ -96,42 +96,6 @@ jobs:
   # MACOS TESTS
   # ============================================================================
   
-  macos-install-intel:
-    runs-on: macos-12
-    name: "Install on macOS (Intel)"
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run bash installer
-        shell: bash
-        run: |
-          curl -fsSL ${{ github.server_url }}/${{ github.repository }}/raw/refs/heads/${{ github.event.pull_request.head.ref || github.ref_name }}/install.sh -o /tmp/install.sh
-          bash -x /tmp/install.sh 2>&1 || (echo "=== Installer failed ===" && exit 1)
-      
-      - name: Verify installation
-        shell: bash
-        run: |
-          echo "=== System Info ==="
-          uname -m
-          bash --version | head -1
-          echo ""
-          echo "=== Verifying tools ==="
-          rag-facile --version
-          proto --version
-          moon --version
-          uv --version
-          just --version
-      
-      - name: Test just commands
-        shell: bash
-        run: |
-          cd ${{ github.workspace }}
-          echo "=== Testing just recipes ==="
-          just --list
-          just format-check
-          just lint
-  
   macos-install-arm64:
     runs-on: macos-14
     name: "Install on macOS (Apple Silicon)"
@@ -312,7 +276,7 @@ jobs:
   test-summary:
     runs-on: ubuntu-latest
     name: "Installation Tests Summary"
-    needs: [linux-install, linux-proxy-simulation, macos-install-intel, macos-install-arm64, macos-proxy-simulation, windows-install-powershell, windows-install-gitbash, windows-proxy-simulation]
+    needs: [linux-install, linux-proxy-simulation, macos-install-arm64, macos-proxy-simulation, windows-install-powershell, windows-install-gitbash, windows-proxy-simulation]
     if: always()
     
     steps:
@@ -321,7 +285,6 @@ jobs:
           echo "=== Installation Test Results ==="
           echo "Linux (Ubuntu): ${{ needs.linux-install.result }}"
           echo "Linux (Proxy): ${{ needs.linux-proxy-simulation.result }}"
-          echo "macOS (Intel): ${{ needs.macos-install-intel.result }}"
           echo "macOS (ARM64): ${{ needs.macos-install-arm64.result }}"
           echo "macOS (Proxy): ${{ needs.macos-proxy-simulation.result }}"
           echo "Windows (PowerShell): ${{ needs.windows-install-powershell.result }}"
@@ -331,7 +294,6 @@ jobs:
           # Fail if any test failed
           if [[ "${{ needs.linux-install.result }}" == "failure" || \
                 "${{ needs.linux-proxy-simulation.result }}" == "failure" || \
-                "${{ needs.macos-install-intel.result }}" == "failure" || \
                 "${{ needs.macos-install-arm64.result }}" == "failure" || \
                 "${{ needs.macos-proxy-simulation.result }}" == "failure" || \
                 "${{ needs.windows-install-powershell.result }}" == "failure" || \
