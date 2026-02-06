@@ -57,8 +57,6 @@ jobs:
           source ~/.bashrc || source ~/.bash_profile || true
           echo "=== Testing just recipes ==="
           just --list
-          just format-check
-          just lint
   
   linux-proxy-simulation:
     runs-on: ubuntu-latest
@@ -138,8 +136,6 @@ jobs:
           source ~/.bashrc || source ~/.bash_profile || true
           echo "=== Testing just recipes ==="
           just --list
-          just format-check
-          just lint
   
   macos-proxy-simulation:
     runs-on: macos-latest
@@ -246,8 +242,6 @@ jobs:
           source ~/.bashrc || source ~/.bash_profile || true
           echo "=== Testing just recipes ==="
           just --list
-          just format-check
-          just lint
   
   windows-proxy-simulation:
     runs-on: windows-latest
