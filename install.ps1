@@ -182,7 +182,7 @@ if (-not (Test-Command uv)) {
 Write-Host "Installing just via proto..." -ForegroundColor Yellow
 try {
     # Register the just plugin (idempotent)
-    proto plugin add just "https://raw.githubusercontent.com/moonrepo/proto-toml-plugins/master/plugins/just.toml" 2>$null
+    proto plugin add just "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/just/plugin.toml" 2>$null
     proto install just
 } catch {
     Write-Host "ERROR: Failed to install just via proto" -ForegroundColor Red

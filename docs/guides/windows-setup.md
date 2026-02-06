@@ -134,7 +134,7 @@ The `.prototools` file at the project root pins tool versions:
 python = "3.13"
 
 [plugins]
-just = "source:https://raw.githubusercontent.com/moonrepo/proto-toml-plugins/master/plugins/just.toml"
+just = "source:https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/just/plugin.toml"
 
 [tools.just]
 version = "1.34.0"

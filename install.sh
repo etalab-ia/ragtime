@@ -280,7 +280,7 @@ fi
 if ! check_tool just; then
     echo "Installing just via proto..."
     # Register the just plugin (idempotent - safe to run even if already registered)
-    proto plugin add just "https://raw.githubusercontent.com/moonrepo/proto-toml-plugins/master/plugins/just.toml" 2>/dev/null || true
+    proto plugin add just "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/just/plugin.toml" 2>/dev/null || true
     
     if ! proto install just; then
         echo "ERROR: Failed to install just via proto"

@@ -122,7 +122,7 @@ proto-plugin-registration:
     - name: Verify proto can find just plugin
       shell: powershell
       run: |
-        proto plugin add just "https://raw.githubusercontent.com/moonrepo/proto-toml-plugins/master/plugins/just.toml"
+        proto plugin add just "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/just/plugin.toml"
         proto install just
         just --version
 ```

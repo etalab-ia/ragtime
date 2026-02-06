@@ -6,7 +6,7 @@ python = "3.13"
 
 # Plugins for non-core tools
 [plugins]
-just = "source:https://raw.githubusercontent.com/moonrepo/proto-toml-plugins/master/plugins/just.toml"
+just = "source:https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/just/plugin.toml"
 
 # Tool-specific versions
 [tools.just]
