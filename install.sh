@@ -349,9 +349,11 @@ else
 fi
 
 # Export PATH to GitHub Actions environment if running in CI
-if [[ -n "$GITHUB_ENV" ]]; then
-    echo "Exporting PATH to GitHub Actions environment..."
-    echo "PATH=$PATH" >> "$GITHUB_ENV"
+if [[ -n "$GITHUB_PATH" ]]; then
+    echo "Adding tool paths to GITHUB_PATH for CI..."
+    echo "$PROTO_SHIMS" >> "$GITHUB_PATH"
+    echo "$PROTO_BIN" >> "$GITHUB_PATH"
+    echo "$LOCAL_BIN" >> "$GITHUB_PATH"
 fi
 
 echo ""

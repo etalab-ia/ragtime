@@ -212,23 +212,23 @@ try {
     exit 1
 }
 
-# Add uv tools directory to PATH for current session and system
-$UvToolsPath = "$env:USERPROFILE\AppData\Roaming\Python\Scripts"
-if (Test-Path $UvToolsPath) {
-    $env:PATH = "$UvToolsPath;$env:PATH"
-    
-    # Also add to User PATH in registry for future sessions
+# Add uv tools directory to PATH for current session
+$UvToolsPath = "$env:USERPROFILE\.local\bin"
+$env:PATH = "$UvToolsPath;$env:PATH"
+
+# In GitHub Actions, add to GITHUB_PATH for subsequent steps
+if ($env:GITHUB_PATH) {
+    Write-Host "Adding uv tools path to GITHUB_PATH for CI..." -ForegroundColor Yellow
+    Add-Content -Path $env:GITHUB_PATH -Value $UvToolsPath
+}
+
+# For local installations, add to User PATH in registry for future sessions
+if (-not $env:GITHUB_PATH) {
     $UserPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
     if ($UserPath -notlike "*$UvToolsPath*") {
         [System.Environment]::SetEnvironmentVariable("Path", "$UvToolsPath;$UserPath", "User")
         Write-Host "Added uv tools directory to system PATH" -ForegroundColor Green
     }
-}
-
-# In GitHub Actions, persist PATH for subsequent steps
-if ($env:GITHUB_ENV) {
-    Write-Host "Persisting PATH to GITHUB_ENV for CI..." -ForegroundColor Yellow
-    Add-Content -Path $env:GITHUB_ENV -Value "PATH=$env:PATH"
 }
 
 Write-Host ""
