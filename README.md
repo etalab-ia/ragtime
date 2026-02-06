@@ -32,7 +32,7 @@ source ~/.bashrc  # or restart your terminal
 
 > **Note**: On Ubuntu/Debian, the installer will automatically install prerequisites (git, curl, xz-utils, unzip) if needed.
 
-> **Behind a corporate proxy or VPN?** The installer automatically detects and configures proxy support. If you encounter issues, see [Proxy Setup Guide](PROXY_SETUP_GUIDE.md) for detailed troubleshooting steps.
+> **Behind a corporate proxy or VPN?** The installer automatically detects and configures proxy support. See [Installation Documentation](docs/) for troubleshooting guides.
 
 Verify the installation:
 
@@ -61,6 +61,14 @@ After configuration, the CLI automatically:
 - Starts the development server
 
 Your app will open in the browser, ready to use!
+
+## Documentation
+
+For detailed guides and troubleshooting, see the [Documentation Hub](docs/):
+
+- **[Proxy & Network Setup](docs/guides/proxy-setup.md)** - Install RAG Facile on corporate networks or behind VPNs
+- **[Proxy Troubleshooting](docs/troubleshooting/proxy.md)** - Solve network-related issues
+- **[Full Documentation Index](docs/)** - All guides and resources
 
 ## Project Structure Options
 

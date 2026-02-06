@@ -1,7 +1,5 @@
 # RAG Facile Installation on Corporate/Restricted Networks
 
-**Issue #46**: Proto plugin installation fails on networks with proxies, VPNs, or restrictive firewalls.
-
 This guide explains how to install RAG Facile when behind a corporate proxy or VPN, and provides troubleshooting steps.
 
 ## Quick Start
@@ -49,143 +47,15 @@ This fails because:
 
 ## Troubleshooting
 
-### Symptom: Connection Timeout
+See the [Proxy Troubleshooting Guide](../troubleshooting/proxy.md) for detailed solutions to each issue type.
 
-```
-Error: Failed to download plugin
-caused by: connection timed out
-```
+### Quick Reference
 
-**Causes**:
-- Proxy server not configured
-- Proxy blocks GitHub/GHCR URLs
-- Firewall rules block outbound connections
-
-**Solutions**:
-
-1. **Verify proxy environment variables are set**:
-   ```bash
-   echo $HTTP_PROXY
-   echo $HTTPS_PROXY
-   ```
-
-2. **Test connectivity through proxy**:
-   ```bash
-   curl -x $HTTPS_PROXY -I https://github.com
-   curl -x $HTTPS_PROXY -I https://ghcr.io
-   ```
-
-3. **Manually configure proto** if the installer's auto-detection didn't work:
-   ```bash
-   mkdir -p ~/.proto
-   cat > ~/.proto/.prototools << 'EOF'
-   [settings.http]
-   proxies = ["https://proxy.company.com:8080"]
-   
-   [settings.offline]
-   timeout = 5000
-   EOF
-   ```
-
-4. **If behind corporate firewall**, your network team may need to whitelist:
-   - `github.com`
-   - `ghcr.io` (GitHub Container Registry)
-   - `raw.githubusercontent.com`
-
-### Symptom: SSL Certificate Error
-
-```
-Error: certificate verify failed
-caused by: Self signed certificate
-```
-
-**Causes**:
-- Corporate proxy performs SSL inspection (MITM)
-- Proxy creates self-signed certificates for HTTPS traffic
-- Proto can't verify the certificate
-
-**Solutions**:
-
-1. **Export your corporate root certificate**:
-   
-   Steps depend on your system:
-   
-   **macOS**:
-   ```bash
-   # Open Keychain Access
-   # Find your corporate proxy/CA certificate
-   # Right-click → Export "Company CA"
-   # Save as corporate-ca.pem
-   ```
-   
-   **Linux (Ubuntu/Debian)**:
-   ```bash
-   # Check if certificate is already installed
-   ls /etc/ssl/certs/
-   
-   # Or use your company's certificate management
-   # Copy certificate to a .pem file
-   ```
-   
-   **Windows (WSL)**:
-   ```bash
-   # Export from Windows certificate store
-   # Or get from your IT team
-   ```
-
-2. **Configure proto to use your certificate**:
-   ```bash
-   cat >> ~/.proto/.prototools << 'EOF'
-   
-   [settings.http]
-   root-cert = "/path/to/corporate-ca.pem"
-   EOF
-   ```
-
-3. **Test the configuration**:
-   ```bash
-   proto install moon --log trace
-   ```
-
-4. **Last resort**: Allow invalid certificates (NOT RECOMMENDED)
-   ```bash
-   cat >> ~/.proto/.prototools << 'EOF'
-   
-   [settings.http]
-   allow-invalid-certs = true
-   EOF
-   ```
-
-### Symptom: Offline Mode Detection Fails
-
-```
-proto: offline mode detected
-Error: Cannot install tools while offline
-```
-
-**Causes**:
-- Proto checks internet connectivity by pinging hosts
-- Proxy blocks DNS or pinging endpoints
-- Proto thinks you're offline when you're actually connected
-
-**Solutions**:
-
-1. **Override default connectivity checks**:
-   ```bash
-   cat >> ~/.proto/.prototools << 'EOF'
-   
-   [settings.offline]
-   override-default-hosts = true
-   custom-hosts = ["8.8.8.8:53"]
-   timeout = 5000
-   EOF
-   ```
-
-2. **Or bypass version checks entirely** (if tool is already installed):
-   ```bash
-   export PROTO_BYPASS_VERSION_CHECK=1
-   proto install moon
-   ```
+| Symptom | Solution Link |
+|---------|---------------|
+| Connection timeout | [See here](../troubleshooting/proxy.md#symptom-connection-timeout) |
+| SSL certificate error | [See here](../troubleshooting/proxy.md#symptom-ssl-certificate-error) |
+| Offline mode detected | [See here](../troubleshooting/proxy.md#symptom-offline-mode-detection-fails) |
 
 ## Advanced: URL Rewriting for Internal Mirrors
 
@@ -310,22 +180,25 @@ proxies = ["https://proxy.company.com:8080"]
 
 If you're still having issues:
 
-1. **Check proto logs**:
+1. **Check the Troubleshooting Guide**:
+   - See [Proxy Troubleshooting](../troubleshooting/proxy.md)
+
+2. **Check proto logs**:
    ```bash
    # Proto creates logs in ~/.proto
    cat ~/.proto/logs/*.log
    ```
 
-2. **Run with debug output**:
+3. **Run with debug output**:
    ```bash
    proto install moon --log trace
    ```
 
-3. **Report an issue**:
+4. **Report an issue**:
    - [RAG Facile GitHub Issues](https://github.com/etalab-ia/rag-facile/issues)
    - [Proto GitHub Issues](https://github.com/moonrepo/proto/issues)
 
-4. **Ask your IT team**:
+5. **Ask your IT team**:
    - What proxy server URL should I use?
    - What domains do I need to whitelist?
    - Can they provide the root CA certificate?
