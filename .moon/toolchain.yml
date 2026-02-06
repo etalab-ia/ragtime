@@ -1,5 +1,5 @@
 $schema: 'https://moonrepo.dev/schemas/toolchain.json'
 
 python:
-  version: '3.13'
+  version: '3.13.11'
   packageManager: 'uv'

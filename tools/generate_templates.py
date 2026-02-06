@@ -84,7 +84,7 @@ def generate_sys_config():
 
     toolchain = {
         "$schema": "https://moonrepo.dev/schemas/toolchain.json",
-        "python": {"version": "3.13", "packageManager": "uv"},
+        "python": {"version": "3.13.11", "packageManager": "uv"},
     }
     (moon_dir / "toolchain.yml").write_text(yaml.dump(toolchain, sort_keys=False))
 

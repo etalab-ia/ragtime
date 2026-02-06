@@ -3,7 +3,7 @@ default:
 
 # Sync dependencies
 sync:
-    uv sync --python 3.13
+    uv sync --python 3.13.11
 
 # Run the Reflex application
 run:
