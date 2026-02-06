@@ -88,11 +88,9 @@ EOF
             echo "  allow-invalid-certs = true"
             echo ""
         fi
-        
-        return 0
     fi
     
-    return 1
+    return 0
 }
 
 # Setup proxy configuration if detected
