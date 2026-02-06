@@ -153,7 +153,35 @@ export PATH="$PROTO_SHIMS:$PROTO_BIN:$LOCAL_BIN:$PATH"
 # 1. Install proto if needed
 if ! check_tool proto; then
     echo "Installing proto..."
-    curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --yes
+    
+    # Download proto installer with error handling for SSL issues
+    if ! curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --yes; then
+        echo "ERROR: Failed to install proto"
+        echo ""
+        echo "This can happen if:"
+        echo "  1. Network connection is unavailable"
+        echo "  2. You're behind a corporate proxy with SSL inspection"
+        echo ""
+        echo "Troubleshooting:"
+        echo "  • Check your internet connection: ping 8.8.8.8"
+        echo "  • If behind a proxy, verify HTTP_PROXY/HTTPS_PROXY env vars are set"
+        echo "  • If you get SSL errors, your proxy is intercepting HTTPS"
+        echo ""
+        echo "Solutions for SSL inspection by corporate proxy:"
+        echo "  1. Ask your IT team to whitelist: moonrepo.dev, ghcr.io, github.com"
+        echo "  2. Or export your corporate root certificate and configure proto:"
+        echo "     mkdir -p ~/.proto"
+        echo "     cat > ~/.proto/.prototools << 'EOF'"
+        echo "     [settings.http]"
+        echo "     root-cert = \"/path/to/corporate-ca.pem\""
+        echo "     EOF"
+        echo "  3. For testing only, temporary workaround (NOT recommended):"
+        echo "     curl -k -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --yes"
+        echo ""
+        echo "For more help, see: https://github.com/etalab-ia/rag-facile/blob/main/docs/"
+        exit 1
+    fi
+    
     export PATH="$PROTO_SHIMS:$PROTO_BIN:$PATH"
     
     if ! check_tool proto; then
