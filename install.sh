@@ -335,7 +335,7 @@ else
     if [[ ":$ORIGINAL_PATH:" == *":$LOCAL_BIN:"* ]]; then
         echo "Tools are ready to use!"
     else
-        echo "Proto paths may need to be added to your shell profile."
+        echo "Proto and tool paths may need to be added to your shell profile."
         profile=$(detect_shell_profile)
         if [[ ! -f "$profile" ]]; then
             echo "Creating shell profile: $profile"
@@ -343,6 +343,7 @@ else
         fi
         add_to_path "$PROTO_SHIMS" "$profile"
         add_to_path "$PROTO_BIN" "$profile"
+        add_to_path "$LOCAL_BIN" "$profile"
         echo ""
         echo "Run this to use tools in your current terminal:"
         echo "  source $profile"

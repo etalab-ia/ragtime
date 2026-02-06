@@ -145,9 +145,9 @@ justfile-testing:
       shell: ${{ matrix.shell }}
       run: |
         if [ "${{ matrix.shell }}" = "bash" ]; then
-          bash <(curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh)
+          bash <(curl -fsSL ${{ github.server_url }}/${{ github.repository }}/raw/${{ github.ref_name }}/install.sh)
         else
-          powershell -ExecutionPolicy Bypass -Command "& { irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex }"
+          powershell -ExecutionPolicy Bypass -Command "& { irm ${{ github.server_url }}/${{ github.repository }}/raw/${{ github.ref_name }}/install.ps1 | iex }"
         fi
     
     - name: Test just commands

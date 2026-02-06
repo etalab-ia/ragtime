@@ -4,8 +4,7 @@
 # Or:    powershell -ExecutionPolicy Bypass -Command "& { irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex }"
 
 param(
-    [string]$Branch = "main",
-    [switch]$NoModifyPath = $false
+    [string]$Branch = "main"
 )
 
 $ErrorActionPreference = "Stop"
