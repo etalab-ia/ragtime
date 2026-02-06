@@ -156,35 +156,63 @@ if ! check_tool proto; then
     
     # Download proto installer to temp file with error handling for SSL/network issues
     proto_installer="/tmp/proto-install-$$.sh"
+    
+    # Try downloading with SSL verification first (secure)
     if ! curl -fsSL https://moonrepo.dev/install/proto.sh -o "$proto_installer" 2>/tmp/curl-error-$$.txt; then
-        echo "ERROR: Failed to download proto installer"
-        echo ""
-        echo "This can happen if:"
-        echo "  1. Network connection is unavailable"
-        echo "  2. You're behind a corporate proxy with SSL inspection"
-        echo ""
-        echo "Error details:"
-        cat /tmp/curl-error-$$.txt 2>/dev/null || echo "  (check your network connection)"
-        echo ""
-        echo "Troubleshooting:"
-        echo "  • Check your internet connection: ping 8.8.8.8"
-        echo "  • If behind a proxy, verify HTTP_PROXY/HTTPS_PROXY env vars are set"
-        echo "  • If you see SSL errors above, your proxy is intercepting HTTPS"
-        echo ""
-        echo "Solutions for SSL inspection by corporate proxy:"
-        echo "  1. Ask your IT team to whitelist: moonrepo.dev, ghcr.io, github.com"
-        echo "  2. Or export your corporate root certificate and configure proto:"
-        echo "     mkdir -p ~/.proto"
-        echo "     cat > ~/.proto/.prototools << 'EOF'"
-        echo "     [settings.http]"
-        echo "     root-cert = \"/path/to/corporate-ca.pem\""
-        echo "     EOF"
-        echo "  3. For testing only, temporary workaround (NOT recommended):"
-        echo "     curl -k -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --yes"
-        echo ""
-        echo "For more help, see: https://github.com/etalab-ia/rag-facile/blob/main/docs/"
-        rm -f "$proto_installer" /tmp/curl-error-$$.txt
-        exit 1
+        # If SSL certificate error, try again with -k (skip SSL verification)
+        # This is a fallback for corporate proxies with SSL inspection
+        if grep -q "SSL certificate" /tmp/curl-error-$$.txt 2>/dev/null; then
+            echo "⚠️  SSL certificate verification failed. Trying with certificate verification disabled..."
+            if curl -fsSLk https://moonrepo.dev/install/proto.sh -o "$proto_installer" 2>/dev/null; then
+                echo "✓ Downloaded successfully (note: SSL verification was disabled)"
+            else
+                # curl -k still failed, show helpful error message
+                echo "ERROR: Failed to download proto installer (even with SSL verification disabled)"
+                echo ""
+                echo "This can happen if:"
+                echo "  1. Network connection is unavailable"
+                echo "  2. You're behind a corporate proxy with SSL inspection"
+                echo ""
+                echo "Error details:"
+                cat /tmp/curl-error-$$.txt 2>/dev/null || echo "  (check your network connection)"
+                echo ""
+                echo "Troubleshooting:"
+                echo "  • Check your internet connection: ping 8.8.8.8"
+                echo "  • If behind a proxy, verify HTTP_PROXY/HTTPS_PROXY env vars are set"
+                echo "  • If you see SSL errors above, your proxy is intercepting HTTPS"
+                echo ""
+                echo "Solutions for SSL inspection by corporate proxy:"
+                echo "  1. Ask your IT team to whitelist: moonrepo.dev, ghcr.io, github.com"
+                echo "  2. Or export your corporate root certificate and configure proto:"
+                echo "     mkdir -p ~/.proto"
+                echo "     cat > ~/.proto/.prototools << 'EOF'"
+                echo "     [settings.http]"
+                echo "     root-cert = \"/path/to/corporate-ca.pem\""
+                echo "     EOF"
+                echo ""
+                echo "For more help, see: https://github.com/etalab-ia/rag-facile/blob/main/docs/"
+                rm -f "$proto_installer" /tmp/curl-error-$$.txt
+                exit 1
+            fi
+        else
+            # Not an SSL error, show general error message
+            echo "ERROR: Failed to download proto installer"
+            echo ""
+            echo "This can happen if:"
+            echo "  1. Network connection is unavailable"
+            echo "  2. You're behind a corporate proxy"
+            echo ""
+            echo "Error details:"
+            cat /tmp/curl-error-$$.txt 2>/dev/null || echo "  (check your network connection)"
+            echo ""
+            echo "Troubleshooting:"
+            echo "  • Check your internet connection: ping 8.8.8.8"
+            echo "  • If behind a proxy, verify HTTP_PROXY/HTTPS_PROXY env vars are set"
+            echo ""
+            echo "For more help, see: https://github.com/etalab-ia/rag-facile/blob/main/docs/"
+            rm -f "$proto_installer" /tmp/curl-error-$$.txt
+            exit 1
+        fi
     fi
     
     # Run the installer
