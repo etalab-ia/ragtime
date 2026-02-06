@@ -1,4 +1,4 @@
-# Proto toolchain configuration for RAG Facile
+# Proto toolchain configuration for {{ project_name }}
 # This file pins versions of all tools used in the project
 # See: https://moonrepo.dev/docs/proto
 

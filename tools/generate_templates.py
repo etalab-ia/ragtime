@@ -182,6 +182,24 @@ add template:
 """
     (target / "justfile").write_text(justfile)
 
+    # Create .prototools for proto toolchain management
+    prototools = """\
+# Proto toolchain configuration for {{ project_name }}
+# This file pins versions of all tools used in the project
+# See: https://moonrepo.dev/docs/proto
+
+python = "3.13.11"
+
+# Plugins for non-core tools
+[plugins]
+just = "source:https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/just/plugin.toml"
+
+# Tool-specific versions
+[tools.just]
+version = "1.34.0"
+"""
+    (target / ".prototools").write_text(prototools)
+
     console.print("[green]✓[/green] sys-config generated")
 
 

@@ -104,6 +104,8 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full git history needed for moon format-check/lint
       
       - name: Run PowerShell installer
         shell: powershell
