@@ -154,18 +154,22 @@ export PATH="$PROTO_SHIMS:$PROTO_BIN:$LOCAL_BIN:$PATH"
 if ! check_tool proto; then
     echo "Installing proto..."
     
-    # Download proto installer with error handling for SSL issues
-    if ! curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --yes; then
-        echo "ERROR: Failed to install proto"
+    # Download proto installer to temp file with error handling for SSL/network issues
+    proto_installer="/tmp/proto-install-$$.sh"
+    if ! curl -fsSL https://moonrepo.dev/install/proto.sh -o "$proto_installer" 2>/tmp/curl-error-$$.txt; then
+        echo "ERROR: Failed to download proto installer"
         echo ""
         echo "This can happen if:"
         echo "  1. Network connection is unavailable"
         echo "  2. You're behind a corporate proxy with SSL inspection"
         echo ""
+        echo "Error details:"
+        cat /tmp/curl-error-$$.txt 2>/dev/null || echo "  (check your network connection)"
+        echo ""
         echo "Troubleshooting:"
         echo "  • Check your internet connection: ping 8.8.8.8"
         echo "  • If behind a proxy, verify HTTP_PROXY/HTTPS_PROXY env vars are set"
-        echo "  • If you get SSL errors, your proxy is intercepting HTTPS"
+        echo "  • If you see SSL errors above, your proxy is intercepting HTTPS"
         echo ""
         echo "Solutions for SSL inspection by corporate proxy:"
         echo "  1. Ask your IT team to whitelist: moonrepo.dev, ghcr.io, github.com"
@@ -179,9 +183,18 @@ if ! check_tool proto; then
         echo "     curl -k -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --yes"
         echo ""
         echo "For more help, see: https://github.com/etalab-ia/rag-facile/blob/main/docs/"
+        rm -f "$proto_installer" /tmp/curl-error-$$.txt
         exit 1
     fi
     
+    # Run the installer
+    if ! bash "$proto_installer" --yes; then
+        echo "ERROR: proto installation failed"
+        rm -f "$proto_installer" /tmp/curl-error-$$.txt
+        exit 1
+    fi
+    
+    rm -f "$proto_installer" /tmp/curl-error-$$.txt
     export PATH="$PROTO_SHIMS:$PROTO_BIN:$PATH"
     
     if ! check_tool proto; then
