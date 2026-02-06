@@ -29,13 +29,14 @@ jobs:
     runs-on: ubuntu-latest
     name: "Install on Linux (Ubuntu)"
     
+    env:
+      RAG_FACILE_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
+    
     steps:
       - uses: actions/checkout@v4
       
       - name: Run bash installer
         shell: bash
-        env:
-          RAG_FACILE_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
         run: |
           curl -fsSL ${{ github.server_url }}/${{ github.repository }}/raw/refs/heads/${{ github.event.pull_request.head.ref || github.ref_name }}/install.sh -o /tmp/install.sh
           bash -x /tmp/install.sh 2>&1 || (echo "=== Installer failed with exit code $? ===" && tail -50 /tmp/install.log 2>/dev/null || echo "No log file" && exit 1)
@@ -100,6 +101,9 @@ jobs:
     runs-on: windows-latest
     name: "Install on Windows (PowerShell)"
     
+    env:
+      RAG_FACILE_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
+    
     steps:
       - uses: actions/checkout@v4
       
@@ -121,7 +125,6 @@ jobs:
       - name: Test just commands
         shell: powershell
         run: |
-          source ~/.bashrc || source ~/.bash_profile || true
           Write-Host "=== Testing just recipes ===" -ForegroundColor Cyan
           just --list
           just format-check

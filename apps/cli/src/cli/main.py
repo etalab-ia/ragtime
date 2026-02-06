@@ -35,7 +35,11 @@ def main_callback(
     ),
 ) -> None:
     """RAG Facile CLI - Build RAG applications for the French government."""
-    console.print(BANNER)
+    try:
+        console.print(BANNER)
+    except UnicodeEncodeError:
+        # Skip banner if terminal doesn't support Unicode (e.g., Git Bash on Windows with cp1252)
+        pass
 
     if version:
         cli_version = get_version("rag-facile-cli")
