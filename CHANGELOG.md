@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/etalab-ia/rag-facile/compare/v0.6.1...v0.7.0) (2026-02-07)
+
+
+### Features
+
+* add --version flag to rag-facile CLI ([daadefe](https://github.com/etalab-ia/rag-facile/commit/daadefe020b6f06c0dd9f166540d82ee16a3c5c3))
+* add just sync task to install dependencies and pre-commit hooks ([2e5dd71](https://github.com/etalab-ia/rag-facile/commit/2e5dd71ef385bc7ad87d4b665c27db2c69b2d5bb))
+* add proxy support to install script for corporate/restricted networks ([0a90cc3](https://github.com/etalab-ia/rag-facile/commit/0a90cc305b1747183b0dac12aa8f169008f54626))
+* add Windows support with proto as unified dependency manager ([5c0ee40](https://github.com/etalab-ia/rag-facile/commit/5c0ee403200d52ad1909d0c2e50fc565ea2ab56f))
+* add Windows support with proto as unified dependency manager ([6cd5300](https://github.com/etalab-ia/rag-facile/commit/6cd5300f3fee0362314f9e1c9b555e3279c90f04))
+
+
+### Bug Fixes
+
+* add .prototools to workspace templates and pin Python 3.13.11 ([0df9943](https://github.com/etalab-ia/rag-facile/commit/0df99431bc71aadcb7be5fb5caeac55ea8c0459d))
+* add comprehensive error handling for SSL certificate issues in proto installation ([75522f9](https://github.com/etalab-ia/rag-facile/commit/75522f967279d16f0ff216e22d2a066af88e6e2f))
+* add explicit permissions block to test-install workflow ([be62466](https://github.com/etalab-ia/rag-facile/commit/be624666be8f455232865c2280ae2a19dfdc83d7))
+* add fallback curl without SSL verification for corporate proxies ([6bc2e7e](https://github.com/etalab-ia/rag-facile/commit/6bc2e7e104846a0be045d05c0607a5e869fb8649))
+* add proto paths to GITHUB_PATH and force UTF-8 encoding on Windows ([a84d042](https://github.com/etalab-ia/rag-facile/commit/a84d0429a205c92a89deaa6c6f51a8facb0cebca))
+* add uv tools directory to PATH on Windows ([6a3654e](https://github.com/etalab-ia/rag-facile/commit/6a3654e3fd6c60abd32bdb9e5fd65265380050d8))
+* add verbose output and error logging to installer tests ([1c1c0e3](https://github.com/etalab-ia/rag-facile/commit/1c1c0e305b5b28ce46581aea1ce6abe6cd395bd4))
+* address review feedback on PR [#53](https://github.com/etalab-ia/rag-facile/issues/53) ([78e0710](https://github.com/etalab-ia/rag-facile/commit/78e07105190fd3b3c8ec39969cb1ff223fbbfb0f))
+* address review feedback on PR [#54](https://github.com/etalab-ia/rag-facile/issues/54) ([0be49f8](https://github.com/etalab-ia/rag-facile/commit/0be49f8222dd06038f8b6d983d0bb8647d9f0e06))
+* catch all exceptions when printing CLI banner ([8b0ed8b](https://github.com/etalab-ia/rag-facile/commit/8b0ed8bb16c0f151861888f57d8a121bb6ee86d9))
+* correct just plugin URL from moonrepo to Phault repository ([24e06af](https://github.com/etalab-ia/rag-facile/commit/24e06afc4dc953f498f3efb68ced26717c6bab7d))
+* export PATH to GitHub Actions environment for CI/CD ([eadf6b3](https://github.com/etalab-ia/rag-facile/commit/eadf6b32d92335f0a35580067de07a3244fa291d))
+* handle Windows encoding issues in CI and CLI ([e672345](https://github.com/etalab-ia/rag-facile/commit/e672345e2a03279f0897119ecdcb8d41e382bcd9))
+* improve error handling by downloading proto installer to temp file ([9016286](https://github.com/etalab-ia/rag-facile/commit/9016286f45514869f64a6435cb6a0b6e5e6572d4))
+* move proxy env vars to installer step to avoid checkout failures ([ee33c05](https://github.com/etalab-ia/rag-facile/commit/ee33c059a29b3105676a123b016af06a851514cd))
+* pass RAG_FACILE_BRANCH env var to installers in workflow ([5936cc5](https://github.com/etalab-ia/rag-facile/commit/5936cc514c1a3c2e9cd3cdb6b027d09a2603d486))
+* pin Python 3.13.11 across all toolchain configurations ([19f68b6](https://github.com/etalab-ia/rag-facile/commit/19f68b6c0b8060b841e2bd415a6a116e0de0530b))
+* preserve proxy environment variables when running proto installer ([f7271cc](https://github.com/etalab-ia/rag-facile/commit/f7271ccdd79e4177f294d24357d1154a77cce03b))
+* prevent install.sh from exiting when no proxy is detected ([7418f99](https://github.com/etalab-ia/rag-facile/commit/7418f99159578a3f125e2f4dda5ecafabc78c00c))
+* remove macOS Intel (macos-12) test - runners not available ([ba2a511](https://github.com/etalab-ia/rag-facile/commit/ba2a511c1f96a734053cf81d63afe5cbcbef2618))
+* remove nested PowerShell call in Windows CI test ([b61a826](https://github.com/etalab-ia/rag-facile/commit/b61a82663cc13ff78eb06a0ef2412155f0ecac12))
+* remove proxy simulation jobs from test-install workflow ([7eb2b9e](https://github.com/etalab-ia/rag-facile/commit/7eb2b9e1fdfaf2a7de4c9dcb55b6233c0baf1eea))
+* replace process substitution with file download for installer ([051698d](https://github.com/etalab-ia/rag-facile/commit/051698d89932aad5a5b6bd89fc3ae9296caaa492))
+* resolve issue [#46](https://github.com/etalab-ia/rag-facile/issues/46) - add proxy support for proto plugin installation ([c1aa693](https://github.com/etalab-ia/rag-facile/commit/c1aa693431af04f7278348be682981c12484b36b))
+* simplify test-install workflow to only verify tool installation ([2d313f8](https://github.com/etalab-ia/rag-facile/commit/2d313f81df3d5ec0a5e646fefb724f75adb9bfba))
+* source shell profile in workflow verification steps ([95761d5](https://github.com/etalab-ia/rag-facile/commit/95761d580855bfe0c29088604cd1ebb311687335))
+* update install script to reference current setup command ([c06a947](https://github.com/etalab-ia/rag-facile/commit/c06a947c5593a0ea36db6c2a8aa85468211787cc))
+* update install script to reference current setup command ([6ac8d99](https://github.com/etalab-ia/rag-facile/commit/6ac8d99464116745aabbec2c94515fc3d00edffa))
+* use correct GitHub raw content URL format with refs/heads ([93087e0](https://github.com/etalab-ia/rag-facile/commit/93087e0756f5bb0964ec9c28a16f2b0787713c2d))
+* use GITHUB_ENV to persist PATH across workflow steps ([64343cf](https://github.com/etalab-ia/rag-facile/commit/64343cf11a3da89c82b0555ffe0f9a75adb62476))
+* use GITHUB_PATH for uv tools directory in CI ([86b4d35](https://github.com/etalab-ia/rag-facile/commit/86b4d357528de0eafcdd817742eaa6d66702d3c3))
+* use github.head.ref for PR testing to avoid 404 errors ([5589820](https://github.com/etalab-ia/rag-facile/commit/558982041502d921e99859420aca837aee12ea47))
+* use static directory names in reflex-chat template for Windows compatibility ([87a4f1f](https://github.com/etalab-ia/rag-facile/commit/87a4f1fc5bb6b50660f2f0b6e5b898b0b0063d64))
+* use subexpression syntax for variable interpolation in PowerShell install script ([d0221e6](https://github.com/etalab-ia/rag-facile/commit/d0221e61e6365fd4ca05b92c7c2236e75b99cc55))
+
+
+### Documentation
+
+* docs:  ([3064ed2](https://github.com/etalab-ia/rag-facile/commit/3064ed21f0ea4d2c53fa045735e1279f4abfc8b9))
+* add comprehensive Windows support documentation ([871e8fd](https://github.com/etalab-ia/rag-facile/commit/871e8fd6c61cf8294178868072307143573f508a))
+* add Linux and macOS CI/CD testing guides with comprehensive workflow ([a2b9189](https://github.com/etalab-ia/rag-facile/commit/a2b9189019b51ffdfe268bac460fdea0717e002c))
+* align documentation wording on just and moon commands ([d8f8a66](https://github.com/etalab-ia/rag-facile/commit/d8f8a66cb02c4901679e9c8558f316865ec5deb9))
+* align documentation wording on just and moon commands ([581feb8](https://github.com/etalab-ia/rag-facile/commit/581feb89f58126148ac7b86ea8b044033e687dc2))
+* reorganize documentation into dedicated docs directory ([1e43a1f](https://github.com/etalab-ia/rag-facile/commit/1e43a1f1d1b11f632c7e6dcf471b1397edaf6f99))
+* update AGENTS.md with comprehensive current project knowledge ([cf15658](https://github.com/etalab-ia/rag-facile/commit/cf15658ff58ae592b3a119619cfa8b36c54c51b0))
+
 ## [0.6.1](https://github.com/etalab-ia/rag-facile/compare/v0.6.0...v0.6.1) (2026-02-05)
 
 
