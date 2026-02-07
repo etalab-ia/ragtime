@@ -1,6 +1,6 @@
 [project]
 name = "pdf-context"
-version = "0.6.1" # x-release-please-version
+version = "0.7.0" # x-release-please-version
 description = "PDF text extraction and context formatting for LLM applications"
 readme = "README.md"
 requires-python = ">=3.13"
