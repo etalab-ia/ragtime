@@ -5,6 +5,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typer.testing import CliRunner
+
 from cli.commands.setup import (
     FRONTENDS,
     MODULES,
@@ -15,7 +17,7 @@ from cli.commands.setup import (
     run_command,
 )
 from cli.main import app as main_app
-from typer.testing import CliRunner
+
 
 runner = CliRunner()
 

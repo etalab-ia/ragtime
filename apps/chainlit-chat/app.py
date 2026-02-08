@@ -5,9 +5,11 @@ import os
 import chainlit as cl
 import engineio
 import engineio.payload
-from albert_client import AsyncAlbertClient
 from context_loader import process_file
 from dotenv import load_dotenv
+
+from albert_client import AsyncAlbertClient
+
 
 # Increase the number of packets allowed in a single payload to prevent "Too
 # many packets in payload" errors. This is especially helpful during streaming

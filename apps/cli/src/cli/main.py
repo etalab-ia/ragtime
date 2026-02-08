@@ -4,7 +4,8 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from cli.commands import setup, generate_dataset
+from cli.commands import generate_dataset, setup
+
 
 console = Console()
 

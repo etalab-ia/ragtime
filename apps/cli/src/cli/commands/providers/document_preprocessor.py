@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
+
 try:
     from pdf_context import extract_text_from_pdf
 except ImportError:

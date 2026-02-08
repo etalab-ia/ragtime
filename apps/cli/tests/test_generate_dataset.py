@@ -5,10 +5,12 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typer.testing import CliRunner
+
 from cli.commands.providers.albert import AlbertApiProvider
 from cli.commands.providers.schema import GeneratedSample, SampleMetadata
 from cli.main import app as main_app
-from typer.testing import CliRunner
+
 
 runner = CliRunner()
 
@@ -17,18 +19,19 @@ class TestAlbertApiProvider:
     """Tests for AlbertApiProvider."""
 
     @pytest.fixture
-    def mock_requests(self, mocker):
-        """Mock the requests library."""
-        mock_req = mocker.patch("cli.commands.providers.albert.requests")
-        return mock_req
-
-    @pytest.fixture
-    def mock_openai(self, mocker):
+    def mock_albert_client(self, mocker):
         """Mock the Albert client."""
         mock_client = mocker.patch("cli.commands.providers.albert.AlbertClient")
+
+        # Setup default mocks for SDK methods
+        mock_instance = mock_client.return_value
+        mock_instance.collections.create.return_value = MagicMock(id="col-123")
+        mock_instance.documents.upload.return_value = MagicMock()
+        mock_instance.collections.delete.return_value = None
+
         return mock_client
 
-    def test_provider_initialization(self, mock_requests, mock_openai):
+    def test_provider_initialization(self, mock_albert_client):
         """Should initialize with API credentials."""
         provider = AlbertApiProvider(
             api_key="test-key", base_url="http://localhost:8000", model="mistral-7b"
@@ -37,10 +40,10 @@ class TestAlbertApiProvider:
         assert provider.api_key == "test-key"
         assert provider.base_url == "http://localhost:8000"
         assert provider.model == "mistral-7b"
-        # OpenAI client should be initialized
-        mock_openai.assert_called_once()
+        # Albert client should be initialized
+        mock_albert_client.assert_called_once()
 
-    def test_base_url_stripping(self, mock_requests, mock_openai):
+    def test_base_url_stripping(self, mock_albert_client):
         """Should strip trailing slash from base_url."""
         provider = AlbertApiProvider(
             api_key="test-key", base_url="http://localhost:8000/", model="mistral-7b"
@@ -48,18 +51,8 @@ class TestAlbertApiProvider:
 
         assert provider.base_url == "http://localhost:8000"
 
-    def test_upload_documents_creates_collection(self, mock_requests, mock_openai):
+    def test_upload_documents_creates_collection(self, mock_albert_client):
         """Should create a collection and upload documents."""
-        # Mock responses for collection creation and document upload
-        collection_response = MagicMock()
-        collection_response.json.return_value = {"id": "col-123"}
-
-        upload_response = MagicMock()
-        upload_response.status_code = 201
-        upload_response.raise_for_status = MagicMock()
-
-        mock_requests.post.side_effect = [collection_response, upload_response]
-
         provider = AlbertApiProvider(
             api_key="test-key", base_url="http://localhost:8000", model="mistral-7b"
         )
@@ -74,15 +67,11 @@ class TestAlbertApiProvider:
             # Should store collection ID
             assert provider.collection_id == "col-123"
 
-            # Should call POST for collection creation
-            calls = mock_requests.post.call_args_list
-            assert len(calls) >= 2  # Collection creation + document upload
+            # Should call SDK methods for collection creation and document upload
+            provider.albert_client.collections.create.assert_called_once()
+            provider.albert_client.documents.upload.assert_called_once()
 
-            # First call should be to create collection
-            first_call = calls[0]
-            assert "/collections" in first_call[0][0]
-
-    def test_generate_requires_collection(self, mock_requests, mock_openai):
+    def test_generate_requires_collection(self, mock_albert_client):
         """Should raise error if generate called without uploaded documents."""
         provider = AlbertApiProvider(
             api_key="test-key", base_url="http://localhost:8000", model="mistral-7b"
@@ -91,19 +80,8 @@ class TestAlbertApiProvider:
         with pytest.raises(RuntimeError, match="No collection ID"):
             list(provider.generate(10))
 
-    def test_cleanup_deletes_collection(self, mock_requests, mock_openai):
+    def test_cleanup_deletes_collection(self, mock_albert_client):
         """Should delete collection on cleanup."""
-        # Mock responses for collection creation and document upload
-        collection_response = MagicMock()
-        collection_response.json.return_value = {"id": "col-123"}
-
-        upload_response = MagicMock()
-        upload_response.status_code = 201
-        upload_response.raise_for_status = MagicMock()
-
-        mock_requests.post.side_effect = [collection_response, upload_response]
-        mock_requests.delete.return_value = MagicMock()
-
         provider = AlbertApiProvider(
             api_key="test-key", base_url="http://localhost:8000", model="mistral-7b"
         )
@@ -116,23 +94,11 @@ class TestAlbertApiProvider:
 
         provider.cleanup()
 
-        # Should call DELETE with collection ID
-        delete_calls = mock_requests.delete.call_args_list
-        assert len(delete_calls) >= 1
-        assert "col-123" in delete_calls[0][0][0]
+        # Should call SDK delete method with collection ID
+        provider.albert_client.collections.delete.assert_called_once_with("col-123")
 
-    def test_generate_streams_samples(self, mock_requests, mock_openai):
+    def test_generate_streams_samples(self, mock_albert_client):
         """Should stream samples from LLM response."""
-        # Mock responses for collection creation and document upload
-        collection_response = MagicMock()
-        collection_response.json.return_value = {"id": "col-123"}
-
-        upload_response = MagicMock()
-        upload_response.status_code = 201
-        upload_response.raise_for_status = MagicMock()
-
-        mock_requests.post.side_effect = [collection_response, upload_response]
-
         # Mock LLM response
         mock_chunk1 = MagicMock()
         mock_chunk1.choices = [MagicMock()]
@@ -144,7 +110,7 @@ class TestAlbertApiProvider:
         mock_chunk2.choices = [MagicMock()]
         mock_chunk2.choices[0].delta.content = None
 
-        mock_openai.return_value.chat.completions.create.return_value = [
+        mock_albert_client.return_value.chat.completions.create.return_value = [
             mock_chunk1,
             mock_chunk2,
         ]
@@ -165,7 +131,7 @@ class TestAlbertApiProvider:
         assert samples[0].user_input == "What is AI?"
         assert samples[0].reference == "AI is artificial intelligence"
 
-    def test_initialization_with_valid_credentials(self, mock_openai):
+    def test_initialization_with_valid_credentials(self, mock_albert_client):
         """Should initialize successfully with valid credentials."""
         provider = AlbertApiProvider(
             api_key="test-key", base_url="http://localhost:8000", model="mistral-7b"
@@ -174,7 +140,7 @@ class TestAlbertApiProvider:
         assert provider.api_key == "test-key"
         assert provider.base_url == "http://localhost:8000"
         assert provider.model == "mistral-7b"
-        mock_openai.assert_called()
+        mock_albert_client.assert_called()
 
 
 class TestGenerateDatasetCommand:

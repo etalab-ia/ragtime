@@ -17,6 +17,7 @@ import libcst as cst
 import yaml
 from rich.console import Console
 
+
 console = Console()
 
 # Repository root (tools/ is at repo/tools/)

@@ -8,6 +8,7 @@ import typer
 import yaml
 from rich.console import Console
 
+
 app = typer.Typer()
 console = Console()
 

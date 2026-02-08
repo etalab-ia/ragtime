@@ -15,6 +15,7 @@ import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+
 console = Console()
 
 # Supported document extensions
