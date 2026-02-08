@@ -9,6 +9,7 @@ dependencies = [
     "rag-facile-cli",
     "pdf-context",
     "reflex-chat",
+    "albert-client",
 ]
 
 [tool.uv.sources]
@@ -16,6 +17,7 @@ chainlit-chat = { workspace = true }
 rag-facile-cli = { workspace = true }
 pdf-context = { workspace = true }
 reflex-chat = { workspace = true }
+albert-client = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -24,6 +26,9 @@ dev = [
     "pre-commit>=4.0.1",
     "pytest>=8.0.0",
     "pytest-mock>=3.12.0",
+    "pytest-asyncio>=0.21.0",
+    "respx>=0.20.0",
+    "httpx>=0.24.0",
 ]
 
 [tool.uv.workspace]
