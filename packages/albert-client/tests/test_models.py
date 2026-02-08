@@ -55,7 +55,7 @@ class TestBaseModel:
         model = SampleModel(
             name="test",
             score=0.95,
-            extra_field="should_not_fail",  # type: ignore[call-arg]  # API added a new field
+            extra_field="should_not_fail",  # type: ignore[call-arg]
         )
         assert model.name == "test"
         assert model.score == 0.95

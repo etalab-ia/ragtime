@@ -2327,6 +2327,7 @@ name = "rag-facile"
 version = "0.7.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "albert-client" },
     { name = "chainlit-chat" },
     { name = "pdf-context" },
     { name = "rag-facile-cli" },
@@ -2335,15 +2336,19 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "httpx" },
     { name = "pre-commit" },
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-mock" },
+    { name = "respx" },
     { name = "ruff" },
     { name = "ty" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "albert-client", editable = "packages/albert-client" },
     { name = "chainlit-chat", editable = "apps/chainlit-chat" },
     { name = "pdf-context", editable = "packages/pdf-context" },
     { name = "rag-facile-cli", editable = "apps/cli" },
@@ -2352,9 +2357,12 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "httpx", specifier = ">=0.24.0" },
     { name = "pre-commit", specifier = ">=4.0.1" },
     { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-asyncio", specifier = ">=0.21.0" },
     { name = "pytest-mock", specifier = ">=3.12.0" },
+    { name = "respx", specifier = ">=0.20.0" },
     { name = "ruff", specifier = ">=0.14.14" },
     { name = "ty", specifier = ">=0.0.1" },
 ]
