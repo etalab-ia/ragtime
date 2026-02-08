@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "chainlit>=1.3.0",
-    "openai>=1.0.0",
+    "albert-client",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.0",
     "pdf-context",
@@ -20,3 +20,4 @@ py-modules = ["app", "context_loader"]
 
 [tool.uv.sources]
 pdf-context = { workspace = true }
+albert-client = { workspace = true }

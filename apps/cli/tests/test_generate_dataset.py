@@ -24,8 +24,8 @@ class TestAlbertApiProvider:
 
     @pytest.fixture
     def mock_openai(self, mocker):
-        """Mock the OpenAI client."""
-        mock_client = mocker.patch("cli.commands.providers.albert.OpenAI")
+        """Mock the Albert client."""
+        mock_client = mocker.patch("cli.commands.providers.albert.AlbertClient")
         return mock_client
 
     def test_provider_initialization(self, mock_requests, mock_openai):

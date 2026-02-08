@@ -2,10 +2,9 @@ import os
 from typing import Any, TypedDict
 
 import reflex as rx
+from albert_client import AlbertClient, ChatCompletionMessageParam
 from context_loader import process_bytes
 from dotenv import load_dotenv
-from openai import OpenAI
-from openai.types.chat import ChatCompletionMessageParam
 
 # Load .env file
 load_dotenv()
@@ -154,7 +153,7 @@ class State(rx.State):
         if not question:
             return
 
-        async for value in self.openai_process_question(question):  # ty:ignore[call-non-callable]
+        async for value in self.openai_process_question(question):
             yield value
 
     @rx.event
@@ -202,7 +201,7 @@ class State(rx.State):
         messages = messages[:-1]
 
         # Start a new session to answer the question.
-        session = OpenAI(
+        session = AlbertClient(
             base_url=os.getenv("OPENAI_BASE_URL"),
         ).chat.completions.create(
             model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),

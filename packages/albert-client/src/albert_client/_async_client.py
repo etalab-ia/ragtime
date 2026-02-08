@@ -59,7 +59,7 @@ class AsyncAlbertClient:
     def __init__(
         self,
         api_key: str | None = None,
-        base_url: str = "https://albert.api.etalab.gouv.fr/v1",
+        base_url: str | None = "https://albert.api.etalab.gouv.fr/v1",
         **kwargs,
     ):
         """Initialize async Albert client.

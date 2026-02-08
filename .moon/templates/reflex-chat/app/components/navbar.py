@@ -13,14 +13,14 @@ def sidebar_chat(chat: str) -> rx.Component:
         rx.hstack(
             rx.button(
                 chat,
-                on_click=lambda: State.set_chat(chat),  # ty:ignore[call-non-callable]
+                on_click=lambda: State.set_chat(chat),
                 width="80%",
                 variant="surface",
             ),
             rx.button(
                 rx.icon(
                     tag="trash",
-                    on_click=State.delete_chat(chat),  # ty:ignore[call-non-callable]
+                    on_click=State.delete_chat(chat),
                     stroke_width=1,
                 ),
                 width="20%",

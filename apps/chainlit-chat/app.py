@@ -5,9 +5,9 @@ import os
 import chainlit as cl
 import engineio
 import engineio.payload
+from albert_client import AsyncAlbertClient
 from context_loader import process_file
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
 
 # Increase the number of packets allowed in a single payload to prevent "Too
 # many packets in payload" errors. This is especially helpful during streaming
@@ -21,7 +21,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 base_url = os.getenv("OPENAI_BASE_URL")
 model = os.getenv("OPENAI_MODEL")
 
-client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+client = AsyncAlbertClient(api_key=api_key, base_url=base_url)
 
 
 # Example dummy function

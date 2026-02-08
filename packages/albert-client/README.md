@@ -5,6 +5,7 @@ Official Python SDK for France's [Albert API](https://albert.api.etalab.gouv.fr/
 ## Why Use This SDK?
 
 - **OpenAI-Compatible**: Use the same code you know from OpenAI with French sovereign models
+- **Single Dependency**: The only dependency in RAG Facile that requires the OpenAI SDK - all apps and packages use albert-client
 - **RAG Made Easy**: Built-in hybrid search, reranking, and collections management
 - **Type-Safe**: Full autocomplete and type checking in your IDE
 - **Production-Ready**: Async support, comprehensive error handling, battle-tested

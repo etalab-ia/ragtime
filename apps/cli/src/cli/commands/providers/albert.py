@@ -18,9 +18,11 @@ except ImportError as e:
     ) from e
 
 try:
-    from openai import OpenAI
+    from albert_client import AlbertClient
 except ImportError as e:
-    raise ImportError("openai package is required. Install with: uv add openai") from e
+    raise ImportError(
+        "albert-client package is required. Install with: uv add albert-client"
+    ) from e
 
 from .document_preprocessor import DocumentPreprocessor
 from .schema import GeneratedSample
@@ -48,8 +50,8 @@ class AlbertApiProvider:
         self.base_url = base_url.rstrip("/")
         self.model = model
 
-        # Initialize OpenAI client for Albert API
-        self.llm_client = OpenAI(api_key=api_key, base_url=self.base_url)
+        # Initialize Albert client for LLM calls
+        self.llm_client = AlbertClient(api_key=api_key, base_url=self.base_url)
 
         # Initialize document preprocessor for PDF extraction
         self.preprocessor = DocumentPreprocessor()

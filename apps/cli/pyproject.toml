@@ -16,6 +16,7 @@ dependencies = [
     "letta-client>=0.1.0",
     "requests>=2.31.0",
     "pypdf>=5.0.0",
+    "albert-client",
 ]
 
 [dependency-groups]
@@ -23,6 +24,9 @@ dev = [
     "pytest>=8.0.0",
     "pytest-mock>=3.12.0",
 ]
+
+[tool.uv.sources]
+albert-client = { workspace = true }
 
 [project.scripts]
 rag-facile = "cli.main:app"
