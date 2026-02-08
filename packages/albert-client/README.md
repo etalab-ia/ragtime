@@ -1,14 +1,23 @@
 # Albert Client
 
-Official Python SDK for France's [Albert API](https://albert.api.etalab.gouv.fr/) - a sovereign AI platform.
+Official Python SDK for France's [Albert API](https://albert.api.etalab.gouv.fr/) - a sovereign AI platform providing OpenAI-compatible endpoints plus French government-specific features.
+
+## Why Use This SDK?
+
+- **OpenAI-Compatible**: Use the same code you know from OpenAI with French sovereign models
+- **RAG Made Easy**: Built-in hybrid search, reranking, and collections management
+- **Type-Safe**: Full autocomplete and type checking in your IDE
+- **Production-Ready**: Async support, comprehensive error handling, battle-tested
 
 ## Features
 
-✅ **OpenAI-Compatible**: Drop-in replacement for OpenAI SDK with French government models  
-✅ **Type-Safe**: Full Pydantic models for all responses with `.to_dict()` and `.to_json()` helpers  
-✅ **Async Support**: Both sync (`AlbertClient`) and async (`AsyncAlbertClient`) clients  
-✅ **Albert-Specific**: Hybrid RAG search, BGE reranking, collections, documents, OCR, parsing, carbon footprint tracking  
-✅ **100% Test Coverage**: 136 passing tests with comprehensive API mocking
+- OpenAI-compatible endpoints: chat, embeddings, audio, models
+- Hybrid/semantic/lexical search across document collections  
+- BGE reranking for improved relevance
+- Collections and document management
+- OCR with bounding boxes and document parsing
+- Usage tracking with carbon footprint metrics
+- Both sync and async clients
 
 ## Installation
 
@@ -27,52 +36,48 @@ uv pip install -e packages/albert-client
 
 ## Quick Start
 
-### Basic Usage
+### Installation
+
+```bash
+pip install albert-client
+```
+
+### Basic Chat (OpenAI-Compatible)
 
 ```python
 from albert_client import AlbertClient
 
-# Initialize client
 client = AlbertClient(
-    api_key="albert_...",  # Or set ALBERT_API_KEY env var
+    api_key="albert_...",  # Or set OPENAI_API_KEY env var
     base_url="https://albert.api.etalab.gouv.fr"
 )
 
-# Chat completion (OpenAI-compatible)
 response = client.chat.completions.create(
-    model="AgentPublic/llama3-instruct-8b",
+    model="openweight-small",  # or "openweight-medium", "openweight-large"
     messages=[
         {"role": "user", "content": "Qu'est-ce que la loi Énergie Climat ?"}
     ]
 )
 print(response.choices[0].message.content)
+```
 
-# Embeddings (OpenAI-compatible)
-embedding = client.embeddings.create(
-    model="BAAI/bge-m3",
-    input="Transition énergétique en France"
-)
-print(embedding.data[0].embedding)
+### Hybrid Search + Reranking
 
-# Hybrid RAG search (Albert-specific)
+```python
+# Search across your document collections
 results = client.search(
     query="transition énergétique",
     collections=[1, 2],
-    method="hybrid",  # or "semantic", "lexical"
-    k=5
+    method="hybrid",
+    k=10
 )
-for result in results.results:
-    print(f"Score: {result.score:.3f} - {result.chunk.content[:100]}...")
 
-# Rerank for better relevance (Albert-specific)
+# Rerank for better precision
 reranked = client.rerank(
     query="énergies renouvelables",
-    documents=[doc.chunk for doc in results.results],
-    model="BAAI/bge-reranker-v2-m3",
+    documents=[r.chunk.content for r in results.results],
     top_n=3
 )
-for result in reranked.results:
-    print(f"Relevance: {result.relevance_score:.3f}")
 ```
 
 ### Async Usage
@@ -81,154 +86,123 @@ for result in reranked.results:
 from albert_client import AsyncAlbertClient
 
 async with AsyncAlbertClient(api_key="albert_...") as client:
-    # All methods have async variants
     response = await client.chat.completions.create(
-        model="AgentPublic/llama3-instruct-8b",
+        model="openweight-small",
         messages=[{"role": "user", "content": "Hello!"}]
-    )
-    print(response.choices[0].message.content)
-    
-    # Async search
-    results = await client.search(
-        query="énergies renouvelables",
-        collections=[1],
-        method="hybrid"
     )
 ```
 
-### Complete RAG Pipeline Example
+## Common Use Cases
+
+### Chat Completion (OpenAI-Compatible)
 
 ```python
-from albert_client import AlbertClient
-from pathlib import Path
-
-client = AlbertClient(api_key="albert_...")
-
-# 1. Create a knowledge base
-collection = client.create_collection(
-    name="Documentation Énergie",
-    description="Documents sur la transition énergétique",
-    model="BAAI/bge-m3"
-)
-
-# 2. Upload documents
-doc = client.upload_document(
-    file_path=Path("./rapport_energie.pdf"),
-    collection_id=collection.id,
-    metadata={"source": "ministère", "year": 2024}
-)
-
-# 3. Search for relevant context
-results = client.search(
-    query="Quelles sont les aides pour les panneaux solaires ?",
-    collections=[collection.id],
-    method="hybrid",
-    k=10
-)
-
-# 4. Rerank for precision
-reranked = client.rerank(
-    query="aides panneaux solaires",
-    documents=[r.chunk.content for r in results.results],
-    top_n=3
-)
-
-# 5. Build context and generate answer
-context = "\n\n".join([
-    results.results[r.index].chunk.content 
-    for r in reranked.results
-])
-
 response = client.chat.completions.create(
-    model="AgentPublic/llama3-instruct-8b",
+    model="openweight-small",
+    messages=[{"role": "user", "content": "Question?"}]
+)
+```
+
+### Embeddings (OpenAI-Compatible)
+
+```python
+embedding = client.embeddings.create(
+    model="openweight-embeddings",
+    input="Text to embed"
+)
+```
+
+### Building a RAG System
+
+**1. Create a collection:**
+```python
+collection = client.create_collection(
+    name="Documentation",
+    model="openweight-embeddings"
+)
+```
+
+**2. Upload documents:**
+```python
+doc = client.upload_document(
+    file_path="document.pdf",
+    collection_id=collection.id
+)
+```
+
+**3. Search + rerank:**
+```python
+results = client.search(query="...", collections=[collection.id])
+reranked = client.rerank(query="...", documents=[...])
+```
+
+**4. Generate answer with context:**
+```python
+context = "\n".join([r.chunk.content for r in reranked.results])
+response = client.chat.completions.create(
+    model="openweight-small",
     messages=[
-        {"role": "system", "content": f"Contexte:\n{context}"},
-        {"role": "user", "content": "Quelles sont les aides disponibles ?"}
+        {"role": "system", "content": f"Context:\n{context}"},
+        {"role": "user", "content": "Question?"}
     ]
 )
+```
 
-print(response.choices[0].message.content)
+### Document Processing
 
-# 6. Track usage and carbon footprint
-usage = client.get_usage(start_date="2024-01-01", end_date="2024-12-31")
+**OCR:**
+```python
+result = client.ocr(document="file.pdf", include_image_base64=True)
+```
+
+**Parse to markdown:**
+```python
+parsed = client.parse(file_path="doc.pdf", output_format="markdown")
+```
+
+### Monitoring
+
+**Track usage and carbon footprint:**
+```python
+usage = client.get_usage(start_date="2024-01-01")
 print(f"CO2: {usage.records[0].carbon_footprint_g}g")
 ```
 
-## API Reference
+## Full API Reference
 
-The SDK wraps the OpenAI Python client for OpenAI-compatible endpoints while providing custom implementations for Albert-specific features:
+For a complete list of methods and parameters, see the [API documentation](https://albert.api.etalab.gouv.fr/docs).
 
-### OpenAI-Compatible Endpoints
+## Contributing
 
-Passthrough to internal OpenAI client:
+Interested in contributing to the SDK? We welcome improvements!
 
-- `client.chat.completions.create()` - Chat completions
-- `client.embeddings.create()` - Text embeddings
-- `client.audio.transcriptions.create()` - Audio transcriptions
-- `client.audio.speech.create()` - Text-to-speech
-- `client.models.list()` - Available models
+### Development Setup
 
-### Albert-Specific Features
+```bash
+# Clone the repository
+git clone https://github.com/etalab-ia/rag-facile.git
+cd rag-facile
 
-#### Search & Reranking
+# Install dependencies
+uv sync
 
-- `client.search()` - Hybrid/semantic/lexical search across collections
-- `client.rerank()` - BGE reranking for improved relevance
+# Run tests
+pytest packages/albert-client/tests/
 
-#### Collections Management
+# Run with coverage
+pytest packages/albert-client/tests/ --cov=albert_client
+```
 
-- `client.create_collection()` - Create knowledge base
-- `client.list_collections()` - List all collections
-- `client.get_collection()` - Get collection details
-- `client.update_collection()` - Update collection metadata
-- `client.delete_collection()` - Delete collection
+### SDK Development Status
 
-#### Documents & Chunks
-
-- `client.upload_document()` - Upload documents to collections
-- `client.list_documents()` - List documents in collection
-- `client.get_document()` - Get document details
-- `client.delete_document()` - Delete document
-- `client.list_chunks()` - List document chunks
-- `client.get_chunk()` - Get specific chunk
-
-#### Advanced Tools
-
-- `client.get_usage()` - Usage tracking with carbon footprint
-- `client.ocr()` - OCR with bounding boxes
-- `client.ocr_beta()` - Advanced OCR with image extraction
-- `client.parse()` - Parse documents to markdown/json/html
-- `client.upload_file()` - Generic file uploads
-- `client.health_check()` - API health status
-- `client.get_metrics()` - API metrics
-
-## Development Status
-
-**✅ SDK Complete** - All 4 development phases finished:
+The SDK is feature-complete with 136/136 tests passing:
 
 - ✅ **Phase 1**: Core client + OpenAI passthrough (30 tests)
 - ✅ **Phase 2**: Search + Rerank (35 tests)
 - ✅ **Phase 3**: Collections + Documents + Chunks (44 tests)
 - ✅ **Phase 4**: Usage + OCR + Parsing + File Management + Monitoring (27 tests)
 
-**Total: 136/136 tests passing** with 100% coverage of all practical Albert API endpoints.
-
-## Running Tests
-
-```bash
-# Run all tests
-pytest packages/albert-client/tests/
-
-# Run with coverage
-pytest packages/albert-client/tests/ --cov=albert_client
-
-# Run specific test file
-pytest packages/albert-client/tests/test_client.py
-```
-
-## Contributing
-
-See the main [CONTRIBUTING.md](../../CONTRIBUTING.md) for development setup and guidelines.
+See the main [CONTRIBUTING.md](../../CONTRIBUTING.md) for project guidelines and workflow.
 
 ## License
 
