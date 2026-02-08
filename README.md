@@ -172,6 +172,60 @@ just run                  # Run all apps
 
 ## Available Components
 
+### Albert Client SDK
+
+A comprehensive Python SDK for the Albert API, providing both synchronous and asynchronous clients with full type safety.
+
+**Installation:**
+```bash
+pip install albert-client
+# or with uv
+uv add albert-client
+```
+
+**Features:**
+- ✅ **OpenAI-Compatible**: Drop-in replacement for chat, embeddings, audio, and models endpoints
+- ✅ **Albert-Specific Features**: Hybrid RAG search, BGE reranking, collections management
+- ✅ **Advanced Tools**: OCR with bounding boxes, document parsing, usage tracking with carbon footprint
+- ✅ **Full Type Safety**: Comprehensive Pydantic models with `.to_dict()` and `.to_json()` helpers
+- ✅ **Async Support**: All methods available in both sync and async variants
+- ✅ **100% Test Coverage**: 136 passing tests with respx HTTP mocking
+
+**Quick Example:**
+```python
+from albert_client import AlbertClient
+
+# Initialize client
+client = AlbertClient(
+    api_key="your-albert-api-key",
+    base_url="https://albert.api.etalab.gouv.fr"
+)
+
+# OpenAI-compatible chat
+response = client.chat.completions.create(
+    model="AgentPublic/llama3-instruct-8b",
+    messages=[{"role": "user", "content": "Bonjour!"}]
+)
+
+# Albert-specific: Hybrid RAG search
+results = client.search(
+    query="transition énergétique",
+    collections=[1, 2],
+    method="hybrid",
+    k=5
+)
+
+# Rerank documents for better relevance
+reranked = client.rerank(
+    query="énergies renouvelables",
+    documents=[doc.chunk for doc in results.results],
+    model="BAAI/bge-reranker-v2-m3",
+    top_n=3
+)
+```
+
+**Learn More:** See the [Albert Client Documentation](packages/albert-client/README.md) for complete API reference and examples.
+
 ### Frontend Apps
 
 | App | Description | Port |
