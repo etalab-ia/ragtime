@@ -22,12 +22,7 @@ py-modules = ["app", "context_loader"]
 
 [tool.uv.sources]
 albert-client = { workspace = true }
-{%- if use_pdf %}
 pdf-context = { workspace = true }
-{%- endif %}
-{%- if use_chroma %}
-chroma-context = { workspace = true }
-{%- endif %}
 
 [tool.uv]
 package = true
