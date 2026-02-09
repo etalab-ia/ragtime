@@ -7,10 +7,10 @@ This module provides commands for managing RAG Facile configuration:
 - preset: Manage configuration presets
 """
 
-from .show import show
-from .validate import validate_cmd as validate
-from .set_value import set_cmd as set_value
 from .preset import preset
+from .set_value import set_value
+from .show import show
+from .validate import validate
 
 
 __all__ = ["show", "validate", "set_value", "preset"]

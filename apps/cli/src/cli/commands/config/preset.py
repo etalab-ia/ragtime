@@ -162,8 +162,8 @@ def apply(
     except ValueError as e:
         console.print(f"[red]✗ {e}[/red]")
         raise typer.Exit(1)
-    except Exception as e:
-        console.print(f"[red]✗ Error applying preset: {e}[/red]")
+    except OSError as e:
+        console.print(f"[red]✗ Error writing config file: {e}[/red]")
         raise typer.Exit(1)
 
 

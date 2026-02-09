@@ -20,14 +20,27 @@ import tomli_w
 from .schema import RAGConfig
 
 
-def _parse_env_value(value: str) -> Any:
-    """Parse environment variable value to appropriate Python type.
+def parse_value(value: str) -> Any:
+    """Parse string value to appropriate Python type.
+
+    Handles boolean, integer, float, and string types with smart detection.
+    Used for both environment variable overrides and CLI value parsing.
 
     Args:
-        value: Raw string value from environment variable
+        value: Raw string value to parse
 
     Returns:
         Parsed value (bool, int, float, or string)
+
+    Examples:
+        >>> parse_value("true")
+        True
+        >>> parse_value("42")
+        42
+        >>> parse_value("3.14")
+        3.14
+        >>> parse_value("openweight-large")
+        'openweight-large'
     """
     # Boolean
     if value.lower() in ("true", "yes", "1", "on"):
@@ -74,13 +87,13 @@ def _apply_env_overrides(config_dict: dict[str, Any]) -> dict[str, Any]:
         section = key_parts[0]
         field = "_".join(key_parts[1:])  # Rejoin in case of multi-part field names
 
-        # Apply override
-        if section in config_dict:
-            if isinstance(config_dict[section], dict):
-                config_dict[section][field] = _parse_env_value(env_value)
-            else:
-                # Top-level field
-                config_dict[section] = _parse_env_value(env_value)
+        # Apply override (ensure section exists)
+        section_dict = config_dict.setdefault(section, {})
+        if isinstance(section_dict, dict):
+            section_dict[field] = parse_value(env_value)
+        else:
+            # Top-level field
+            config_dict[section] = parse_value(env_value)
 
     return config_dict
 

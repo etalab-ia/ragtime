@@ -32,6 +32,7 @@ from .loader import (
     get_env_override_docs,
     load_config,
     load_config_or_default,
+    parse_value,
     save_config,
     validate_config,
 )
@@ -87,6 +88,7 @@ __all__ = [
     "validate_config",
     "export_json_schema",
     "get_env_override_docs",
+    "parse_value",
     # Runtime functions
     "get_config",
     "reload_config",

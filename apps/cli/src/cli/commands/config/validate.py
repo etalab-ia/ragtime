@@ -6,13 +6,13 @@ import typer
 from pydantic import ValidationError
 from rich.console import Console
 
-from rag_config import validate_config
+from rag_config import RAGConfig, validate_config
 
 
 console = Console()
 
 
-def validate_cmd(
+def validate(
     path: str = typer.Option(
         "ragfacile.toml",
         "--config",
@@ -71,8 +71,12 @@ def validate_cmd(
         raise typer.Exit(1)
 
 
-def _show_warnings(config) -> None:
-    """Show warnings for potential configuration issues."""
+def _show_warnings(config: RAGConfig) -> None:
+    """Show warnings for potential configuration issues.
+
+    Args:
+        config: Validated RAG configuration to check
+    """
     warnings = []
 
     # Check for common misconfigurations

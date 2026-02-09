@@ -148,16 +148,21 @@ def compare_presets(name1: str, name2: str) -> dict[str, tuple[Any, Any]]:
 
     def _compare_dicts(d1: dict, d2: dict, prefix: str = "") -> None:
         """Recursively compare nested dictionaries."""
-        for key in d1.keys():
-            if key not in d2:
+        # Use union of keys to catch differences in both directions
+        for key in sorted(d1.keys() | d2.keys()):
+            path = f"{prefix}.{key}" if prefix else key
+            val1 = d1.get(key)
+            val2 = d2.get(key)
+
+            # Skip if values are identical
+            if val1 == val2:
                 continue
 
-            path = f"{prefix}.{key}" if prefix else key
-
-            if isinstance(d1[key], dict) and isinstance(d2[key], dict):
-                _compare_dicts(d1[key], d2[key], path)
-            elif d1[key] != d2[key]:
-                differences[path] = (d1[key], d2[key])
+            # Recurse for nested dictionaries
+            if isinstance(val1, dict) and isinstance(val2, dict):
+                _compare_dicts(val1, val2, path)
+            else:
+                differences[path] = (val1, val2)
 
     _compare_dicts(dict1, dict2)
     return differences

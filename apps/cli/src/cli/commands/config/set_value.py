@@ -6,13 +6,13 @@ import typer
 from pydantic import ValidationError
 from rich.console import Console
 
-from rag_config import load_config_or_default, save_config
+from rag_config import load_config_or_default, parse_value, save_config
 
 
 console = Console()
 
 
-def set_cmd(
+def set_value(
     key: str = typer.Argument(
         ...,
         help="Config key in dot notation (e.g., generation.model)",
@@ -103,7 +103,7 @@ def set_cmd(
             raise typer.Exit(1)
 
         # Parse value
-        parsed_value = _parse_value(value)
+        parsed_value = parse_value(value)
 
         # Get old value for comparison
         old_value = getattr(current, field_name)
@@ -130,30 +130,3 @@ def set_cmd(
     except Exception as e:
         console.print(f"[red]✗ Error: {e}[/red]")
         raise typer.Exit(1)
-
-
-def _parse_value(value: str) -> bool | int | float | str:
-    """Parse string value to appropriate type.
-
-    Args:
-        value: String value to parse
-
-    Returns:
-        Parsed value as bool, int, float, or string
-    """
-    # Boolean
-    if value.lower() in ("true", "yes", "1", "on"):
-        return True
-    if value.lower() in ("false", "no", "0", "off"):
-        return False
-
-    # Try numeric types
-    try:
-        if "." in value:
-            return float(value)
-        return int(value)
-    except ValueError:
-        pass
-
-    # String (default)
-    return value
