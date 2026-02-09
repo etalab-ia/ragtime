@@ -1,6 +1,6 @@
 # Chainlit Chat
 
-This is a simple Chainlit-based chat application designed to benchmark the OpenGate LLM (Albert API) using the OpenAI Functions Streaming pattern.
+This is a simple Chainlit-based chat application designed to benchmark the Albert API using the OpenAI-compatible Functions Streaming pattern via the albert-client SDK.
 
 ## Setup
 

@@ -79,7 +79,9 @@ class TestAsyncUsageTracking:
 
         result = await client.get_usage(start_date="2024-01-01", end_date="2024-01-31")
 
-        assert mock_route.calls.last.request.url.params.get("start_date") == "2024-01-01"
+        assert (
+            mock_route.calls.last.request.url.params.get("start_date") == "2024-01-01"
+        )
         assert isinstance(result, UsageList)
 
     @respx.mock
@@ -108,7 +110,9 @@ class TestAsyncOCR:
             "model": "doctr",
         }
 
-        respx.post(f"{base_url.rstrip('/')}/ocr").mock(return_value=Response(200, json=mock_ocr))
+        respx.post(f"{base_url.rstrip('/')}/ocr").mock(
+            return_value=Response(200, json=mock_ocr)
+        )
 
         result = await client.ocr(document="https://example.com/doc.pdf")
 
@@ -120,7 +124,9 @@ class TestAsyncOCR:
         """Test async OCR with options."""
         mock_ocr = {"pages": [{"page": 0, "text": "Page 1"}], "model": "doctr"}
 
-        respx.post(f"{base_url.rstrip('/')}/ocr").mock(return_value=Response(200, json=mock_ocr))
+        respx.post(f"{base_url.rstrip('/')}/ocr").mock(
+            return_value=Response(200, json=mock_ocr)
+        )
 
         result = await client.ocr(
             document="https://example.com/doc.pdf",

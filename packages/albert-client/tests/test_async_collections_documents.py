@@ -99,7 +99,9 @@ class TestAsyncCollections:
     async def test_list_collections(self, client, base_url, mock_collection):
         """Test async list collections."""
         respx.get(f"{base_url.rstrip('/')}/collections").mock(
-            return_value=Response(200, json={"object": "list", "data": [mock_collection]})
+            return_value=Response(
+                200, json={"object": "list", "data": [mock_collection]}
+            )
         )
 
         result = await client.list_collections()
@@ -136,12 +138,16 @@ class TestAsyncCollections:
     @respx.mock
     async def test_delete_collection(self, client, base_url):
         """Test async delete collection."""
-        respx.delete(f"{base_url.rstrip('/')}/collections/123").mock(return_value=Response(204))
+        respx.delete(f"{base_url.rstrip('/')}/collections/123").mock(
+            return_value=Response(204)
+        )
 
         await client.delete_collection(123)
 
     @respx.mock
-    async def test_collections_context_manager(self, api_key, base_url, mock_collection):
+    async def test_collections_context_manager(
+        self, api_key, base_url, mock_collection
+    ):
         """Test async collections with context manager."""
         respx.post(f"{base_url.rstrip('/')}/collections").mock(
             return_value=Response(200, json=mock_collection)
@@ -208,19 +214,25 @@ class TestAsyncDocuments:
     @respx.mock
     async def test_delete_document(self, client, base_url):
         """Test async delete document."""
-        respx.delete(f"{base_url.rstrip('/')}/documents/456").mock(return_value=Response(204))
+        respx.delete(f"{base_url.rstrip('/')}/documents/456").mock(
+            return_value=Response(204)
+        )
 
         await client.delete_document(456)
 
     @respx.mock
-    async def test_documents_context_manager(self, api_key, base_url, mock_document, temp_file):
+    async def test_documents_context_manager(
+        self, api_key, base_url, mock_document, temp_file
+    ):
         """Test async documents with context manager."""
         respx.post(f"{base_url.rstrip('/')}/documents").mock(
             return_value=Response(200, json=mock_document)
         )
 
         async with AsyncAlbertClient(api_key=api_key, base_url=base_url) as client:
-            result = await client.upload_document(file_path=temp_file, collection_id=123)
+            result = await client.upload_document(
+                file_path=temp_file, collection_id=123
+            )
             assert isinstance(result, Document)
 
 

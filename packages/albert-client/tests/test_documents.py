@@ -73,7 +73,9 @@ class TestUploadDocument:
         assert result.chunks == 10
 
     @respx.mock
-    def test_upload_document_with_parameters(self, client, base_url, mock_document, temp_file):
+    def test_upload_document_with_parameters(
+        self, client, base_url, mock_document, temp_file
+    ):
         """Test uploading document with custom parameters."""
         respx.post(f"{base_url.rstrip('/')}/documents").mock(
             return_value=Response(200, json=mock_document)
@@ -94,7 +96,9 @@ class TestUploadDocument:
     def test_upload_document_http_error(self, client, base_url, temp_file):
         """Test upload document with HTTP error."""
         respx.post(f"{base_url.rstrip('/')}/documents").mock(
-            return_value=Response(400, json={"error": {"message": "Invalid collection"}})
+            return_value=Response(
+                400, json={"error": {"message": "Invalid collection"}}
+            )
         )
 
         with pytest.raises(Exception):  # httpx.HTTPStatusError
@@ -181,7 +185,9 @@ class TestDeleteDocument:
     @respx.mock
     def test_delete_document(self, client, base_url):
         """Test deleting a document."""
-        respx.delete(f"{base_url.rstrip('/')}/documents/456").mock(return_value=Response(204))
+        respx.delete(f"{base_url.rstrip('/')}/documents/456").mock(
+            return_value=Response(204)
+        )
 
         # Should not raise
         client.delete_document(456)

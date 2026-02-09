@@ -153,7 +153,9 @@ class TestAsyncRerank:
         )
 
         with pytest.raises(Exception):  # httpx.HTTPStatusError
-            await client.rerank(query="test", documents=sample_documents, model="nonexistent-model")
+            await client.rerank(
+                query="test", documents=sample_documents, model="nonexistent-model"
+            )
 
     @respx.mock
     async def test_async_rerank_scores_descending(
@@ -164,7 +166,9 @@ class TestAsyncRerank:
             return_value=Response(200, json=mock_rerank_response)
         )
 
-        result = await client.rerank(query="test", documents=sample_documents, model="test-model")
+        result = await client.rerank(
+            query="test", documents=sample_documents, model="test-model"
+        )
 
         # Verify scores are in descending order
         scores = [r.relevance_score for r in result.results]

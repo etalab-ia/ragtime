@@ -1,17 +1,17 @@
 [project]
 name = "{{ project_name }}"
-version = "0.6.1" # x-release-please-version
+version = "0.7.0" # x-release-please-version
 description = "{{ description }}"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "albert-client",
     "chainlit>=1.3.0",
-    "openai>=1.0.0",
-    "python-dotenv>=1.0.0",
-    "pyyaml>=6.0.0",
 {%- if use_pdf %}
     "pdf-context",
 {%- endif %}
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0",
 ]
 
 [project.scripts]
@@ -20,15 +20,9 @@ chainlit-chat = "chainlit.cli:run"
 [tool.setuptools]
 py-modules = ["app", "context_loader"]
 
-{% if use_pdf or use_chroma %}
 [tool.uv.sources]
-{%- if use_pdf %}
+albert-client = { workspace = true }
 pdf-context = { workspace = true }
-{%- endif %}
-{%- if use_chroma %}
-chroma-context = { workspace = true }
-{%- endif %}
-{% endif %}
 
 [tool.uv]
 package = true

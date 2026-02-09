@@ -12,6 +12,7 @@ from pathlib import Path
 from .document_preprocessor import DocumentPreprocessor
 from .schema import GeneratedSample
 
+
 logger = logging.getLogger(__name__)
 
 

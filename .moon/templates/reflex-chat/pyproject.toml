@@ -1,17 +1,17 @@
 [project]
 name = "{{ project_name }}"
-version = "0.6.1" # x-release-please-version
+version = "0.7.0" # x-release-please-version
 description = "{{ description }}"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "reflex>=0.7.11",
-    "openai>=1.78.1",
-    "python-dotenv>=1.0.0",
-    "pyyaml>=6.0.0",
+    "albert-client",
 {%- if use_pdf %}
     "pdf-context",
 {%- endif %}
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0",
+    "reflex>=0.7.11",
 ]
 
 [project.scripts]
@@ -23,15 +23,9 @@ include = ["{{ project_name | replace(from='-', to='_') }}*"]
 [tool.setuptools]
 py-modules = ["context_loader"]
 
-{% if use_pdf or use_chroma %}
 [tool.uv.sources]
-{%- if use_pdf %}
+albert-client = { workspace = true }
 pdf-context = { workspace = true }
-{%- endif %}
-{%- if use_chroma %}
-chroma-context = { workspace = true }
-{%- endif %}
-{% endif %}
 
 [tool.uv]
 package = true

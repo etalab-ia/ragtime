@@ -24,6 +24,24 @@ class TestClientInitialization:
         client = AlbertClient(base_url=base_url)
         assert client.api_key == api_key
 
+    def test_init_with_openai_api_key_fallback(self, base_url, monkeypatch):
+        """Test initialization with OPENAI_API_KEY env var (fallback)."""
+        api_key = "openai_from_env"
+        monkeypatch.setenv("OPENAI_API_KEY", api_key)
+
+        client = AlbertClient(base_url=base_url)
+        assert client.api_key == api_key
+
+    def test_init_albert_api_key_takes_precedence(self, base_url, monkeypatch):
+        """Test that ALBERT_API_KEY takes precedence over OPENAI_API_KEY."""
+        albert_key = "albert_key"
+        openai_key = "openai_key"
+        monkeypatch.setenv("ALBERT_API_KEY", albert_key)
+        monkeypatch.setenv("OPENAI_API_KEY", openai_key)
+
+        client = AlbertClient(base_url=base_url)
+        assert client.api_key == albert_key
+
     def test_init_without_api_key_raises_error(self, base_url):
         """Test that missing API key raises ValueError."""
         with pytest.raises(ValueError, match="Albert API key is required"):

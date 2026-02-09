@@ -19,6 +19,7 @@ Example usage:
 from .extractor import extract_text_from_bytes, extract_text_from_pdf
 from .formatter import format_as_context, process_multiple_files, process_pdf_file
 
+
 __all__ = [
     "extract_text_from_pdf",
     "extract_text_from_bytes",

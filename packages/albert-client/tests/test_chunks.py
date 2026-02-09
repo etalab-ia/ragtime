@@ -76,7 +76,9 @@ class TestListChunks:
     def test_list_chunks_http_error(self, client, base_url):
         """Test list chunks with HTTP error."""
         respx.get(f"{base_url.rstrip('/')}/chunks/999").mock(
-            return_value=Response(404, json={"error": {"message": "Document not found"}})
+            return_value=Response(
+                404, json={"error": {"message": "Document not found"}}
+            )
         )
 
         with pytest.raises(Exception):  # httpx.HTTPStatusError

@@ -52,7 +52,9 @@ class TestAsyncSearch:
         )
 
         # Make async request
-        result = await client.search(prompt="Loi Énergie Climat", collections=["col_123"])
+        result = await client.search(
+            prompt="Loi Énergie Climat", collections=["col_123"]
+        )
 
         # Verify result type
         assert isinstance(result, SearchResponse)
@@ -72,7 +74,9 @@ class TestAsyncSearch:
         assert "énergie" in chunk.content.lower()
 
     @respx.mock
-    async def test_async_search_with_parameters(self, client, base_url, mock_search_response):
+    async def test_async_search_with_parameters(
+        self, client, base_url, mock_search_response
+    ):
         """Test async search with optional parameters."""
         respx.post(f"{base_url.rstrip('/')}/search").mock(
             return_value=Response(200, json=mock_search_response)
@@ -90,7 +94,9 @@ class TestAsyncSearch:
         assert len(result.data) == 1
 
     @respx.mock
-    async def test_async_search_context_manager(self, api_key, base_url, mock_search_response):
+    async def test_async_search_context_manager(
+        self, api_key, base_url, mock_search_response
+    ):
         """Test async search with context manager."""
         respx.post(f"{base_url.rstrip('/')}/search").mock(
             return_value=Response(200, json=mock_search_response)
@@ -118,7 +124,9 @@ class TestAsyncSearch:
     async def test_async_search_http_error(self, client, base_url):
         """Test async search with HTTP error response."""
         respx.post(f"{base_url.rstrip('/')}/search").mock(
-            return_value=Response(404, json={"error": {"message": "Collection not found"}})
+            return_value=Response(
+                404, json={"error": {"message": "Collection not found"}}
+            )
         )
 
         with pytest.raises(Exception):  # httpx.HTTPStatusError
@@ -130,7 +138,9 @@ class TestAsyncSearchMethods:
 
     @respx.mock
     @pytest.mark.parametrize("method", ["hybrid", "semantic", "lexical"])
-    async def test_async_search_methods(self, client, base_url, method, mock_search_response):
+    async def test_async_search_methods(
+        self, client, base_url, method, mock_search_response
+    ):
         """Test all three async search methods."""
         # Update response to match method
         mock_search_response["data"][0]["method"] = method

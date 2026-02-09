@@ -54,7 +54,9 @@ class TestRerank:
     """Test rerank method."""
 
     @respx.mock
-    def test_rerank_basic(self, client, base_url, mock_rerank_response, sample_documents):
+    def test_rerank_basic(
+        self, client, base_url, mock_rerank_response, sample_documents
+    ):
         """Test basic rerank request."""
         # Mock the rerank endpoint
         respx.post(f"{base_url.rstrip('/')}/rerank").mock(
@@ -86,7 +88,9 @@ class TestRerank:
         assert result.usage.cost == 0.005
 
     @respx.mock
-    def test_rerank_with_top_n(self, client, base_url, mock_rerank_response, sample_documents):
+    def test_rerank_with_top_n(
+        self, client, base_url, mock_rerank_response, sample_documents
+    ):
         """Test rerank with top_n parameter."""
         # Return only top 2 results
         limited_response = mock_rerank_response.copy()
@@ -147,7 +151,9 @@ class TestRerank:
             return_value=Response(200, json=response_no_usage)
         )
 
-        result = client.rerank(query="test", documents=sample_documents, model="test-model")
+        result = client.rerank(
+            query="test", documents=sample_documents, model="test-model"
+        )
 
         assert isinstance(result, RerankResponse)
         assert result.usage is None
@@ -160,7 +166,9 @@ class TestRerank:
         )
 
         with pytest.raises(Exception):  # httpx.HTTPStatusError
-            client.rerank(query="test", documents=sample_documents, model="nonexistent-model")
+            client.rerank(
+                query="test", documents=sample_documents, model="nonexistent-model"
+            )
 
     @respx.mock
     def test_rerank_pydantic_helpers(
@@ -254,20 +262,26 @@ class TestRerankScores:
             return_value=Response(200, json=mock_rerank_response)
         )
 
-        result = client.rerank(query="test", documents=sample_documents, model="test-model")
+        result = client.rerank(
+            query="test", documents=sample_documents, model="test-model"
+        )
 
         # Verify scores are in descending order
         scores = [r.relevance_score for r in result.results]
         assert scores == sorted(scores, reverse=True)
 
     @respx.mock
-    def test_rerank_score_range(self, client, base_url, mock_rerank_response, sample_documents):
+    def test_rerank_score_range(
+        self, client, base_url, mock_rerank_response, sample_documents
+    ):
         """Test that rerank scores are valid floats."""
         respx.post(f"{base_url.rstrip('/')}/rerank").mock(
             return_value=Response(200, json=mock_rerank_response)
         )
 
-        result = client.rerank(query="test", documents=sample_documents, model="test-model")
+        result = client.rerank(
+            query="test", documents=sample_documents, model="test-model"
+        )
 
         # Verify all scores are valid floats
         for rerank_result in result.results:

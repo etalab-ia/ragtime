@@ -176,7 +176,9 @@ class TestSearch:
     def test_search_http_error(self, client, base_url):
         """Test search with HTTP error response."""
         respx.post(f"{base_url.rstrip('/')}/search").mock(
-            return_value=Response(404, json={"error": {"message": "Collection not found"}})
+            return_value=Response(
+                404, json={"error": {"message": "Collection not found"}}
+            )
         )
 
         with pytest.raises(Exception):  # httpx.HTTPStatusError

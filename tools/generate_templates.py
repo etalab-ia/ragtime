@@ -17,6 +17,7 @@ import libcst as cst
 import yaml
 from rich.console import Console
 
+
 console = Console()
 
 # Repository root (tools/ is at repo/tools/)
@@ -34,6 +35,9 @@ ARTIFACTS = [
     ".web",
     ".states",
     ".chainlit",
+    "tests",
+    ".pytest_cache",
+    ".ruff_cache",
 ]
 
 
@@ -533,6 +537,7 @@ def main():
             "sys-config",
             "chainlit-chat",
             "reflex-chat",
+            "albert-client",
             "pdf-context",
             "chroma-context",
         ],
@@ -558,6 +563,7 @@ def main():
             "sys-config",
             "chainlit-chat",
             "reflex-chat",
+            "albert-client",
             "pdf-context",
             "chroma-context",
         ]
@@ -572,6 +578,10 @@ def main():
             generate_app_template("chainlit-chat", REPO_ROOT / "apps" / "chainlit-chat")
         elif template == "reflex-chat":
             generate_app_template("reflex-chat", REPO_ROOT / "apps" / "reflex-chat")
+        elif template == "albert-client":
+            generate_package_template(
+                "albert-client", REPO_ROOT / "packages" / "albert-client"
+            )
         elif template == "pdf-context":
             generate_package_template(
                 "pdf-context", REPO_ROOT / "packages" / "pdf-context"

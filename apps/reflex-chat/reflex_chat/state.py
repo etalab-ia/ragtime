@@ -4,8 +4,9 @@ from typing import Any, TypedDict
 import reflex as rx
 from context_loader import process_bytes
 from dotenv import load_dotenv
-from openai import OpenAI
-from openai.types.chat import ChatCompletionMessageParam
+
+from albert_client import AlbertClient, ChatCompletionMessageParam
+
 
 # Load .env file
 load_dotenv()
@@ -202,7 +203,7 @@ class State(rx.State):
         messages = messages[:-1]
 
         # Start a new session to answer the question.
-        session = OpenAI(
+        session = AlbertClient(
             base_url=os.getenv("OPENAI_BASE_URL"),
         ).chat.completions.create(
             model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),

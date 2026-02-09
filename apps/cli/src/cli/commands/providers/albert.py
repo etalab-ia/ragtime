@@ -10,20 +10,17 @@ from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
 
-try:
-    import requests
-except ImportError as e:
-    raise ImportError(
-        "requests package is required. Install with: uv add requests"
-    ) from e
 
 try:
-    from openai import OpenAI
+    from albert_client import AlbertClient
 except ImportError as e:
-    raise ImportError("openai package is required. Install with: uv add openai") from e
+    raise ImportError(
+        "albert-client package is required. Install with: uv add albert-client"
+    ) from e
 
 from .document_preprocessor import DocumentPreprocessor
 from .schema import GeneratedSample
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +45,8 @@ class AlbertApiProvider:
         self.base_url = base_url.rstrip("/")
         self.model = model
 
-        # Initialize OpenAI client for Albert API
-        self.llm_client = OpenAI(api_key=api_key, base_url=self.base_url)
+        # Initialize Albert client for all API operations
+        self.albert_client = AlbertClient(api_key=api_key, base_url=self.base_url)
 
         # Initialize document preprocessor for PDF extraction
         self.preprocessor = DocumentPreprocessor()
@@ -74,66 +71,35 @@ class AlbertApiProvider:
         processed_paths = self.preprocessor.process_documents(document_paths)
         logger.info(f"Preprocessed {len(processed_paths)} documents")
 
-        # Create a collection
+        # Create a collection using SDK
         collection_name = (
             f"data_foundry_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         )
 
-        collection_data = {
-            "name": collection_name,
-            "description": "RAG Facile Data Foundry",
-        }
-        response = requests.post(
-            f"{self.base_url}/collections",
-            json=collection_data,
-            headers={"Authorization": f"Bearer {self.api_key}"},
+        collection = self.albert_client.collections.create(
+            name=collection_name,
+            description="RAG Facile Data Foundry",
         )
-        response.raise_for_status()
-        collection_response = response.json()
-        self.collection_id = collection_response.get("id")
-
-        if not self.collection_id:
-            raise ValueError("Failed to create collection: no ID in response")
+        self.collection_id = collection.id
 
         logger.info(f"Created Albert collection: {self.collection_id}")
 
-        # Upload each processed document
+        # Upload each processed document using SDK
         for i, doc_path in enumerate(processed_paths, 1):
             logger.info(
                 f"Uploading document {i}/{len(processed_paths)}: {Path(doc_path).name}"
             )
-            with open(doc_path, "rb") as f:
-                # Determine MIME type based on file extension
-                mime_types = {
-                    ".pdf": "application/pdf",
-                    ".txt": "text/plain",
-                    ".md": "text/markdown",
-                }
-                ext = Path(doc_path).suffix.lower()
-                mime_type = mime_types.get(ext, "application/octet-stream")
-                logger.debug(
-                    f"  MIME type: {mime_type}, Size: {Path(doc_path).stat().st_size} bytes"
-                )
+            logger.debug(f"  Size: {Path(doc_path).stat().st_size} bytes")
 
-                # Send file and collection in multipart form data
-                files = {
-                    "file": (Path(doc_path).name, f, mime_type),
-                    "collection": (None, str(self.collection_id)),
-                }
-                doc_response = requests.post(
-                    f"{self.base_url}/documents",
-                    files=files,
-                    headers={"Authorization": f"Bearer {self.api_key}"},
+            try:
+                self.albert_client.documents.upload(
+                    file_path=doc_path, collection_id=self.collection_id
                 )
-                if doc_response.status_code != 201:
-                    error_msg = (
-                        f"Failed to upload {doc_path}: "
-                        f"{doc_response.status_code} {doc_response.text}"
-                    )
-                    logger.error(error_msg)
-                    raise RuntimeError(error_msg)
                 logger.debug("  Upload successful")
-                doc_response.raise_for_status()
+            except Exception as e:
+                error_msg = f"Failed to upload {doc_path}: {e}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg) from e
 
     def generate(self, num_samples: int) -> Iterator[GeneratedSample]:
         """Generate Q/A samples using hybrid search and LLM.
@@ -161,7 +127,7 @@ class AlbertApiProvider:
         total_response = ""
 
         try:
-            stream = self.llm_client.chat.completions.create(
+            stream = self.albert_client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 stream=True,
@@ -207,10 +173,7 @@ class AlbertApiProvider:
         """Delete collection from Albert API and clean up temporary files."""
         if self.collection_id:
             try:
-                requests.delete(
-                    f"{self.base_url}/collections/{self.collection_id}",
-                    headers={"Authorization": f"Bearer {self.api_key}"},
-                )
+                self.albert_client.collections.delete(self.collection_id)
             except Exception:
                 pass  # Non-critical
 

@@ -64,7 +64,9 @@ class TestCreateCollection:
         assert result.visibility == "private"
 
     @respx.mock
-    def test_create_collection_with_all_parameters(self, client, base_url, mock_collection):
+    def test_create_collection_with_all_parameters(
+        self, client, base_url, mock_collection
+    ):
         """Test creating collection with all parameters."""
         mock_route = respx.post(f"{base_url.rstrip('/')}/collections").mock(
             return_value=Response(200, json=mock_collection)
@@ -89,7 +91,9 @@ class TestCreateCollection:
     def test_create_collection_http_error(self, client, base_url):
         """Test create collection with HTTP error."""
         respx.post(f"{base_url.rstrip('/')}/collections").mock(
-            return_value=Response(400, json={"error": {"message": "Invalid collection name"}})
+            return_value=Response(
+                400, json={"error": {"message": "Invalid collection name"}}
+            )
         )
 
         with pytest.raises(Exception):  # httpx.HTTPStatusError
@@ -215,7 +219,9 @@ class TestDeleteCollection:
     @respx.mock
     def test_delete_collection(self, client, base_url):
         """Test deleting a collection."""
-        respx.delete(f"{base_url.rstrip('/')}/collections/123").mock(return_value=Response(204))
+        respx.delete(f"{base_url.rstrip('/')}/collections/123").mock(
+            return_value=Response(204)
+        )
 
         # Should not raise
         client.delete_collection(123)

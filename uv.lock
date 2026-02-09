@@ -321,8 +321,8 @@ name = "chainlit-chat"
 version = "0.7.0"
 source = { editable = "apps/chainlit-chat" }
 dependencies = [
+    { name = "albert-client" },
     { name = "chainlit" },
-    { name = "openai" },
     { name = "pdf-context" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
@@ -330,8 +330,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "albert-client", editable = "packages/albert-client" },
     { name = "chainlit", specifier = ">=1.3.0" },
-    { name = "openai", specifier = ">=1.0.0" },
     { name = "pdf-context", editable = "packages/pdf-context" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },
@@ -2372,6 +2372,7 @@ name = "rag-facile-cli"
 version = "0.7.0"
 source = { editable = "apps/cli" }
 dependencies = [
+    { name = "albert-client" },
     { name = "datasets" },
     { name = "huggingface-hub" },
     { name = "letta-client" },
@@ -2380,7 +2381,6 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "questionary" },
-    { name = "requests" },
     { name = "rich" },
     { name = "typer" },
 ]
@@ -2393,6 +2393,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "albert-client", editable = "packages/albert-client" },
     { name = "datasets", specifier = ">=3.0.0" },
     { name = "huggingface-hub", specifier = ">=1.3.0" },
     { name = "letta-client", specifier = ">=0.1.0" },
@@ -2401,7 +2402,6 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "questionary", specifier = ">=2.0.0" },
-    { name = "requests", specifier = ">=2.31.0" },
     { name = "rich", specifier = ">=13.0.0" },
     { name = "typer", specifier = ">=0.12.0" },
 ]
@@ -2467,7 +2467,7 @@ name = "reflex-chat"
 version = "0.7.0"
 source = { editable = "apps/reflex-chat" }
 dependencies = [
-    { name = "openai" },
+    { name = "albert-client" },
     { name = "pdf-context" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
@@ -2476,7 +2476,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "openai", specifier = ">=1.78.1" },
+    { name = "albert-client", editable = "packages/albert-client" },
     { name = "pdf-context", editable = "packages/pdf-context" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },

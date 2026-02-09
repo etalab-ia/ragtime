@@ -93,7 +93,9 @@ class TestUsageTracking:
         result = client.get_usage(start_date="2024-01-01", end_date="2024-01-31")
 
         # Verify query params
-        assert mock_route.calls.last.request.url.params.get("start_date") == "2024-01-01"
+        assert (
+            mock_route.calls.last.request.url.params.get("start_date") == "2024-01-01"
+        )
         assert mock_route.calls.last.request.url.params.get("end_date") == "2024-01-31"
 
         assert isinstance(result, UsageList)
@@ -162,7 +164,9 @@ class TestOCR:
             return_value=Response(200, json=mock_ocr_response)
         )
 
-        result = client.ocr(document="https://example.com/doc.pdf", pages=[0, 1, 2], model="doctr")
+        result = client.ocr(
+            document="https://example.com/doc.pdf", pages=[0, 1, 2], model="doctr"
+        )
 
         # Verify request body
         request_body = mock_route.calls.last.request.content.decode()
@@ -205,7 +209,9 @@ class TestParsing:
         }
 
     @respx.mock
-    def test_parse_default_markdown(self, client, base_url, temp_file, mock_parsed_document):
+    def test_parse_default_markdown(
+        self, client, base_url, temp_file, mock_parsed_document
+    ):
         """Test parsing document to markdown."""
         respx.post(f"{base_url.rstrip('/')}/parse-beta").mock(
             return_value=Response(200, json=mock_parsed_document)
@@ -218,7 +224,9 @@ class TestParsing:
         assert result.data[0].content.startswith("# Page 1")
 
     @respx.mock
-    def test_parse_with_options(self, client, base_url, temp_file, mock_parsed_document):
+    def test_parse_with_options(
+        self, client, base_url, temp_file, mock_parsed_document
+    ):
         """Test parsing with custom options."""
         mock_route = respx.post(f"{base_url.rstrip('/')}/parse-beta").mock(
             return_value=Response(200, json=mock_parsed_document)

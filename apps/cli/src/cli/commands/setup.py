@@ -10,6 +10,7 @@ import questionary
 import typer
 from rich.console import Console
 
+
 console = Console()
 
 
@@ -177,6 +178,24 @@ def get_pdf_context_source() -> Path:
     )
 
 
+def get_albert_client_source() -> Path:
+    """Get the albert-client source directory for inline copying."""
+    # In development mode, use the packages directory
+    repo_root = Path(__file__).resolve().parents[5]
+    local_source = repo_root / "packages" / "albert-client" / "src" / "albert_client"
+    if local_source.exists():
+        return local_source
+
+    # For installed CLI, albert_client is bundled at cli/albert_client_src
+    package_source = Path(__file__).resolve().parent.parent / "albert_client_src"
+    if package_source.exists():
+        return package_source
+
+    raise FileNotFoundError(
+        "albert-client source not found. This is a packaging error - please reinstall the CLI."
+    )
+
+
 def render_template_file(template_path: Path, variables: dict[str, str | bool]) -> str:
     """Render a template file with Tera-style variables.
 
@@ -256,11 +275,12 @@ def generate_standalone(
 
     # Create pyproject.toml for standalone mode
     pdf_dep = '\n    "pypdf>=5.0.0",' if "PDF" in selected_modules else ""
-    setuptools_packages = (
-        'packages = ["pdf_context"]' if "PDF" in selected_modules else ""
-    )
+    setuptools_packages_list = ["albert_client"]
+    if "PDF" in selected_modules:
+        setuptools_packages_list.append("pdf_context")
+    setuptools_packages = f"packages = {setuptools_packages_list}"
 
-    # For standalone, we don't need workspace sources - pdf_context is local
+    # For standalone, albert-client and pdf-context are local modules (not dependencies)
     pyproject_content = f'''[project]
 name = "{project_name}"
 version = "0.1.0"
@@ -269,7 +289,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "chainlit>=1.3.0",
+    "httpx>=0.24.0",
     "openai>=1.0.0",
+    "pydantic>=2.0.0",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.0",{pdf_dep}
 ]
@@ -291,13 +313,16 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "reflex>=0.7.0",
+    "httpx>=0.24.0",
     "openai>=1.0.0",
+    "pydantic>=2.0.0",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.0",{pdf_dep}
 ]
 
-[tool.setuptools.packages.find]
-where = ["."]
+[tool.setuptools]
+py-modules = ["app", "context_loader"]
+{setuptools_packages}
 
 [tool.uv]
 package = true
@@ -323,9 +348,8 @@ package = true
 
     # For Reflex, we also need to copy the app package directory
     if frontend_choice == "Reflex":
-        # The template uses [project_name | replace(from='-', to='_')] as dir name
-        template_app_dir_name = "[project_name | replace(from='-', to='_')]"
-        template_app_dir = template_dir / template_app_dir_name
+        # The template uses static "app" directory (moon doesn't support filters in paths)
+        template_app_dir = template_dir / "app"
         if template_app_dir.exists():
             snake_name = project_name.replace("-", "_")
             target_app_dir = target_path / snake_name
@@ -334,10 +358,12 @@ package = true
             for src_file in template_app_dir.rglob("*"):
                 if src_file.is_file():
                     rel_path = src_file.relative_to(template_app_dir)
-                    # Rename files/dirs that contain the placeholder
-                    rel_path_str = str(rel_path).replace(
-                        "[project_name | replace(from='-', to='_')]", snake_name
-                    )
+                    rel_path_str = str(rel_path)
+
+                    # Rename app.py to {snake_name}.py (Reflex expects {app_name}/{app_name}.py)
+                    if rel_path_str == "app.py":
+                        rel_path_str = f"{snake_name}.py"
+
                     target_file = target_app_dir / rel_path_str
                     target_file.parent.mkdir(parents=True, exist_ok=True)
                     content = render_template_file(src_file, variables)
@@ -358,10 +384,29 @@ package = true
 
     console.print("[green]✓[/green] Project files generated")
 
-    # Step 3: Copy pdf_context as local module if selected
+    # Step 3: Copy albert-client as local module (always required)
+    console.print()
+    console.print("[bold green]Step 3:[/bold green] Adding Albert client module...")
+
+    try:
+        albert_source = get_albert_client_source()
+        target_albert = target_path / "albert_client"
+        if target_albert.exists():
+            shutil.rmtree(target_albert)
+        shutil.copytree(albert_source, target_albert)
+        # Remove __pycache__ if copied
+        pycache = target_albert / "__pycache__"
+        if pycache.exists():
+            shutil.rmtree(pycache)
+        console.print("[green]✓[/green] Albert client module added")
+    except FileNotFoundError as e:
+        console.print(f"[yellow]Warning: {e}[/yellow]")
+        console.print("[yellow]You'll need to install albert-client manually.[/yellow]")
+
+    # Step 4: Copy pdf_context as local module if selected
     if "PDF" in selected_modules:
         console.print()
-        console.print("[bold green]Step 3:[/bold green] Adding PDF context module...")
+        console.print("[bold green]Step 4:[/bold green] Adding PDF context module...")
 
         try:
             pdf_source = get_pdf_context_source()
@@ -380,8 +425,8 @@ package = true
                 "[yellow]You'll need to install pdf-context manually.[/yellow]"
             )
 
-    # Step 4: Create .env file
-    step_num = 4 if "PDF" in selected_modules else 3
+    # Step 5: Create .env file
+    step_num = 5 if "PDF" in selected_modules else 4
     console.print()
     console.print(
         f"[bold green]Step {step_num}:[/bold green] Creating environment file..."
@@ -641,6 +686,7 @@ def run(
         "sys-config",
         "chainlit-chat",
         "reflex-chat",
+        "albert-client",
         "pdf-context",
         "chroma-context",
     ]:
@@ -715,10 +761,22 @@ OPENAI_MODEL={env_config["openai_model"]}
     env_file.write_text(env_content)
     console.print("[green]✓[/green] Created .env file")
 
+    # 4. Generate albert-client package (always required)
+    console.print()
+    console.print(
+        "[bold green]Step 4:[/bold green] Generating albert-client package..."
+    )
+    albert_cmd = ["moon", "generate", "albert-client", "--defaults"]
+    if force:
+        albert_cmd.append("--force")
+    if not run_command(albert_cmd, "generate albert-client", cwd=target_path):
+        raise typer.Exit(1)
+    console.print("[green]✓[/green] albert-client package generated")
+
     # 5. Generate selected packages
     if selected_modules:
         console.print()
-        console.print("[bold green]Step 4:[/bold green] Generating packages...")
+        console.print("[bold green]Step 5:[/bold green] Generating packages...")
 
         for module in selected_modules:
             module_info = MODULES[module]
@@ -744,14 +802,14 @@ OPENAI_MODEL={env_config["openai_model"]}
 
     # Run uv sync to install dependencies
     console.print()
-    console.print("[bold green]Step 5:[/bold green] Installing dependencies...")
+    console.print("[bold green]Step 6:[/bold green] Installing dependencies...")
     if not run_command(["uv", "sync"], "install dependencies", cwd=target_path):
         console.print("[yellow]Warning: uv sync failed. Run it manually.[/yellow]")
 
     # Start the dev server
     console.print()
     console.print(
-        f"[bold green]Step 6:[/bold green] Starting {frontend_choice} dev server..."
+        f"[bold green]Step 7:[/bold green] Starting {frontend_choice} dev server..."
     )
     console.print()
     console.print(f"[dim]Your app is at: {target_display}[/dim]")
