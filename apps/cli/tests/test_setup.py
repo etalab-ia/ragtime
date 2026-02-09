@@ -460,7 +460,9 @@ class TestGenerateStandalone:
         pyproject = standalone_target / "pyproject.toml"
         content = pyproject.read_text()
         assert "pypdf>=5.0.0" in content
-        assert 'packages = ["pdf_context"]' in content
+        # Both albert_client (always included) and pdf_context should be in packages
+        assert "'albert_client'" in content or '"albert_client"' in content
+        assert "'pdf_context'" in content or '"pdf_context"' in content
 
     def test_modules_yml_includes_pdf_provider(
         self, standalone_target, mock_standalone_deps
