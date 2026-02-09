@@ -72,18 +72,20 @@ class AlbertClient:
         """Initialize Albert client.
 
         Args:
-            api_key: Albert API key. If not provided, reads from ALBERT_API_KEY env var.
+            api_key: Albert API key. If not provided, reads from ALBERT_API_KEY or OPENAI_API_KEY env var.
             base_url: Base URL for Albert API (includes /v1 suffix).
             **kwargs: Additional arguments passed to OpenAI client (timeout, max_retries, etc.).
         """
-        # Get API key from env if not provided
+        # Get API key from env if not provided (check both ALBERT_API_KEY and OPENAI_API_KEY)
         if api_key is None:
-            api_key = os.environ.get("ALBERT_API_KEY")
+            api_key = os.environ.get("ALBERT_API_KEY") or os.environ.get(
+                "OPENAI_API_KEY"
+            )
 
         if not api_key:
             raise ValueError(
                 "Albert API key is required. Provide via api_key parameter or "
-                "ALBERT_API_KEY environment variable."
+                "ALBERT_API_KEY/OPENAI_API_KEY environment variable."
             )
 
         # Initialize wrapped OpenAI client
