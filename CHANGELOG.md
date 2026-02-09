@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0](https://github.com/etalab-ia/rag-facile/compare/v0.7.0...v0.8.0) (2026-02-09)
+
+
+### Features
+
+* Add Albert Client SDK - Complete Python SDK for Albert API ([ebf3d55](https://github.com/etalab-ia/rag-facile/commit/ebf3d55fa603cf1f9fcfed0024dae6f646080d0f))
+* add albert-client package template for monorepo workspaces ([1e99698](https://github.com/etalab-ia/rag-facile/commit/1e9969868d0c3228cef8d04b76cd2e1c3975048f))
+* add albert-client SDK Phase 1 (core client + OpenAI passthrough) ([0424d2c](https://github.com/etalab-ia/rag-facile/commit/0424d2c1b8adf9f0eb6bcb9d3a2fcc35f28da5a1))
+* add OPENAI_API_KEY fallback for AlbertClient initialization ([418b5f2](https://github.com/etalab-ia/rag-facile/commit/418b5f233d3432ea8d331ec0a3c9158d589fe5f9))
+* implement Phase 2 (Search + Rerank) for Albert Client SDK ([675ad56](https://github.com/etalab-ia/rag-facile/commit/675ad56815574b385edd42042f379d84740ec592))
+* implement Phase 3 (Collections & Documents) for Albert Client SDK ([f7d29af](https://github.com/etalab-ia/rag-facile/commit/f7d29af15ae09bc1b5be3402331d382641a0b41a))
+* implement Phase 4 (Tools & Monitoring) for Albert Client SDK ([4b0abba](https://github.com/etalab-ia/rag-facile/commit/4b0abba2fe3cd0e0d6433f3915f31bd38ebe36d3))
+
+
+### Bug Fixes
+
+* add albert-client to workspace dependencies and test dependencies ([8d405f8](https://github.com/etalab-ia/rag-facile/commit/8d405f8c4ef54915350ba87a4792475567e1b710))
+* bundle albert-client with CLI for standalone workspaces ([d36c744](https://github.com/etalab-ia/rag-facile/commit/d36c7445e64ee5fa06f4a1e7252042f306a980ea))
+* centralize ruff config and remove unused resources directory ([552d071](https://github.com/etalab-ia/rag-facile/commit/552d07105c097ce881e83b0946f1db2ef2ebb13f))
+* correct API usage in documentation examples ([122beaa](https://github.com/etalab-ia/rag-facile/commit/122beaaaee26265b58643682c6b11fdb61fc34ca))
+* regenerate templates with albert-client dependency ([094be96](https://github.com/etalab-ia/rag-facile/commit/094be96021a8c1e5e9fffd5f43a569af7b0c1d78))
+* rename app.py to match Reflex app_name requirement in standalone workspaces ([9c20691](https://github.com/etalab-ia/rag-facile/commit/9c2069187bbe548128487198a093aa2757df31c6))
+* use correct Albert API model aliases in documentation ([a9fcd03](https://github.com/etalab-ia/rag-facile/commit/a9fcd035e851f307a3576d04802cce1a28c85dca))
+
+
+### Documentation
+
+* add Albert Client SDK documentation ([eeb5d8d](https://github.com/etalab-ia/rag-facile/commit/eeb5d8d7332910812e10bc0862f4fecbd0eb7436))
+* add Albert Client SDK with audience-focused documentation ([6a3a51e](https://github.com/etalab-ia/rag-facile/commit/6a3a51e7e3c8126ca34ed08ec4054cded5ead16b))
+* improve type safety documentation in albert-client SDK ([dc7d2af](https://github.com/etalab-ia/rag-facile/commit/dc7d2afddf9de71b5fb289d5e6b453a93f6c299d))
+
 ## [0.7.0](https://github.com/etalab-ia/rag-facile/compare/v0.6.1...v0.7.0) (2026-02-07)
 
 
