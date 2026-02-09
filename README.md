@@ -172,39 +172,71 @@ just run                  # Run all apps
 
 ## Available Components
 
+### Configuration Management
+
+RAG Facile includes a comprehensive configuration system for customizing your RAG pipeline without touching code.
+
+**Quick Start:**
+```bash
+# Apply a preset configuration
+rag-facile config preset apply balanced
+
+# View current configuration
+rag-facile config show
+
+# Update specific values
+rag-facile config set generation.model openweight-large
+rag-facile config set generation.temperature 0.5
+```
+
+**Available Presets:**
+- `balanced` - Recommended default (quality/speed tradeoff)
+- `fast` - Speed-optimized (smaller models, skip reranking)
+- `accurate` - Quality-optimized (larger models, hallucination detection)
+- `legal` - For legal documents (strict citations, accuracy validation)
+- `hr` - For HR policies (privacy-aware, clear attribution)
+
+**Environment Variable Overrides:**
+```bash
+export RAG_GENERATION_MODEL=openweight-large
+export RAG_RERANKING_ENABLED=true
+```
+
+See [Configuration Guide](packages/rag-config/README.md) for complete documentation.
+
 ### Albert Client SDK
 
-SDK Python officiel pour l'API Albert. Compatible OpenAI avec des fonctionnalités spécifiques pour l'administration française.
+Official Python SDK for the Albert API. OpenAI-compatible with features specific to French government administration.
 
 **Installation:**
 ```bash
 pip install albert-client
 ```
 
-**Exemple d'utilisation:**
+**Usage Example:**
 ```python
 from albert_client import AlbertClient
 
 client = AlbertClient(
-    api_key="votre-clé-api",
+    api_key="your-api-key",
     base_url="https://albert.api.etalab.gouv.fr/v1"
 )
 
-# Compatible OpenAI
+# OpenAI-compatible
 response = client.chat.completions.create(
     model="openweight-small",
-    messages=[{"role": "user", "content": "Bonjour!"}]
+    messages=[{"role": "user", "content": "Hello!"}]
 )
 
-# Recherche hybride avec reranking
+# Hybrid search with reranking
 results = client.search(
-    query="transition énergétique",
+    query="energy transition",
     collections=[1, 2],
     method="hybrid"
 )
 ```
 
-**Documentation complète:** [Albert Client SDK](packages/albert-client/README.md)
+**Full Documentation:** [Albert Client SDK](packages/albert-client/README.md)
 
 ### Frontend Apps
 

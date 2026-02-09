@@ -4,7 +4,7 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from cli.commands import generate_dataset, setup
+from cli.commands import config, generate_dataset, setup
 
 
 console = Console()
@@ -50,6 +50,21 @@ def main_callback(
 
 
 # Register commands in alphabetical order
+
+# Config command group
+config_app = typer.Typer(
+    name="config",
+    help="Manage RAG configuration",
+    no_args_is_help=True,
+)
+config_app.command("show", help="Display current configuration")(config.show)
+config_app.command("validate", help="Validate configuration file")(config.validate)
+config_app.command("set", help="Set configuration value")(config.set_value)
+config_app.add_typer(
+    config.preset(), name="preset", help="Manage configuration presets"
+)
+app.add_typer(config_app, name="config")
+
 app.command(
     name="generate-dataset",
     help="Generate synthetic Q/A evaluation dataset from documents",
