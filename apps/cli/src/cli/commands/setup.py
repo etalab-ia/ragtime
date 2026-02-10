@@ -737,6 +737,7 @@ def run(
                 )
                 for name, config in PRESET_CONFIGS.items()
             ],
+            default="balanced",
         ).ask()
         if not preset:
             console.print("[red]Aborted.[/red]")
