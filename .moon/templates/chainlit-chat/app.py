@@ -129,8 +129,11 @@ async def main(message: cl.Message):
     # Send an empty message to start the stream UI
     await msg.send()
 
-    # Create the completion with streaming (uses config values)
-    stream = await client.chat.completions.create(
+    # TODO: OpenAI SDK can't infer correct return type when stream parameter is a variable
+    # This causes ty to report no-matching-overload error. Need to either:
+    # 1. Split into separate streaming/non-streaming code paths with literal True/False
+    # 2. Wait for OpenAI SDK to improve overload inference with runtime booleans
+    stream = await client.chat.completions.create(  # ty: ignore[no-matching-overload]
         model=model,
         messages=message_history,
         tools=tools,
@@ -142,8 +145,7 @@ async def main(message: cl.Message):
 
     cur_tool_calls = []
 
-    # Type ignore: SDK can't infer stream type when stream parameter is variable
-    async for part in stream:  # type: ignore[union-attr]
+    async for part in stream:
         if not part.choices:
             continue
 
