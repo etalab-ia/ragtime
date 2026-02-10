@@ -11,7 +11,7 @@ from cli.commands.setup import (
     FRONTENDS,
     MODULES,
     PROJECT_STRUCTURES,
-    get_pdf_context_source,
+    get_retrieval_full_context_source,
     get_templates_dir,
     render_template_file,
     run_command,
@@ -92,7 +92,7 @@ class TestConstants:
     def test_modules_has_pdf(self):
         """Should have PDF module option."""
         assert "PDF" in MODULES
-        assert MODULES["PDF"]["template"] == "pdf-context"
+        assert MODULES["PDF"]["template"] == "full-context"
         assert MODULES["PDF"]["available"] is True
 
     def test_modules_has_chroma(self):
@@ -115,33 +115,33 @@ class TestConstants:
         assert PROJECT_STRUCTURES["Monorepo (for multi-app projects)"] == "monorepo"
 
 
-class TestGetPdfContextSource:
-    """Tests for get_pdf_context_source function."""
+class TestGetRetrievalFullContextSource:
+    """Tests for get_retrieval_full_context_source function."""
 
     def test_returns_path_object(self):
         """Should return a Path object."""
-        result = get_pdf_context_source()
+        result = get_retrieval_full_context_source()
         assert isinstance(result, Path)
 
-    def test_path_ends_with_pdf_context(self):
-        """Should return path ending with pdf_context."""
-        result = get_pdf_context_source()
-        assert result.name == "pdf_context"
+    def test_path_ends_with_full_context(self):
+        """Should return path ending with full_context."""
+        result = get_retrieval_full_context_source()
+        assert result.name == "full_context"
 
     def test_path_exists_in_repo(self):
-        """pdf_context source should exist when running from repo."""
-        result = get_pdf_context_source()
-        assert result.exists(), f"pdf_context source not found at {result}"
+        """full_context source should exist when running from repo."""
+        result = get_retrieval_full_context_source()
+        assert result.exists(), f"full_context source not found at {result}"
 
     def test_contains_init_file(self):
-        """pdf_context source should contain __init__.py."""
-        result = get_pdf_context_source()
+        """full_context source should contain __init__.py."""
+        result = get_retrieval_full_context_source()
         init_file = result / "__init__.py"
         assert init_file.exists(), f"__init__.py not found at {init_file}"
 
     def test_contains_required_modules(self):
-        """pdf_context source should contain extractor and formatter modules."""
-        result = get_pdf_context_source()
+        """full_context source should contain extractor and formatter modules."""
+        result = get_retrieval_full_context_source()
         assert (result / "extractor.py").exists()
         assert (result / "formatter.py").exists()
 
@@ -391,10 +391,10 @@ class TestGenerateStandalone:
         assert python_version.exists()
         assert "3.13" in python_version.read_text()
 
-    def test_copies_pdf_context_when_selected(
+    def test_copies_full_context_when_selected(
         self, standalone_target, mock_standalone_deps
     ):
-        """Should copy pdf_context module when PDF is selected."""
+        """Should copy full_context module when PDF is selected."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -410,16 +410,16 @@ class TestGenerateStandalone:
             force=False,
         )
 
-        pdf_context = standalone_target / "pdf_context"
-        assert pdf_context.exists()
-        assert (pdf_context / "__init__.py").exists()
-        assert (pdf_context / "extractor.py").exists()
-        assert (pdf_context / "formatter.py").exists()
+        full_context = standalone_target / "full_context"
+        assert full_context.exists()
+        assert (full_context / "__init__.py").exists()
+        assert (full_context / "extractor.py").exists()
+        assert (full_context / "formatter.py").exists()
 
-    def test_pdf_context_not_copied_when_not_selected(
+    def test_full_context_not_copied_when_not_selected(
         self, standalone_target, mock_standalone_deps
     ):
-        """Should not copy pdf_context when PDF is not selected."""
+        """Should not copy full_context when PDF is not selected."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -435,8 +435,8 @@ class TestGenerateStandalone:
             force=False,
         )
 
-        pdf_context = standalone_target / "pdf_context"
-        assert not pdf_context.exists()
+        full_context = standalone_target / "full_context"
+        assert not full_context.exists()
 
     def test_pyproject_includes_pypdf_when_pdf_selected(
         self, standalone_target, mock_standalone_deps
@@ -460,9 +460,9 @@ class TestGenerateStandalone:
         pyproject = standalone_target / "pyproject.toml"
         content = pyproject.read_text()
         assert "pypdf>=5.0.0" in content
-        # Both albert_client (always included) and pdf_context should be in packages
-        assert "'albert_client'" in content or '"albert_client"' in content
-        assert "'pdf_context'" in content or '"pdf_context"' in content
+        # Both albert (always included) and full_context should be in packages
+        assert "'albert'" in content or '"albert"' in content
+        assert "'full_context'" in content or '"full_context"' in content
 
     def test_modules_yml_includes_pdf_provider(
         self, standalone_target, mock_standalone_deps
@@ -485,7 +485,7 @@ class TestGenerateStandalone:
 
         modules_yml = standalone_target / "modules.yml"
         content = modules_yml.read_text()
-        assert "pdf: pdf_context" in content
+        assert "pdf: full_context" in content
 
     def test_creates_chainlit_md_for_chainlit(
         self, standalone_target, mock_standalone_deps

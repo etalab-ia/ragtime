@@ -1,0 +1,92 @@
+# RAG Facile Configuration - Accurate Preset
+# Quality-optimized: larger models, more retrieval, hallucination detection
+# Use when: Production, critical accuracy, research applications
+
+[meta]
+schema_version = "1.0.0"
+preset = "accurate"
+
+[eval]
+provider = "albert"
+target_samples = 100  # More samples for better coverage
+output_format = "jsonl"
+
+[ingestion]
+file_types = [".pdf", ".md", ".txt"]
+
+[ingestion.ocr]
+enabled = true
+dpi = 600  # High DPI for best quality
+extract_images = true  # Extract for comprehensive processing
+include_bounding_boxes = true  # Full OCR metadata
+
+[ingestion.parsing]
+output_format = "markdown"
+preserve_structure = true
+include_page_numbers = true
+
+[chunking]
+strategy = "semantic"  # Best context preservation
+chunk_size = 768  # Larger chunks for more context
+chunk_overlap = 100  # More overlap for continuity
+preserve_metadata = true
+
+[embedding]
+model = "albert-embedding-large"  # Best embedding model
+batch_size = 16  # Smaller batches for stability
+normalization = "L2"
+
+[storage]
+backend = "albert-collections"
+collection_naming = "workspace"
+distance_metric = "cosine"
+
+[query]
+rewrite_enabled = true  # Improve query quality
+expand_enabled = true  # Find more relevant results
+spell_check = true  # Fix typos
+
+[retrieval]
+method = "hybrid"  # Best of both worlds
+top_k = 20  # More candidates for reranking
+score_threshold = 0.5  # Only high-quality results
+
+[retrieval.hybrid]
+alpha = 0.5  # Balanced semantic/lexical
+
+[reranking]
+enabled = true  # Essential for accuracy
+model = "bge-reranker-large"
+top_n = 5  # More final results
+
+[context]
+strategy = "token-budget"
+max_tokens = 8192  # Large context window
+deduplicate = true
+ordering = "by-score"
+
+[context.formatting]
+include_citations = true
+citation_style = "inline"
+
+[generation]
+model = "openweight-large"  # Best generation model
+temperature = 0.5  # Lower for more factual responses
+max_tokens = 2048  # Longer, more detailed responses
+streaming = true
+system_prompt = """You are an expert assistant for the French government.
+Provide comprehensive, accurate answers based on the provided context.
+Always cite your sources using [1], [2], etc.
+If you're unsure about any information, explicitly state it."""
+
+[hallucination]
+enabled = true  # Critical for accuracy
+method = "citation-check"
+threshold = 0.9  # Strict threshold
+fallback = "warn"
+
+[formatting]
+output_format = "markdown"
+include_sources = true
+include_confidence = true  # Show confidence scores
+language = "fr"

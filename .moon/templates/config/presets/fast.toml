@@ -1,0 +1,89 @@
+# RAG Facile Configuration - Fast Preset
+# Speed-optimized: smaller models, skip reranking, reduced retrieval
+# Use when: Quick prototypes, development, low-latency requirements
+
+[meta]
+schema_version = "1.0.0"
+preset = "fast"
+
+[eval]
+provider = "albert"
+target_samples = 25  # Fewer samples for faster generation
+output_format = "jsonl"
+
+[ingestion]
+file_types = [".pdf", ".md", ".txt"]
+
+[ingestion.ocr]
+enabled = true
+dpi = 200  # Lower DPI for faster OCR
+extract_images = false
+include_bounding_boxes = false
+
+[ingestion.parsing]
+output_format = "markdown"
+preserve_structure = true
+include_page_numbers = false  # Skip for speed
+
+[chunking]
+strategy = "fixed-size"  # Faster than semantic chunking
+chunk_size = 512
+chunk_overlap = 25  # Less overlap
+preserve_metadata = false  # Skip for speed
+
+[embedding]
+model = "albert-embedding-small"
+batch_size = 64  # Larger batches for speed
+normalization = "L2"
+
+[storage]
+backend = "albert-collections"
+collection_naming = "workspace"
+distance_metric = "cosine"
+
+[query]
+rewrite_enabled = false
+expand_enabled = false
+spell_check = false
+
+[retrieval]
+method = "semantic"  # Skip lexical component for speed
+top_k = 5  # Fewer results
+score_threshold = 0.0
+
+[retrieval.hybrid]
+alpha = 1.0  # Pure semantic (not used since method=semantic)
+
+[reranking]
+enabled = false  # Skip reranking for speed
+model = "bge-reranker-large"
+top_n = 3
+
+[context]
+strategy = "top-n"  # Simpler than token-budget
+max_tokens = 2048  # Smaller context
+deduplicate = false  # Skip for speed
+ordering = "by-score"
+
+[context.formatting]
+include_citations = true
+citation_style = "inline"
+
+[generation]
+model = "openweight-small"  # Fastest model
+temperature = 0.3  # Lower for more deterministic (faster)
+max_tokens = 512  # Shorter responses
+streaming = true
+system_prompt = """You are a helpful assistant. Answer concisely based on the context provided."""
+
+[hallucination]
+enabled = false
+method = "citation-check"
+threshold = 0.8
+fallback = "warn"
+
+[formatting]
+output_format = "markdown"
+include_sources = false  # Skip for speed
+include_confidence = false
+language = "fr"

@@ -4,7 +4,7 @@ tasks:
   # Generate all templates from golden masters
   # Note: Caching disabled because inputs come from outside this project
   generate-all:
-    command: uv run python generate_templates.py --all
+    command: uv run python generate_templates.py --all --force
     inputs:
       - "generate_templates.py"
     options:
@@ -12,33 +12,47 @@ tasks:
 
   # Generate individual templates
   generate-sys-config:
-    command: uv run python generate_templates.py --template sys-config
+    command: uv run python generate_templates.py --template sys-config --force
     inputs:
       - "generate_templates.py"
 
   generate-chainlit-chat:
-    command: uv run python generate_templates.py --template chainlit-chat
+    command: uv run python generate_templates.py --template chainlit-chat --force
     inputs:
       - "generate_templates.py"
     options:
       cache: false
 
   generate-reflex-chat:
-    command: uv run python generate_templates.py --template reflex-chat
+    command: uv run python generate_templates.py --template reflex-chat --force
     inputs:
       - "generate_templates.py"
     options:
       cache: false
 
-  generate-pdf-context:
-    command: uv run python generate_templates.py --template pdf-context
+  generate-albert:
+    command: uv run python generate_templates.py --template albert --force
+    inputs:
+      - "generate_templates.py"
+    options:
+      cache: false
+
+  generate-config:
+    command: uv run python generate_templates.py --template config --force
+    inputs:
+      - "generate_templates.py"
+    options:
+      cache: false
+
+  generate-full-context:
+    command: uv run python generate_templates.py --template full-context --force
     inputs:
       - "generate_templates.py"
     options:
       cache: false
 
   generate-chroma-context:
-    command: uv run python generate_templates.py --template chroma-context
+    command: uv run python generate_templates.py --template chroma-context --force
     inputs:
       - "generate_templates.py"
 

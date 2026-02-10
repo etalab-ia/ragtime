@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 try:
-    from albert_client import AlbertClient
+    from albert import AlbertClient
 except ImportError as e:
     raise ImportError(
         "albert-client package is required. Install with: uv add albert-client"

@@ -35,10 +35,11 @@ def sidebar_chat(chat: str) -> rx.Component:
 
 def sidebar(trigger) -> rx.Component:
     """The sidebar component."""
+    # TODO: Fix Reflex component kwargs type errors (tracked for future PR)
     return rx.drawer.root(
-        rx.drawer.trigger(trigger),
-        rx.drawer.overlay(),
-        rx.drawer.portal(
+        rx.drawer.trigger(trigger),  # type: ignore[missing-argument]
+        rx.drawer.overlay(),  # type: ignore[missing-argument]
+        rx.drawer.portal(  # type: ignore[missing-argument]
             rx.drawer.content(
                 rx.vstack(
                     rx.heading("Chats", color=rx.color("mauve", 11)),
@@ -62,8 +63,9 @@ def sidebar(trigger) -> rx.Component:
 
 def modal(trigger) -> rx.Component:
     """A modal to create a new chat."""
+    # TODO: Fix Reflex component kwargs type errors (tracked for future PR)
     return rx.dialog.root(
-        rx.dialog.trigger(trigger),
+        rx.dialog.trigger(trigger),  # type: ignore[missing-argument]
         rx.dialog.content(
             rx.form(
                 rx.hstack(

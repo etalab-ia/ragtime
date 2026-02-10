@@ -1,0 +1,89 @@
+[meta]
+schema_version = "1.0.0"
+preset = "balanced"
+
+[eval]
+provider = "albert"
+target_samples = 50
+output_format = "jsonl"
+
+[ingestion]
+file_types = [
+    ".pdf",
+    ".md",
+    ".txt",
+]
+
+[ingestion.ocr]
+enabled = true
+dpi = 300
+extract_images = false
+include_bounding_boxes = false
+
+[ingestion.parsing]
+output_format = "markdown"
+preserve_structure = true
+include_page_numbers = true
+
+[chunking]
+strategy = "semantic"
+chunk_size = 512
+chunk_overlap = 50
+preserve_metadata = true
+
+[embedding]
+model = "albert-embedding-small"
+batch_size = 32
+normalization = "L2"
+
+[storage]
+backend = "albert-collections"
+collection_naming = "workspace"
+distance_metric = "cosine"
+
+[query]
+rewrite_enabled = false
+expand_enabled = false
+spell_check = false
+
+[retrieval]
+method = "hybrid"
+top_k = 10
+score_threshold = 0.0
+
+[retrieval.hybrid]
+alpha = 0.5
+
+[reranking]
+enabled = true
+model = "bge-reranker-large"
+top_n = 3
+
+[context]
+strategy = "token-budget"
+max_tokens = 4096
+deduplicate = true
+ordering = "by-score"
+
+[context.formatting]
+include_citations = true
+citation_style = "inline"
+
+[generation]
+model = "openweight-medium"
+temperature = 0.7
+max_tokens = 1024
+streaming = true
+system_prompt = "You are a helpful assistant for the French government.\nAnswer questions based on the provided context.\nAlways cite your sources using [1], [2], etc."
+
+[hallucination]
+enabled = false
+method = "citation-check"
+threshold = 0.8
+fallback = "warn"
+
+[formatting]
+output_format = "markdown"
+include_sources = true
+include_confidence = false
+language = "fr"

@@ -58,12 +58,17 @@ class JinjaTransformer(cst.CSTTransformer):
         return updated_node
 
 
-def generate_sys_config():
+def generate_sys_config(force: bool = False):
     """Generate sys-config template (workspace configuration)."""
     console.print("[bold]Generating sys-config template...[/bold]")
 
     target = TEMPLATES_DIR / "sys-config"
     if target.exists():
+        if not force:
+            console.print(
+                f"[red]Error:[/red] Template directory {target} already exists. Use --force to overwrite."
+            )
+            return False
         shutil.rmtree(target)
     target.mkdir(parents=True)
 
@@ -207,12 +212,17 @@ version = "1.34.0"
     console.print("[green]✓[/green] sys-config generated")
 
 
-def generate_app_template(app_name: str, source_dir: Path):
+def generate_app_template(app_name: str, source_dir: Path, force: bool = False):
     """Generate an app template from source with parameterization."""
     console.print(f"[bold]Generating {app_name} template...[/bold]")
 
     target = TEMPLATES_DIR / app_name
     if target.exists():
+        if not force:
+            console.print(
+                f"[red]Error:[/red] Template directory {target} already exists. Use --force to overwrite."
+            )
+            return False
         shutil.rmtree(target)
 
     # Copy source to target, ignoring artifacts
@@ -453,12 +463,17 @@ context_providers:
     console.print(f"[green]✓ {app_name} template complete![/green]")
 
 
-def generate_package_template(pkg_name: str, source_dir: Path):
+def generate_package_template(pkg_name: str, source_dir: Path, force: bool = False):
     """Generate a package template from source."""
     console.print(f"[bold]Generating {pkg_name} template...[/bold]")
 
     target = TEMPLATES_DIR / pkg_name
     if target.exists():
+        if not force:
+            console.print(
+                f"[red]Error:[/red] Template directory {target} already exists. Use --force to overwrite."
+            )
+            return False
         shutil.rmtree(target)
 
     # Copy source to target, ignoring artifacts
@@ -478,12 +493,17 @@ def generate_package_template(pkg_name: str, source_dir: Path):
     console.print(f"[green]✓ {pkg_name} template complete![/green]")
 
 
-def generate_chroma_placeholder():
+def generate_chroma_placeholder(force: bool = False):
     """Generate chroma-context placeholder template."""
     console.print("[bold]Generating chroma-context placeholder...[/bold]")
 
     target = TEMPLATES_DIR / "chroma-context"
     if target.exists():
+        if not force:
+            console.print(
+                f"[red]Error:[/red] Template directory {target} already exists. Use --force to overwrite."
+            )
+            return False
         shutil.rmtree(target)
     target.mkdir(parents=True)
 
@@ -537,8 +557,9 @@ def main():
             "sys-config",
             "chainlit-chat",
             "reflex-chat",
-            "albert-client",
-            "pdf-context",
+            "albert",
+            "full-context",
+            "config",
             "chroma-context",
         ],
         help="Generate a specific template",
@@ -547,6 +568,11 @@ def main():
         "--all",
         action="store_true",
         help="Generate all templates",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force overwrite existing templates",
     )
     args = parser.parse_args()
 
@@ -563,34 +589,70 @@ def main():
             "sys-config",
             "chainlit-chat",
             "reflex-chat",
-            "albert-client",
-            "pdf-context",
+            "albert",
+            "full-context",
+            "config",
             "chroma-context",
         ]
     else:
         templates_to_generate = [args.template]
 
+    failed = []
     for template in templates_to_generate:
         console.print()
+        success = True
         if template == "sys-config":
-            generate_sys_config()
+            result = generate_sys_config(force=args.force)
+            if result is False:
+                success = False
         elif template == "chainlit-chat":
-            generate_app_template("chainlit-chat", REPO_ROOT / "apps" / "chainlit-chat")
+            result = generate_app_template(
+                "chainlit-chat", REPO_ROOT / "apps" / "chainlit-chat", force=args.force
+            )
+            if result is False:
+                success = False
         elif template == "reflex-chat":
-            generate_app_template("reflex-chat", REPO_ROOT / "apps" / "reflex-chat")
-        elif template == "albert-client":
-            generate_package_template(
-                "albert-client", REPO_ROOT / "packages" / "albert-client"
+            result = generate_app_template(
+                "reflex-chat", REPO_ROOT / "apps" / "reflex-chat", force=args.force
             )
-        elif template == "pdf-context":
-            generate_package_template(
-                "pdf-context", REPO_ROOT / "packages" / "pdf-context"
+            if result is False:
+                success = False
+        elif template == "albert":
+            result = generate_package_template(
+                "albert", REPO_ROOT / "packages" / "core-albert", force=args.force
             )
+            if result is False:
+                success = False
+        elif template == "full-context":
+            result = generate_package_template(
+                "full-context",
+                REPO_ROOT / "packages" / "retrieval-full-context",
+                force=args.force,
+            )
+            if result is False:
+                success = False
+        elif template == "config":
+            result = generate_package_template(
+                "config", REPO_ROOT / "packages" / "core-config", force=args.force
+            )
+            if result is False:
+                success = False
         elif template == "chroma-context":
-            generate_chroma_placeholder()
+            result = generate_chroma_placeholder(force=args.force)
+            if result is False:
+                success = False
+
+        if not success:
+            failed.append(template)
 
     console.print()
-    console.print("[bold green]Template generation complete![/bold green]")
+    if failed:
+        console.print(
+            f"[bold yellow]Template generation partially complete.[/bold yellow] Failed templates: {', '.join(failed)}"
+        )
+        console.print("\nUse --force to overwrite existing templates.")
+    else:
+        console.print("[bold green]Template generation complete![/bold green]")
 
 
 if __name__ == "__main__":

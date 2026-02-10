@@ -1,0 +1,4 @@
+title: Config
+description: Config package
+destination: packages/config
+variables: {}

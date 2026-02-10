@@ -5,7 +5,7 @@ import reflex as rx
 from context_loader import process_bytes
 from dotenv import load_dotenv
 
-from albert_client import AlbertClient, ChatCompletionMessageParam
+from albert import AlbertClient, ChatCompletionMessageParam
 
 
 # Load .env file

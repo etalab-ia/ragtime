@@ -6,7 +6,7 @@ import typer
 from pydantic import ValidationError
 from rich.console import Console
 
-from rag_config import RAGConfig, validate_config
+from config import RAGConfig, validate_config
 
 
 console = Console()

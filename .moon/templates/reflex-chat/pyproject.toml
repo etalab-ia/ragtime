@@ -1,14 +1,12 @@
 [project]
 name = "{{ project_name }}"
-version = "0.7.0" # x-release-please-version
+version = "0.8.0" # x-release-please-version
 description = "{{ description }}"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "albert-client",
-{%- if use_pdf %}
-    "pdf-context",
-{%- endif %}
+    "albert",
+    "full-context",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.0",
     "reflex>=0.7.11",
@@ -24,8 +22,8 @@ include = ["{{ project_name | replace(from='-', to='_') }}*"]
 py-modules = ["context_loader"]
 
 [tool.uv.sources]
-albert-client = { workspace = true }
-pdf-context = { workspace = true }
+albert = { workspace = true }
+full-context = { workspace = true }
 
 [tool.uv]
 package = true
