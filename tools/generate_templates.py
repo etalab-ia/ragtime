@@ -539,6 +539,7 @@ def main():
             "reflex-chat",
             "albert-client",
             "pdf-context",
+            "rag-config",
             "chroma-context",
         ],
         help="Generate a specific template",
@@ -565,6 +566,7 @@ def main():
             "reflex-chat",
             "albert-client",
             "pdf-context",
+            "rag-config",
             "chroma-context",
         ]
     else:
@@ -585,6 +587,10 @@ def main():
         elif template == "pdf-context":
             generate_package_template(
                 "pdf-context", REPO_ROOT / "packages" / "pdf-context"
+            )
+        elif template == "rag-config":
+            generate_package_template(
+                "rag-config", REPO_ROOT / "packages" / "rag-config"
             )
         elif template == "chroma-context":
             generate_chroma_placeholder()

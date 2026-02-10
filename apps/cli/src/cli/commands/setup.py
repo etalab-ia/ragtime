@@ -196,6 +196,46 @@ def get_albert_client_source() -> Path:
     )
 
 
+def get_rag_config_source() -> Path:
+    """Get the rag-config source directory for inline copying."""
+    # In development mode, use the packages directory
+    repo_root = Path(__file__).resolve().parents[5]
+    local_source = repo_root / "packages" / "rag-config" / "src" / "rag_config"
+    if local_source.exists():
+        return local_source
+
+    # For installed CLI, rag_config is bundled at cli/rag_config_src
+    package_source = Path(__file__).resolve().parent.parent / "rag_config_src"
+    if package_source.exists():
+        return package_source
+
+    raise FileNotFoundError(
+        "rag-config source not found. This is a packaging error - please reinstall the CLI."
+    )
+
+
+def get_default_config_template() -> Path:
+    """Get the default ragfacile.toml template."""
+    # In development mode, use the templates directory
+    repo_root = Path(__file__).resolve().parents[5]
+    local_template = (
+        repo_root / "apps" / "cli" / "src" / "cli" / "templates" / "ragfacile.toml"
+    )
+    if local_template.exists():
+        return local_template
+
+    # For installed CLI, template is bundled at cli/templates/ragfacile.toml
+    bundled_template = (
+        Path(__file__).resolve().parent.parent / "templates" / "ragfacile.toml"
+    )
+    if bundled_template.exists():
+        return bundled_template
+
+    raise FileNotFoundError(
+        "ragfacile.toml template not found. This is a packaging error - please reinstall the CLI."
+    )
+
+
 def render_template_file(template_path: Path, variables: dict[str, str | bool]) -> str:
     """Render a template file with Tera-style variables.
 
@@ -275,12 +315,12 @@ def generate_standalone(
 
     # Create pyproject.toml for standalone mode
     pdf_dep = '\n    "pypdf>=5.0.0",' if "PDF" in selected_modules else ""
-    setuptools_packages_list = ["albert_client"]
+    setuptools_packages_list = ["albert_client", "rag_config"]
     if "PDF" in selected_modules:
         setuptools_packages_list.append("pdf_context")
     setuptools_packages = f"packages = {setuptools_packages_list}"
 
-    # For standalone, albert-client and pdf-context are local modules (not dependencies)
+    # For standalone, albert-client, rag-config, and pdf-context are local modules (not dependencies)
     pyproject_content = f'''[project]
 name = "{project_name}"
 version = "0.1.0"
@@ -293,7 +333,8 @@ dependencies = [
     "openai>=1.0.0",
     "pydantic>=2.0.0",
     "python-dotenv>=1.0.0",
-    "pyyaml>=6.0.0",{pdf_dep}
+    "pyyaml>=6.0.0",
+    "tomli-w>=1.0.0",{pdf_dep}
 ]
 
 [tool.setuptools]
@@ -317,7 +358,8 @@ dependencies = [
     "openai>=1.0.0",
     "pydantic>=2.0.0",
     "python-dotenv>=1.0.0",
-    "pyyaml>=6.0.0",{pdf_dep}
+    "pyyaml>=6.0.0",
+    "tomli-w>=1.0.0",{pdf_dep}
 ]
 
 [tool.setuptools]
@@ -403,10 +445,29 @@ package = true
         console.print(f"[yellow]Warning: {e}[/yellow]")
         console.print("[yellow]You'll need to install albert-client manually.[/yellow]")
 
-    # Step 4: Copy pdf_context as local module if selected
+    # Step 4: Copy rag-config as local module (always required for config commands)
+    console.print()
+    console.print("[bold green]Step 4:[/bold green] Adding RAG config module...")
+
+    try:
+        rag_config_source = get_rag_config_source()
+        target_rag_config = target_path / "rag_config"
+        if target_rag_config.exists():
+            shutil.rmtree(target_rag_config)
+        shutil.copytree(rag_config_source, target_rag_config)
+        # Remove __pycache__ if copied
+        pycache = target_rag_config / "__pycache__"
+        if pycache.exists():
+            shutil.rmtree(pycache)
+        console.print("[green]✓[/green] RAG config module added")
+    except FileNotFoundError as e:
+        console.print(f"[yellow]Warning: {e}[/yellow]")
+        console.print("[yellow]You'll need to install rag-config manually.[/yellow]")
+
+    # Step 5: Copy pdf_context as local module if selected
     if "PDF" in selected_modules:
         console.print()
-        console.print("[bold green]Step 4:[/bold green] Adding PDF context module...")
+        console.print("[bold green]Step 5:[/bold green] Adding PDF context module...")
 
         try:
             pdf_source = get_pdf_context_source()
@@ -425,8 +486,26 @@ package = true
                 "[yellow]You'll need to install pdf-context manually.[/yellow]"
             )
 
-    # Step 5: Create .env file
-    step_num = 5 if "PDF" in selected_modules else 4
+    # Step 6: Create ragfacile.toml config file
+    step_num = 6 if "PDF" in selected_modules else 5
+    console.print()
+    console.print(
+        f"[bold green]Step {step_num}:[/bold green] Creating configuration file..."
+    )
+
+    try:
+        config_template = get_default_config_template()
+        target_config = target_path / "ragfacile.toml"
+        shutil.copy(config_template, target_config)
+        console.print("[green]✓[/green] Created ragfacile.toml (balanced preset)")
+    except FileNotFoundError as e:
+        console.print(f"[yellow]Warning: {e}[/yellow]")
+        console.print(
+            "[yellow]You can create config later with: rag-facile config preset apply balanced[/yellow]"
+        )
+
+    # Step 7: Create .env file
+    step_num = 7 if "PDF" in selected_modules else 6
     console.print()
     console.print(
         f"[bold green]Step {step_num}:[/bold green] Creating environment file..."
@@ -688,6 +767,7 @@ def run(
         "reflex-chat",
         "albert-client",
         "pdf-context",
+        "rag-config",
         "chroma-context",
     ]:
         src = templates_dir / template_name
@@ -773,10 +853,32 @@ OPENAI_MODEL={env_config["openai_model"]}
         raise typer.Exit(1)
     console.print("[green]✓[/green] albert-client package generated")
 
-    # 5. Generate selected packages
+    # 5. Generate rag-config package (always required for config management)
+    console.print()
+    console.print("[bold green]Step 5:[/bold green] Generating rag-config package...")
+    rag_config_cmd = ["moon", "generate", "rag-config", "--defaults"]
+    if force:
+        rag_config_cmd.append("--force")
+    if not run_command(rag_config_cmd, "generate rag-config", cwd=target_path):
+        raise typer.Exit(1)
+    console.print("[green]✓[/green] rag-config package generated")
+
+    # Copy ragfacile.toml config file to workspace root
+    try:
+        config_template = get_default_config_template()
+        target_config = target_path / "ragfacile.toml"
+        shutil.copy(config_template, target_config)
+        console.print("[green]✓[/green] Created ragfacile.toml (balanced preset)")
+    except FileNotFoundError as e:
+        console.print(f"[yellow]Warning: {e}[/yellow]")
+        console.print(
+            "[yellow]You can create config later with: rag-facile config preset apply balanced[/yellow]"
+        )
+
+    # 6. Generate selected packages
     if selected_modules:
         console.print()
-        console.print("[bold green]Step 5:[/bold green] Generating packages...")
+        console.print("[bold green]Step 6:[/bold green] Generating packages...")
 
         for module in selected_modules:
             module_info = MODULES[module]
@@ -802,7 +904,7 @@ OPENAI_MODEL={env_config["openai_model"]}
 
     # Run uv sync to install dependencies
     console.print()
-    console.print("[bold green]Step 6:[/bold green] Installing dependencies...")
+    console.print("[bold green]Step 7:[/bold green] Installing dependencies...")
     if not run_command(["uv", "sync"], "install dependencies", cwd=target_path):
         console.print("[yellow]Warning: uv sync failed. Run it manually.[/yellow]")
 

@@ -1,0 +1,93 @@
+# RAG Facile Configuration - HR Preset
+# HR policies: Privacy-aware, clear attribution, natural language queries
+# Use when: Employee handbooks, HR policies, benefits documentation
+
+[meta]
+schema_version = "1.0.0"
+preset = "hr"
+
+[eval]
+provider = "albert"
+target_samples = 50
+output_format = "jsonl"
+
+[ingestion]
+file_types = [".pdf", ".md", ".txt"]
+
+[ingestion.ocr]
+enabled = true
+dpi = 300
+extract_images = false  # Privacy consideration
+include_bounding_boxes = false
+
+[ingestion.parsing]
+output_format = "markdown"
+preserve_structure = true  # Preserve policy structure
+include_page_numbers = true
+
+[chunking]
+strategy = "semantic"  # HR policies are naturally semantic
+chunk_size = 512
+chunk_overlap = 75
+preserve_metadata = true  # Track policy names and sections
+
+[embedding]
+model = "albert-embedding-medium"  # Good balance for HR content
+batch_size = 32
+normalization = "L2"
+
+[storage]
+backend = "albert-collections"
+collection_naming = "workspace"
+distance_metric = "cosine"
+
+[query]
+rewrite_enabled = true  # HR queries often informal
+expand_enabled = true  # Find related policies
+spell_check = true  # Friendly to typos
+
+[retrieval]
+method = "hybrid"  # Balance semantic understanding with keyword matching
+top_k = 12
+score_threshold = 0.3  # Lower threshold for broader policy coverage
+
+[retrieval.hybrid]
+alpha = 0.7  # Weight semantic more (natural language queries)
+
+[reranking]
+enabled = true
+model = "bge-reranker-large"
+top_n = 4
+
+[context]
+strategy = "token-budget"
+max_tokens = 4096
+deduplicate = true
+ordering = "by-score"
+
+[context.formatting]
+include_citations = true
+citation_style = "inline"  # Clear policy attribution
+
+[generation]
+model = "openweight-medium"  # Good for conversational HR responses
+temperature = 0.5  # Balanced - accurate but approachable
+max_tokens = 1024
+streaming = true
+system_prompt = """You are an HR assistant for the French government.
+Provide clear, helpful answers about HR policies based on the provided context.
+Always cite which policy or document you're referencing using [1], [2], etc.
+Use friendly, accessible language while being accurate.
+If a policy doesn't cover the question, suggest who to contact (e.g., "Contact HR for more information")."""
+
+[hallucination]
+enabled = true  # Important for policy accuracy
+method = "citation-check"
+threshold = 0.85
+fallback = "warn"  # Warn but allow response with disclaimer
+
+[formatting]
+output_format = "markdown"
+include_sources = true  # Show which policies were consulted
+include_confidence = false  # Keep responses simple
+language = "fr"
