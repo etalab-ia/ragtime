@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0](https://github.com/etalab-ia/rag-facile/compare/v0.8.0...v0.9.0) (2026-02-11)
+
+
+### Features
+
+* add config management CLI commands ([4b87b59](https://github.com/etalab-ia/rag-facile/commit/4b87b59c9468a8dfbbf28affee546a51f08b440b))
+* add rag-config package with complete RAG pipeline configuration ([2a48da4](https://github.com/etalab-ia/rag-facile/commit/2a48da40c281d0aa57ddc9e2edd091cae490b63c))
+* integrate config presets into workspace setup command ([657dc02](https://github.com/etalab-ia/rag-facile/commit/657dc028e3401612a0fa6d3baee2e05c605b1b08))
+* integrate config system into apps (Phase 4) ([4b6c2dc](https://github.com/etalab-ia/rag-facile/commit/4b6c2dcc9f817d9eb59bd06efba4ebb1895c5b0b))
+* integrate rag-config package into workspace generation ([dc58587](https://github.com/etalab-ia/rag-facile/commit/dc58587195cf90c784f07f66b815b364fa865a8e))
+* integrate rag-config system into workspace generation + module renaming ([7e44788](https://github.com/etalab-ia/rag-facile/commit/7e44788c42bbbc66ae50d6464c36ef37a9c0b572))
+* RAG configuration management system ([2a5974d](https://github.com/etalab-ia/rag-facile/commit/2a5974db8f4b69f7596652e3109818d968070fbe))
+* RAG Configuration System - Phases 4 & 5 (App Integration + Setup Integration) ([f5fce7a](https://github.com/etalab-ia/rag-facile/commit/f5fce7a997f1cdeb923c1fd62155c767a53255c3))
+
+
+### Bug Fixes
+
+* address Gemini Code Assist review feedback ([d0d0d5d](https://github.com/etalab-ia/rag-facile/commit/d0d0d5d263f3fa07d974576985649b9754e884c6))
+* create .env file at workspace root in monorepo mode ([8ae7867](https://github.com/etalab-ia/rag-facile/commit/8ae786717f4ae2b69c7f641db1a859e40d1e6628))
+* move base URL to presets and remove setup prompt ([cfc65cc](https://github.com/etalab-ia/rag-facile/commit/cfc65cc29a91ec5ea17c5c90b6914b753798d463))
+* resolve ty type checking issues in setup and reflex app ([92f8c25](https://github.com/etalab-ia/rag-facile/commit/92f8c254e4bed900eb3d2f40bc3865264b622e0b))
+* set balanced preset as default selection in prompt ([8f054a5](https://github.com/etalab-ia/rag-facile/commit/8f054a5da0ae1176fe9dd1cdfe7ae9681452f3ad))
+* update test to expect new template name after module renaming ([1d5e916](https://github.com/etalab-ia/rag-facile/commit/1d5e9161eb5cf235df83608aed3e73e07ced814d))
+* update workspace generation for phase-based package structure ([8beb8d3](https://github.com/etalab-ia/rag-facile/commit/8beb8d3f392e18a0216042f7e85fa50fa67e3a99))
+
+
+### Documentation
+
+* comprehensive documentation for RAG configuration system ([13c3043](https://github.com/etalab-ia/rag-facile/commit/13c30437f584e454718a51eb6fb546e02b43ad8b))
+* comprehensive documentation for RAG configuration system ([b7b0eec](https://github.com/etalab-ia/rag-facile/commit/b7b0eecb4e23300bbec1c322b3b3aaf054ac1d21))
+* translate French content to English and add config system documentation ([87f67cd](https://github.com/etalab-ia/rag-facile/commit/87f67cd8fed4dd85ff591af6fbdda6939c8f17ed))
+
 ## [0.8.0](https://github.com/etalab-ia/rag-facile/compare/v0.7.0...v0.8.0) (2026-02-09)
 
 
