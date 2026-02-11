@@ -122,8 +122,7 @@ my-rag-app/
 **Run your app:**
 ```bash
 cd my-rag-app
-uv run chainlit run app.py -w    # For Chainlit
-uv run reflex run                 # For Reflex
+just run
 ```
 
 ### Monorepo (For Multi-App Projects)
@@ -270,8 +269,7 @@ curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.s
 
 ```bash
 cd my-rag-app
-uv run chainlit run app.py -w    # Chainlit with hot-reload
-uv run reflex run                 # Reflex
+just run
 ```
 
 ### Monorepo Structure

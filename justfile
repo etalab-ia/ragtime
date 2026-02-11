@@ -34,3 +34,11 @@ type-check:
 
 # Run all checks (format-check, lint, type-check)
 check: format-check lint type-check
+
+# Run all apps or a specific one (e.g., just run chainlit-chat)
+run name="":
+    moon run {{ if name == "" { ":dev" } else { name + ":dev" } }}
+
+# Add a new app from a template (e.g., just add chainlit-chat)
+add template:
+    moon generate {{template}}

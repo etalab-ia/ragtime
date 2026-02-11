@@ -33,10 +33,6 @@ If you are in **this directory** (or using the generated template):
 just sync  # Setup dependencies (Python 3.13)
 just run   # Run the application
 ```
-
-Or directly using `uv`:
-```bash
-uv run reflex run
 ```
 
 # Features

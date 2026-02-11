@@ -21,7 +21,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/etalab-ia/rag-facile"
-Documentation = "https://github.com/etalab-ia/rag-facile/blob/main/docs/config-guide.md"
+Documentation = "https://github.com/etalab-ia/rag-facile/blob/main/docs/guides/config-guide.md"
 Repository = "https://github.com/etalab-ia/rag-facile"
 Issues = "https://github.com/etalab-ia/rag-facile/issues"
 
