@@ -16,6 +16,9 @@ This is a simple Chainlit-based chat application designed to benchmark the Alber
     OPENAI_MODEL=meta-llama/Meta-Llama-3-8B-Instruct # or appropriate model ID
     ```
 
+> [!TIP]
+> RAG parameters like model names, temperature, and retrieval settings are now managed in `ragfacile.toml` via the configuration system. Use `rag-facile config` to customize them.
+
 2.  **Dependencies**:
     This project is managed as part of the workspace. Ensure you have `uv` installed.
     ```bash
@@ -35,9 +38,4 @@ If you are in **this directory** (or using the generated template):
 ```bash
 just sync  # Setup dependencies (Python 3.13)
 just run   # Run the application
-```
-
-Or directly using `uv`:
-```bash
-uv run chainlit run app.py -w
 ```

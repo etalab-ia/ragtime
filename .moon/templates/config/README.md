@@ -177,7 +177,7 @@ RAG Config covers the complete RAG pipeline:
 11. **hallucination** - Accuracy validation
 12. **formatting** - Output presentation
 
-See [Configuration Guide](../../docs/config-guide.md) for complete reference.
+See [Configuration Guide](../../docs/guides/config-guide.md) for complete reference.
 
 ## Presets
 

@@ -18,6 +18,9 @@ cp .env.example .env
 
 Edit the `.env` file to add your `OPENAI_API_KEY` and `OPENAI_BASE_URL`.
 
+> [!TIP]
+> RAG parameters like model names, temperature, and retrieval settings are now managed in `ragfacile.toml` via the configuration system. Use `rag-facile config` to customize them.
+
 ### 2. Run the application
 
 If you are at the **root of the monorepo**:
@@ -29,11 +32,6 @@ If you are in **this directory** (or using the generated template):
 ```bash
 just sync  # Setup dependencies (Python 3.13)
 just run   # Run the application
-```
-
-Or directly using `uv`:
-```bash
-uv run reflex run
 ```
 
 # Features

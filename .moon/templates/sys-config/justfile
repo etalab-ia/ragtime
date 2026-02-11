@@ -5,11 +5,11 @@ default:
     @just --list
 
 # Run all apps or a specific app (e.g., just run or just run chainlit-chat)
-run app="":
-    @if [ -z "{{ "{{ app }}" }}" ]; then \
+run name="":
+    @if [ -z "{{ "{{ name }}" }}" ]; then \
         moon run :dev; \
     else \
-        moon run {{ "{{ app }}" }}:dev; \
+        moon run {{ "{{ name }}" }}:dev; \
     fi
 
 # Format code (write changes)

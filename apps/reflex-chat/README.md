@@ -34,11 +34,6 @@ just sync  # Setup dependencies (Python 3.13)
 just run   # Run the application
 ```
 
-Or directly using `uv`:
-```bash
-uv run reflex run
-```
-
 # Features
 
 - 100% Python-based, including the UI, using Reflex
