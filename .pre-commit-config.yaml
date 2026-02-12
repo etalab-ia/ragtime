@@ -15,7 +15,6 @@ repos:
         language: system
         files: ^(apps/(chainlit-chat|reflex-chat)|packages/(albert-client|rag-core|retrieval-basic))/
         pass_filenames: false
-        stages: [commit]
       - id: ty
         name: ty
         entry: uv run ty check --exclude ".moon/templates"
