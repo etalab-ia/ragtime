@@ -5,8 +5,8 @@ description = "RAG Facile CLI - Generate RAG workspaces for French Government"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "albert",
-    "config",
+    "albert-client",
+    "rag-core",
     "datasets>=3.0.0",
     "huggingface-hub>=1.3.0",
     "letta-client>=0.1.0",
@@ -26,8 +26,8 @@ dev = [
 ]
 
 [tool.uv.sources]
-albert = { workspace = true }
-config = { workspace = true }
+albert-client = { workspace = true }
+rag-core = { workspace = true }
 
 [project.scripts]
 rag-facile = "cli.main:app"
@@ -41,7 +41,7 @@ packages = ["src/cli"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "../../.moon/templates" = "cli/templates"
-"../../packages/retrieval-full-context/src/full_context" = "cli/full_context_src"
-"../../packages/core-albert/src/albert" = "cli/albert_src"
-"../../packages/core-config/src/config" = "cli/config_src"
+"../../packages/retrieval-basic/src/retrieval_basic" = "cli/retrieval_basic_src"
+"../../packages/albert-client/src/albert" = "cli/albert_src"
+"../../packages/rag-core/src/rag_core" = "cli/rag_core_src"
 "src/cli/templates/ragfacile.toml" = "cli/templates/ragfacile.toml"

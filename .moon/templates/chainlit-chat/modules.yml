@@ -3,7 +3,7 @@
 
 context_providers:
 {%- if use_pdf %}
-  pdf: pdf_context
+  pdf: retrieval_basic
 {%- endif %}
 {%- if use_chroma %}
   chroma: chroma_context

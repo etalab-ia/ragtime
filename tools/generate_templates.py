@@ -342,7 +342,7 @@ chroma-context = { workspace = true }
 
 context_providers:
 {%- if use_pdf %}
-  pdf: pdf_context
+  pdf: retrieval_basic
 {%- endif %}
 {%- if use_chroma %}
   chroma: chroma_context
@@ -557,9 +557,9 @@ def main():
             "sys-config",
             "chainlit-chat",
             "reflex-chat",
-            "albert",
-            "full-context",
-            "config",
+            "albert-client",
+            "retrieval-basic",
+            "rag-core",
             "chroma-context",
         ],
         help="Generate a specific template",
@@ -589,9 +589,9 @@ def main():
             "sys-config",
             "chainlit-chat",
             "reflex-chat",
-            "albert",
-            "full-context",
-            "config",
+            "albert-client",
+            "retrieval-basic",
+            "rag-core",
             "chroma-context",
         ]
     else:
@@ -617,23 +617,25 @@ def main():
             )
             if result is False:
                 success = False
-        elif template == "albert":
+        elif template == "albert-client":
             result = generate_package_template(
-                "albert", REPO_ROOT / "packages" / "core-albert", force=args.force
-            )
-            if result is False:
-                success = False
-        elif template == "full-context":
-            result = generate_package_template(
-                "full-context",
-                REPO_ROOT / "packages" / "retrieval-full-context",
+                "albert-client",
+                REPO_ROOT / "packages" / "albert-client",
                 force=args.force,
             )
             if result is False:
                 success = False
-        elif template == "config":
+        elif template == "retrieval-basic":
             result = generate_package_template(
-                "config", REPO_ROOT / "packages" / "core-config", force=args.force
+                "retrieval-basic",
+                REPO_ROOT / "packages" / "retrieval-basic",
+                force=args.force,
+            )
+            if result is False:
+                success = False
+        elif template == "rag-core":
+            result = generate_package_template(
+                "rag-core", REPO_ROOT / "packages" / "rag-core", force=args.force
             )
             if result is False:
                 success = False

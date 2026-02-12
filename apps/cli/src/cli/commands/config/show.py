@@ -10,7 +10,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
 
-from config import get_env_override_docs, load_config_or_default
+from rag_core import get_env_override_docs, load_config_or_default
 
 
 console = Console()

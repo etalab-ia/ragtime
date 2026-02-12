@@ -5,9 +5,9 @@ description = "Reflex Chat Application"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "albert",
-    "config",
-    "full-context",
+    "albert-client",
+    "rag-core",
+    "retrieval-basic",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.0",
     "reflex>=0.7.11",
@@ -23,6 +23,6 @@ include = ["reflex_chat*"]
 py-modules = ["context_loader"]
 
 [tool.uv.sources]
-albert = { workspace = true }
-config = { workspace = true }
-full-context = { workspace = true }
+albert-client = { workspace = true }
+rag-core = { workspace = true }
+retrieval-basic = { workspace = true }

@@ -11,15 +11,15 @@ from typing import Optional
 
 
 try:
-    from full_context import extract_text_from_pdf
+    from retrieval_basic import extract_text_from_pdf
 except ImportError:
     try:
         # Fallback for development/editable install
-        from cli.full_context_src import extract_text_from_pdf
+        from cli.retrieval_basic_src import extract_text_from_pdf
     except ImportError as e:
         raise ImportError(
-            "full_context module is required for PDF extraction. "
-            "Ensure the full-context package is installed."
+            "retrieval_basic module is required for PDF extraction. "
+            "Ensure the retrieval-basic package is installed."
         ) from e
 
 

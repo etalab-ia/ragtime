@@ -6,7 +6,7 @@ from context_loader import process_bytes
 from dotenv import load_dotenv
 
 from albert import AlbertClient, ChatCompletionMessageParam
-from config import get_config
+from rag_core import get_config
 
 
 # Load .env file

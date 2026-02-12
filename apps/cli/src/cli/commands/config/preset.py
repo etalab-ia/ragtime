@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from config import (
+from rag_core import (
     apply_preset,
     compare_presets,
     get_preset_description,
