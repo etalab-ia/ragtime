@@ -9,7 +9,7 @@ from context_loader import process_file
 from dotenv import load_dotenv
 
 from albert import AsyncAlbertClient
-from config import get_config
+from rag_core import get_config
 
 
 # Increase the number of packets allowed in a single payload to prevent "Too

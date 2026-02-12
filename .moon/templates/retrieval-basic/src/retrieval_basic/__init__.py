@@ -28,4 +28,4 @@ __all__ = [
     "process_multiple_files",
 ]
 
-__version__ = "0.8.0" # x-release-please-version
+__version__ = "0.8.0"  # x-release-please-version
