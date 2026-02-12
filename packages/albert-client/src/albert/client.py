@@ -128,9 +128,11 @@ class AlbertClient:
         Returns:
             httpx.Response object
         """
-        # Add authorization header if not already present
+        # Add authorization header if not already present (case-insensitive check)
         headers = kwargs.get("headers", {})
-        if "Authorization" not in headers and "authorization" not in headers:
+        # Check for Authorization header case-insensitively (HTTP header names are case-insensitive)
+        has_auth = any(key.lower() == "authorization" for key in headers.keys())
+        if not has_auth:
             headers["Authorization"] = f"Bearer {self.api_key}"
         kwargs["headers"] = headers
 
