@@ -159,7 +159,38 @@ add_to_path() {
 # Add proto paths to current session
 export PATH="$PROTO_SHIMS:$PROTO_BIN:$LOCAL_BIN:$PATH"
 
-# 1. Install proto if needed
+# 1. Install direnv for automatic .env file loading
+if ! check_tool direnv; then
+    echo "Installing direnv..."
+    if [[ $OS_IS_WINDOWS -eq 0 ]] && command -v apt-get &> /dev/null; then
+        # Linux
+        if [[ $EUID -eq 0 ]]; then
+            apt-get update && apt-get install -y direnv
+        else
+            sudo apt-get update && sudo apt-get install -y direnv
+        fi
+    elif [[ $OS_IS_WINDOWS -eq 0 ]] && command -v brew &> /dev/null; then
+        # macOS
+        brew install direnv
+    fi
+    
+    # Add direnv hook to shell profile
+    if check_tool direnv; then
+        profile=$(detect_shell_profile)
+        if ! grep -q "direnv hook" "$profile" 2>/dev/null; then
+            echo "" >> "$profile"
+            echo "# Added by RAG Facile installer" >> "$profile"
+            if [[ "$SHELL" == */zsh ]]; then
+                echo 'eval "$(direnv hook zsh)"' >> "$profile"
+            else
+                echo 'eval "$(direnv hook bash)"' >> "$profile"
+            fi
+            echo "Added direnv hook to $profile"
+        fi
+    fi
+fi
+
+# 2. Install proto if needed
 if ! check_tool proto; then
     echo "Installing proto..."
     
@@ -227,7 +258,7 @@ if ! check_tool proto; then
     fi
 fi
 
-# 2. Install moon via proto if needed
+# 3. Install moon via proto if needed
 if ! check_tool moon; then
     echo "Installing moon via proto..."
     if ! proto install moon; then
@@ -259,7 +290,7 @@ if ! check_tool moon; then
     fi
 fi
 
-# 3. Install uv via proto if needed
+# 4. Install uv via proto if needed
 if ! check_tool uv; then
     echo "Installing uv via proto..."
     if ! proto install uv; then
@@ -276,7 +307,7 @@ if ! check_tool uv; then
     fi
 fi
 
-# 4. Install just via proto
+# 5. Install just via proto
 if ! check_tool just; then
     echo "Installing just via proto..."
     # Register the just plugin (idempotent - safe to run even if already registered)
@@ -296,7 +327,7 @@ if ! check_tool just; then
     fi
 fi
 
-# 5. Install rag-facile CLI via uv
+# 6. Install rag-facile CLI via uv
 echo ""
 echo "Installing RAG Facile CLI..."
 BRANCH="${RAG_FACILE_BRANCH:-main}"
@@ -306,7 +337,7 @@ if ! uv tool install rag-facile-cli --force --from "git+https://github.com/etala
     exit 1
 fi
 
-# 6. Verify installation
+# 7. Verify installation
 echo ""
 if ! check_tool rag-facile; then
     echo "ERROR: rag-facile installation failed"

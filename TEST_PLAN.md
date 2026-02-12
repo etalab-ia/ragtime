@@ -49,14 +49,21 @@ rag-facile setup my-standalone-app
 - **API Key**: Provide your Albert API key (or dummy value for testing)
 - **Confirm**: "Yes"
 
-### Step 4: Verify Generated Files
+### Step 4: Verify Generated Files and Enable direnv
 Navigate to `my-standalone-app/` and check:
 - [ ] `albert/` directory exists (previously `core-albert`)
 - [ ] `rag_core/` directory exists (previously `config`)
 - [ ] `retrieval_basic/` directory exists (previously `full_context`) — **included in balanced preset**
 - [ ] `pyproject.toml` contains: `packages = ["albert", "rag_core", "retrieval_basic"]`
 - [ ] `.env` file contains `OPENAI_API_KEY` and `OPENAI_BASE_URL`
+- [ ] `.envrc` file exists (direnv configuration)
 - [ ] `modules.yml` contains `pdf: retrieval_basic` — **automatically included in balanced preset**
+
+**Enable direnv** (optional but recommended):
+```bash
+direnv allow  # Trust the .envrc file
+```
+This will automatically load `.env` variables when you enter the directory. If direnv is not installed, the installer added it for you.
 
 ### Step 5: Run the App
 ```bash
@@ -106,12 +113,19 @@ from albert import AlbertClient
 from retrieval_basic import extract_text_from_pdf
 ```
 
-### Step 4: Run Workspace Sync
+### Step 4: Enable direnv and Run Workspace Sync
+**Enable direnv** (optional but recommended):
+```bash
+direnv allow  # Trust the .envrc file
+```
+This will automatically load `.env` variables when you enter the directory.
+
+Then sync dependencies:
 ```bash
 just sync
 ```
 
-**Expected**: Dependencies installed and pre-commit hooks configured
+**Expected**: Dependencies installed, pre-commit hooks configured, and `.env` automatically loaded by direnv
 
 ### Step 5: Run Type Checking
 ```bash
@@ -155,13 +169,15 @@ Verify the preprocessor and provider imports work with new package names. Since 
 mkdir test-docs
 echo "Ceci est un document test pour Albert." > test-docs/test.txt
 
-# Run generation (uses retrieval_basic from balanced preset)
-rag-facile generate-dataset ./test-docs -o dataset.jsonl
+# Run generation with Albert provider (uses retrieval_basic from balanced preset)
+rag-facile generate-dataset ./test-docs --provider albert -o dataset.jsonl
 
 # Verify output was created
 ls -lh dataset.jsonl
 # Should show a file with content
 ```
+
+**Note**: The command requires `OPENAI_API_KEY` and `OPENAI_BASE_URL` environment variables to be set. If using direnv (installed by the setup script), these are automatically loaded from the `.env` file when you `cd` into the workspace.
 
 ---
 
