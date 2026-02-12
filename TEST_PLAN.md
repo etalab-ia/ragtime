@@ -12,6 +12,8 @@
 ## 🏗️ Scenario A: Standalone Installation
 *Focus: Testing the "Lambda Developer" path where everything is self-contained in one folder.*
 
+> **Note on Modules**: The preset system (fast, balanced, accurate, legal, hr) now determines which retrieval module is included. The balanced preset includes PDF retrieval (`retrieval_basic`). There is no separate interactive module selection step.
+
 ### Step 1: Run the Installer
 
 **macOS/Linux:**
@@ -51,16 +53,16 @@ rag-facile setup my-standalone-app
 Navigate to `my-standalone-app/` and check:
 - [ ] `albert/` directory exists (previously `core-albert`)
 - [ ] `rag_core/` directory exists (previously `config`)
-- [ ] `retrieval_basic/` directory exists (previously `full_context`)
+- [ ] `retrieval_basic/` directory exists (previously `full_context`) — **included in balanced preset**
 - [ ] `pyproject.toml` contains: `packages = ["albert", "rag_core", "retrieval_basic"]`
 - [ ] `.env` file contains `OPENAI_API_KEY` and `OPENAI_BASE_URL`
-- [ ] `modules.yml` contains `pdf: retrieval_basic` (if PDF was selected)
+- [ ] `modules.yml` contains `pdf: retrieval_basic` — **automatically included in balanced preset**
 
 ### Step 5: Run the App
 ```bash
 cd my-standalone-app
-uv sync
-uv run chainlit run app.py -w
+just sync
+just run
 ```
 
 **Expected**: Chainlit opens in browser at `http://localhost:8000`
@@ -107,21 +109,20 @@ from retrieval_basic import extract_text_from_pdf
 ### Step 4: Run Workspace Sync
 ```bash
 just sync
-# Or manually:
-# uv sync
-# uv run pre-commit install
 ```
+
+**Expected**: Dependencies installed and pre-commit hooks configured
 
 ### Step 5: Run Type Checking
 ```bash
 just type-check
-# Expected: All checks pass
 ```
+
+**Expected**: All checks pass
 
 ### Step 6: Run the App
 ```bash
 just run reflex-chat
-# Or: moon run reflex-chat:dev
 ```
 
 **Expected**: Reflex dev server starts at `http://localhost:3000`
@@ -148,12 +149,12 @@ rag-facile config preset apply balanced
 ```
 
 ### 2. Dataset Generation (Data Foundry)
-Verify the preprocessor and provider imports work with new package names:
+Verify the preprocessor and provider imports work with new package names. Since the balanced preset includes PDF retrieval, this tests the `retrieval_basic` module:
 ```bash
 # Create a dummy test document
 echo "Ceci est un document test pour Albert." > test.txt
 
-# Run generation
+# Run generation (uses retrieval_basic from balanced preset)
 rag-facile generate-dataset ./test.txt -o dataset.jsonl
 
 # Verify output was created
@@ -197,12 +198,13 @@ Check that the GitHub Actions workflow correctly:
 
 ### Installation Error: "404:: command not found"
 **Cause**: Shell variable `$RAG_FACILE_BRANCH` was not expanded  
-**Solution**: Use double quotes in curl URL:
+**Solution**: Use double quotes in curl URL (and use `${VAR}` syntax for clarity):
 ```bash
-# ❌ WRONG (single quotes prevent expansion)
+# ❌ WRONG (single quotes prevent expansion, results in 404)
 curl -sSL 'https://raw.githubusercontent.com/etalab-ia/rag-facile/refs/heads/$RAG_FACILE_BRANCH/install.sh' | bash
 
 # ✅ CORRECT (double quotes allow expansion)
+export RAG_FACILE_BRANCH="feat/refactor-monorepo-structure"
 curl -sSL "https://raw.githubusercontent.com/etalab-ia/rag-facile/refs/heads/${RAG_FACILE_BRANCH}/install.sh" | bash
 ```
 
@@ -259,19 +261,22 @@ Keep track of your testing:
 - [ ] rag-facile --version works
 - [ ] Setup creates correct directory structure
 - [ ] New package names present (albert, rag_core, retrieval_basic)
-- [ ] App runs: uv run chainlit run app.py
+- [ ] retrieval_basic included automatically (part of balanced preset)
+- [ ] App runs: `just run` starts Chainlit server
 - [ ] Config commands work
 - [ ] No import errors
+- [ ] modules.yml contains `pdf: retrieval_basic`
 
 ### Monorepo Test (Reflex)
 - [ ] Installation successful
 - [ ] Setup creates monorepo structure
-- [ ] Templates exist for all packages
+- [ ] Templates exist for all packages (including retrieval-basic from preset)
 - [ ] just sync completes without errors
 - [ ] just type-check passes
 - [ ] just run reflex-chat starts dev server
 - [ ] No import errors in state.py
-- [ ] Dataset generation works
+- [ ] Dataset generation works with retrieval_basic
+- [ ] modules.yml contains `pdf: retrieval_basic`
 
 ### Quality Checks
 - [ ] No legacy imports found
