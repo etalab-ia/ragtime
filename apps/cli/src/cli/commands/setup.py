@@ -487,7 +487,13 @@ package = true
     console.print("[dim]  ✓ pyproject.toml[/dim]")
 
     # Copy and render app files from template
-    files_to_copy = ["context_loader.py", ".env.template", "README.md", "justfile"]
+    files_to_copy = [
+        "context_loader.py",
+        ".env.template",
+        ".envrc",
+        "README.md",
+        "justfile",
+    ]
 
     if frontend_choice == "Chainlit":
         files_to_copy.extend(["app.py", "chainlit.md"])

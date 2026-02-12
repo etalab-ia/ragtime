@@ -19,11 +19,7 @@ exclude = [".moon/templates"]
 exclude = [".moon/templates"]
 
 [tool.ty.src]
-exclude = [
-    ".moon/templates",
-    "apps/chainlit-chat/app.py",
-    "apps/reflex-chat/reflex_chat/state.py",
-]
+exclude = [".moon/templates"]
 
 [tool.uv]
 managed = true
