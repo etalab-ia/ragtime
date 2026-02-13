@@ -1,4 +1,4 @@
 {
-	"packages/albert-client": "0.4.0",
-	".": "0.9.0"
+	"packages/albert-client": "0.5.0",
+	".": "0.10.0"
 }
