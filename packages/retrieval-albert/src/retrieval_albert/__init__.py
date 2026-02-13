@@ -26,12 +26,25 @@ from .ingestion import (
     ingest_documents,
     list_collections,
 )
+from .parser import (
+    extract_text_from_bytes,
+    extract_text_from_pdf,
+    format_as_context,
+    process_multiple_files,
+    process_pdf_file,
+)
 from .retriever import rerank_chunks, retrieve, search_chunks
 
 
 __all__ = [
     # Types
     "RetrievedChunk",
+    # Parser (context_loader-compatible, same interface as retrieval-basic)
+    "extract_text_from_bytes",
+    "extract_text_from_pdf",
+    "format_as_context",
+    "process_multiple_files",
+    "process_pdf_file",
     # Ingestion
     "create_collection",
     "delete_collection",

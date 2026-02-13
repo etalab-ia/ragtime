@@ -548,7 +548,7 @@ package = true
     if "PDF" in selected_modules:
         modules_yml_content += "  pdf: retrieval_basic\n"
     if "Albert RAG" in selected_modules:
-        modules_yml_content += "  albert_rag: retrieval_albert\n"
+        modules_yml_content += "  pdf: retrieval_albert\n"
     (target_path / "modules.yml").write_text(modules_yml_content)
     console.print("[dim]  ✓ modules.yml[/dim]")
 
@@ -817,18 +817,19 @@ def run(
         console.print("[red]Aborted.[/red]")
         raise typer.Exit(1)
 
-    # Select retrieval module
-    available_modules = {
-        name: info for name, info in MODULES.items() if info["available"]
-    }
+    # Select retrieval module — both handle PDF file attachments,
+    # but use different backends (local pypdf vs Albert parse API).
     module_choice = questionary.select(
         "Select your retrieval module:",
         choices=[
             questionary.Choice(
-                f"{name} - {'Full RAG pipeline via Albert API' if name == 'Albert RAG' else 'Simple PDF text extraction into prompt'}",
-                value=name,
-            )
-            for name in available_modules
+                "PDF - Local text extraction (offline, simple)",
+                value="PDF",
+            ),
+            questionary.Choice(
+                "Albert RAG - Server-side parsing, search & reranking",
+                value="Albert RAG",
+            ),
         ],
     ).ask()
     if not module_choice:
