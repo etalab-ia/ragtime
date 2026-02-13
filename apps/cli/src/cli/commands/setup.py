@@ -1002,6 +1002,29 @@ def run(
         raise typer.Exit(1)
     console.print(f"[green]✓[/green] {frontend_choice} app generated")
 
+    # Post-generation: rename Reflex app package to match project_name
+    # Moon templates can't use filters in directory names, so the template
+    # generates a static "app/" directory that needs renaming.
+    if frontend_choice == "Reflex":
+        app_dir = target_path / "apps" / frontend_template
+        static_pkg = app_dir / "app"
+        if static_pkg.exists():
+            # Read project_name from rxconfig.py to get the actual app_name
+            rxconfig = app_dir / "rxconfig.py"
+            if rxconfig.exists():
+                import re
+
+                match = re.search(r'app_name="([^"]+)"', rxconfig.read_text())
+                if match:
+                    app_module_name = match.group(1)
+                    target_pkg = app_dir / app_module_name
+                    static_pkg.rename(target_pkg)
+                    # Rename app.py to {module_name}.py inside the package
+                    static_main = target_pkg / "app.py"
+                    if static_main.exists():
+                        static_main.rename(target_pkg / f"{app_module_name}.py")
+                    console.print(f"[dim]  ✓ Renamed app/ → {app_module_name}/[/dim]")
+
     # Create .env file from template values
     app_dir = target_path / "apps" / frontend_template
     env_file = app_dir / ".env"
