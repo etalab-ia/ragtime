@@ -5,7 +5,7 @@ All notable changes to albert-client will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses independent versioning (matches Albert API spec, not monorepo releases).
 
-## [0.5.0](https://github.com/etalab-ia/rag-facile/compare/v0.4.0...v0.5.0) (2026-02-13)
+## [0.4.0](https://github.com/etalab-ia/rag-facile/compare/albert-client-v0.3.7...albert-client-v0.4.0) (2026-02-13)
 
 
 ### Features
