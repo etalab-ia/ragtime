@@ -548,7 +548,7 @@ package = true
     if "PDF" in selected_modules:
         modules_yml_content += "  pdf: retrieval_basic\n"
     if "Albert RAG" in selected_modules:
-        modules_yml_content += "  pdf: retrieval_albert\n"
+        modules_yml_content += "  albert_rag: retrieval_albert\n"
     (target_path / "modules.yml").write_text(modules_yml_content)
     console.print("[dim]  ✓ modules.yml[/dim]")
 

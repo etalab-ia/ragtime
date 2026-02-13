@@ -342,7 +342,7 @@ context_providers:
 {%- if use_pdf %}
   pdf: retrieval_basic
 {%- else %}
-  pdf: retrieval_albert
+  albert_rag: retrieval_albert
 {%- endif %}
 """
     (target / "modules.yml").write_text(modules_yml_content)
