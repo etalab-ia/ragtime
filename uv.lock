@@ -2327,7 +2327,7 @@ wheels = [
 
 [[package]]
 name = "rag-core"
-version = "0.8.0"
+version = "0.10.0"
 source = { editable = "packages/rag-core" }
 dependencies = [
     { name = "pydantic" },
@@ -2552,7 +2552,7 @@ wheels = [
 
 [[package]]
 name = "retrieval-basic"
-version = "0.8.0"
+version = "0.10.0"
 source = { editable = "packages/retrieval-basic" }
 dependencies = [
     { name = "pypdf" },

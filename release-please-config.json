@@ -18,8 +18,8 @@
 				"apps/cli/pyproject.toml",
 				"apps/chainlit-chat/pyproject.toml",
 				"apps/reflex-chat/pyproject.toml",
-				"packages/pdf-context/pyproject.toml",
-				"packages/rag-config/pyproject.toml"
+				"packages/rag-core/pyproject.toml",
+				"packages/retrieval-basic/pyproject.toml"
 			]
 		}
 	}
