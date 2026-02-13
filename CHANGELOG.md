@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1](https://github.com/etalab-ia/rag-facile/compare/v0.10.0...v0.10.1) (2026-02-13)
+
+
+### Bug Fixes
+
+* align albert-client version with Albert API (v0.4.0) and enable component tags ([4725817](https://github.com/etalab-ia/rag-facile/commit/472581754ce7eab053e31152ec5506947bf11a70))
+* align albert-client version with Albert API (v0.4.0) and enable component tags ([63daa9f](https://github.com/etalab-ia/rag-facile/commit/63daa9f31e390d22ce37b8706bcc920acf11cedb))
+
 ## [0.10.0](https://github.com/etalab-ia/rag-facile/compare/v0.9.0...v0.10.0) (2026-02-13)
 
 
