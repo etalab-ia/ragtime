@@ -439,6 +439,8 @@ def generate_standalone(
     setuptools_packages_list = ["albert", "rag_core"]
     if "PDF" in selected_modules:
         setuptools_packages_list.append("retrieval_basic")
+    if "Albert RAG" in selected_modules:
+        setuptools_packages_list.append("retrieval_albert")
     setuptools_packages = f"packages = {setuptools_packages_list}"
 
     # For standalone, albert-client, rag-core, and retrieval-basic are local modules (not dependencies)
@@ -545,6 +547,8 @@ package = true
     modules_yml_content += "context_providers:\n"
     if "PDF" in selected_modules:
         modules_yml_content += "  pdf: retrieval_basic\n"
+    if "Albert RAG" in selected_modules:
+        modules_yml_content += "  albert_rag: retrieval_albert\n"
     (target_path / "modules.yml").write_text(modules_yml_content)
     console.print("[dim]  ✓ modules.yml[/dim]")
 
@@ -813,8 +817,25 @@ def run(
         console.print("[red]Aborted.[/red]")
         raise typer.Exit(1)
 
-    # Use preset's retrieval module (skip interactive selection)
-    selected_modules = [preset_config["retrieval_module"]]
+    # Select retrieval module
+    available_modules = {
+        name: info for name, info in MODULES.items() if info["available"]
+    }
+    module_choice = questionary.select(
+        "Select your retrieval module:",
+        choices=[
+            questionary.Choice(
+                f"{name} - {'Full RAG pipeline via Albert API' if name == 'Albert RAG' else 'Simple PDF text extraction into prompt'}",
+                value=name,
+            )
+            for name in available_modules
+        ],
+    ).ask()
+    if not module_choice:
+        console.print("[red]Aborted.[/red]")
+        raise typer.Exit(1)
+
+    selected_modules = [module_choice]
 
     # Prompt for environment configuration (use current env as defaults)
     console.print()
@@ -849,7 +870,7 @@ def run(
     console.print(f"  Preset: {preset} ({preset_config['description']})")
     console.print(f"  Frontend: {frontend_choice}")
     console.print(f"  Model: {preset_config['model_alias']}")
-    console.print(f"  Retrieval: {preset_config['retrieval_module']}")
+    console.print(f"  Retrieval: {module_choice}")
     console.print(f"  API: {env_config['openai_base_url']}")
     console.print()
 
