@@ -83,7 +83,7 @@ def get_file_processor(provider: str) -> ContextProvider | None:
     """Get a file processor by provider name.
 
     Args:
-        provider: The provider name (e.g., 'pdf', 'chroma')
+        provider: The provider name (e.g., 'pdf')
 
     Returns:
         The processor function or None if not available.

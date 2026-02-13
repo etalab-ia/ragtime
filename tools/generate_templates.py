@@ -318,13 +318,10 @@ def generate_app_template(app_name: str, source_dir: Path, force: bool = False):
 
         # Update uv sources for conditional deps
         old_sources = "[tool.uv.sources]\npdf-context = { workspace = true }"
-        new_sources = """{% if use_pdf or use_chroma %}
+        new_sources = """{% if use_pdf %}
 [tool.uv.sources]
 {%- if use_pdf %}
 pdf-context = { workspace = true }
-{%- endif %}
-{%- if use_chroma %}
-chroma-context = { workspace = true }
 {%- endif %}
 {% endif %}"""
         content = content.replace(old_sources, new_sources)
@@ -343,9 +340,6 @@ chroma-context = { workspace = true }
 context_providers:
 {%- if use_pdf %}
   pdf: retrieval_basic
-{%- endif %}
-{%- if use_chroma %}
-  chroma: chroma_context
 {%- endif %}
 """
     (target / "modules.yml").write_text(modules_yml_content)
@@ -436,10 +430,6 @@ context_providers:
             "type": "boolean",
             "default": False,
         },
-        "use_chroma": {
-            "type": "boolean",
-            "default": False,
-        },
     }
 
     if app_name == "chainlit-chat":
@@ -493,62 +483,6 @@ def generate_package_template(pkg_name: str, source_dir: Path, force: bool = Fal
     console.print(f"[green]✓ {pkg_name} template complete![/green]")
 
 
-def generate_chroma_placeholder(force: bool = False):
-    """Generate chroma-context placeholder template."""
-    console.print("[bold]Generating chroma-context placeholder...[/bold]")
-
-    target = TEMPLATES_DIR / "chroma-context"
-    if target.exists():
-        if not force:
-            console.print(
-                f"[red]Error:[/red] Template directory {target} already exists. Use --force to overwrite."
-            )
-            return False
-        shutil.rmtree(target)
-    target.mkdir(parents=True)
-
-    # template.yml
-    template_yml = {
-        "title": "Chroma Context",
-        "description": "ChromaDB vector store integration (Coming Soon)",
-        "destination": "packages/chroma-context",
-        "variables": {},
-    }
-    (target / "template.yml").write_text(yaml.dump(template_yml, sort_keys=False))
-
-    # README.md
-    readme = """# Chroma Context
-
-> **Coming Soon!**
-
-This package will provide ChromaDB vector store integration for RAG applications.
-
-## Planned Features
-
-- Vector embeddings storage and retrieval
-- Semantic search capabilities
-- Integration with pdf-context for document indexing
-
-## Status
-
-This module is currently under development. Check back soon for updates!
-"""
-    (target / "README.md").write_text(readme)
-
-    # pyproject.toml
-    pyproject = """[project]
-name = "chroma-context"
-version = "0.1.0"
-description = "ChromaDB vector store integration (Coming Soon)"
-readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
-"""
-    (target / "pyproject.toml").write_text(pyproject)
-
-    console.print("[green]✓ chroma-context placeholder complete![/green]")
-
-
 def main():
     parser = argparse.ArgumentParser(description="Generate RAG Facile templates")
     parser.add_argument(
@@ -560,7 +494,7 @@ def main():
             "albert-client",
             "retrieval-basic",
             "rag-core",
-            "chroma-context",
+            "retrieval-albert",
         ],
         help="Generate a specific template",
     )
@@ -592,7 +526,7 @@ def main():
             "albert-client",
             "retrieval-basic",
             "rag-core",
-            "chroma-context",
+            "retrieval-albert",
         ]
     else:
         templates_to_generate = [args.template]
@@ -639,11 +573,14 @@ def main():
             )
             if result is False:
                 success = False
-        elif template == "chroma-context":
-            result = generate_chroma_placeholder(force=args.force)
+        elif template == "retrieval-albert":
+            result = generate_package_template(
+                "retrieval-albert",
+                REPO_ROOT / "packages" / "retrieval-albert",
+                force=args.force,
+            )
             if result is False:
                 success = False
-
         if not success:
             failed.append(template)
 

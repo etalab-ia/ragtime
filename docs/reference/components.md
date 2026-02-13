@@ -52,6 +52,6 @@ Both are available during `rag-facile setup` and are pre-configured to work with
 | Module | Description | Status |
 |--------|-------------|--------|
 | **PDF Context** | Extract and process PDF documents for RAG context | Available |
-| **Chroma Context** | Vector store for semantic search | Coming Soon |
+| **Albert RAG** | Full RAG pipeline: ingestion, search, reranking via Albert API | Available |
 
 Modules are selected during `rag-facile setup` and automatically included in your project.

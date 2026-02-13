@@ -151,7 +151,7 @@ FRONTENDS = {
 # Available modules (packages)
 MODULES = {
     "PDF": {"template": "retrieval-basic", "available": True},
-    "Chroma": {"template": "chroma-context", "available": False},
+    "Albert RAG": {"template": "retrieval-albert", "available": True},
 }
 
 # Project structure options
@@ -275,6 +275,15 @@ def get_albert_client_source() -> Path:
         ("packages", "albert-client", "src", "albert"),
         ("albert_src",),
         "albert-client source not found. This is a packaging error - please reinstall the CLI.",
+    )
+
+
+def get_retrieval_albert_source() -> Path:
+    """Get the retrieval-albert source directory for inline copying."""
+    return _get_source_path(
+        ("packages", "retrieval-albert", "src", "retrieval_albert"),
+        ("retrieval_albert_src",),
+        "retrieval-albert source not found. This is a packaging error - please reinstall the CLI.",
     )
 
 
@@ -411,7 +420,6 @@ def generate_standalone(
         "openai_base_url": env_config["openai_base_url"],
         "system_prompt": preset_config["system_prompt"],
         "use_pdf": "PDF" in selected_modules,
-        "use_chroma": "Chroma" in selected_modules,
         "welcome_message": f"Welcome to {project_name}!",
     }
 
@@ -537,9 +545,6 @@ package = true
     modules_yml_content += "context_providers:\n"
     if "PDF" in selected_modules:
         modules_yml_content += "  pdf: retrieval_basic\n"
-    if "Chroma" in selected_modules:
-        modules_yml_content += "  chroma: chroma_context\n"
-
     (target_path / "modules.yml").write_text(modules_yml_content)
     console.print("[dim]  ✓ modules.yml[/dim]")
 
@@ -603,6 +608,30 @@ package = true
             console.print(f"[yellow]Warning: {e}[/yellow]")
             console.print(
                 "[yellow]You'll need to install retrieval-basic manually.[/yellow]"
+            )
+
+    # Copy retrieval_albert as local module if selected
+    if "Albert RAG" in selected_modules:
+        console.print()
+        console.print(
+            "[bold green]Step 5b:[/bold green] Adding Albert RAG retrieval module..."
+        )
+
+        try:
+            albert_rag_source = get_retrieval_albert_source()
+            target_albert_rag = target_path / "retrieval_albert"
+            if target_albert_rag.exists():
+                shutil.rmtree(target_albert_rag)
+            shutil.copytree(albert_rag_source, target_albert_rag)
+            # Remove __pycache__ if copied
+            pycache = target_albert_rag / "__pycache__"
+            if pycache.exists():
+                shutil.rmtree(pycache)
+            console.print("[green]✓[/green] Albert RAG retrieval module added")
+        except FileNotFoundError as e:
+            console.print(f"[yellow]Warning: {e}[/yellow]")
+            console.print(
+                "[yellow]You'll need to install retrieval-albert manually.[/yellow]"
             )
 
     # Step 6: Create ragfacile.toml config file
@@ -892,8 +921,8 @@ def run(
         "reflex-chat",
         "albert-client",
         "retrieval-basic",
+        "retrieval-albert",
         "rag-core",
-        "chroma-context",
     ]:
         src = templates_dir / template_name
         dst = target_templates / template_name
@@ -947,9 +976,6 @@ def run(
     # Add feature flags (boolean variables passed as flags)
     if "PDF" in selected_modules:
         app_cmd.append("--use_pdf")
-    if "Chroma" in selected_modules:
-        app_cmd.append("--use_chroma")
-
     if not run_command(app_cmd, f"generate {frontend_template}", cwd=target_path):
         raise typer.Exit(1)
     console.print(f"[green]✓[/green] {frontend_choice} app generated")

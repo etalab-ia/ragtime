@@ -15,6 +15,7 @@ members = [
     "rag-facile",
     "rag-facile-cli",
     "reflex-chat",
+    "retrieval-albert",
     "retrieval-basic",
 ]
 
@@ -324,7 +325,7 @@ wheels = [
 
 [[package]]
 name = "chainlit-chat"
-version = "0.10.0"
+version = "0.10.1"
 source = { editable = "apps/chainlit-chat" }
 dependencies = [
     { name = "albert-client" },
@@ -2327,7 +2328,7 @@ wheels = [
 
 [[package]]
 name = "rag-core"
-version = "0.10.0"
+version = "0.10.1"
 source = { editable = "packages/rag-core" }
 dependencies = [
     { name = "pydantic" },
@@ -2342,7 +2343,7 @@ requires-dist = [
 
 [[package]]
 name = "rag-facile"
-version = "0.10.0"
+version = "0.10.1"
 source = { virtual = "." }
 dependencies = [
     { name = "albert-client" },
@@ -2350,6 +2351,7 @@ dependencies = [
     { name = "rag-core" },
     { name = "rag-facile-cli" },
     { name = "reflex-chat" },
+    { name = "retrieval-albert" },
     { name = "retrieval-basic" },
 ]
 
@@ -2372,6 +2374,7 @@ requires-dist = [
     { name = "rag-core", editable = "packages/rag-core" },
     { name = "rag-facile-cli", editable = "apps/cli" },
     { name = "reflex-chat", editable = "apps/reflex-chat" },
+    { name = "retrieval-albert", editable = "packages/retrieval-albert" },
     { name = "retrieval-basic", editable = "packages/retrieval-basic" },
 ]
 
@@ -2389,7 +2392,7 @@ dev = [
 
 [[package]]
 name = "rag-facile-cli"
-version = "0.10.0"
+version = "0.10.1"
 source = { editable = "apps/cli" }
 dependencies = [
     { name = "albert-client" },
@@ -2402,6 +2405,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "questionary" },
     { name = "rag-core" },
+    { name = "retrieval-albert" },
     { name = "rich" },
     { name = "typer" },
 ]
@@ -2424,6 +2428,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "questionary", specifier = ">=2.0.0" },
     { name = "rag-core", editable = "packages/rag-core" },
+    { name = "retrieval-albert", editable = "packages/retrieval-albert" },
     { name = "rich", specifier = ">=13.0.0" },
     { name = "typer", specifier = ">=0.12.0" },
 ]
@@ -2486,7 +2491,7 @@ wheels = [
 
 [[package]]
 name = "reflex-chat"
-version = "0.10.0"
+version = "0.10.1"
 source = { editable = "apps/reflex-chat" }
 dependencies = [
     { name = "albert-client" },
@@ -2551,8 +2556,23 @@ wheels = [
 ]
 
 [[package]]
+name = "retrieval-albert"
+version = "0.10.1"
+source = { editable = "packages/retrieval-albert" }
+dependencies = [
+    { name = "albert-client" },
+    { name = "rag-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "albert-client", editable = "packages/albert-client" },
+    { name = "rag-core", editable = "packages/rag-core" },
+]
+
+[[package]]
 name = "retrieval-basic"
-version = "0.10.0"
+version = "0.10.1"
 source = { editable = "packages/retrieval-basic" }
 dependencies = [
     { name = "pypdf" },

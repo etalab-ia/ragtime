@@ -8,6 +8,7 @@ dependencies = [
     "albert-client",
     "chainlit-chat",
     "rag-core",
+    "retrieval-albert",
     "retrieval-basic",
     "rag-facile-cli",
     "reflex-chat",
@@ -17,6 +18,7 @@ dependencies = [
 albert-client = { workspace = true }
 chainlit-chat = { workspace = true }
 rag-core = { workspace = true }
+retrieval-albert = { workspace = true }
 retrieval-basic = { workspace = true }
 rag-facile-cli = { workspace = true }
 reflex-chat = { workspace = true }
@@ -57,7 +59,7 @@ exclude = [".moon/templates"]
 
 [tool.ruff.lint.isort]
 # Define our first-party packages (local imports)
-known-first-party = ["albert", "chainlit_chat", "cli", "rag_core", "retrieval_basic", "reflex_chat"]
+known-first-party = ["albert", "chainlit_chat", "cli", "rag_core", "retrieval_albert", "retrieval_basic", "reflex_chat"]
 # Ensure proper PEP 8 section ordering with blank lines between groups
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 lines-after-imports = 2  # PEP 8: 2 blank lines before top-level definitions

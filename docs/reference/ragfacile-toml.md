@@ -116,7 +116,7 @@ normalization = "L2"              # "L2" or "none"
 # VECTOR STORAGE
 # ==========================================================
 [storage]
-backend = "albert-collections"  # "albert-collections", "chroma", "local-sqlite"
+backend = "albert-collections"  # "albert-collections", "local-sqlite"
 collection_naming = "workspace" # "workspace", "app", or "custom"
 distance_metric = "cosine"      # "cosine", "euclidean", "dot-product"
 

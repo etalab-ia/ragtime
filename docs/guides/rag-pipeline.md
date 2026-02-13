@@ -84,7 +84,7 @@ The left side happens **once** when you load your documents. The right side happ
 
 **What it does**: Saves the vectors in an index (vector store) so they can be searched efficiently.
 
-**Why it matters**: The backend choice affects performance, scalability, and features. `albert-collections` is the default for sovereign AI; `chroma` is a popular open-source alternative for local development.
+**Why it matters**: The backend choice affects performance, scalability, and features. `albert-collections` is the default for sovereign AI.
 
 ### 5. Query Enhancement
 

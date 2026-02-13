@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "albert-client",
     "rag-core",
+    "retrieval-albert",
     "datasets>=3.0.0",
     "huggingface-hub>=1.3.0",
     "letta-client>=0.1.0",
@@ -28,6 +29,7 @@ dev = [
 [tool.uv.sources]
 albert-client = { workspace = true }
 rag-core = { workspace = true }
+retrieval-albert = { workspace = true }
 
 [project.scripts]
 rag-facile = "cli.main:app"
@@ -44,4 +46,5 @@ packages = ["src/cli"]
 "../../packages/retrieval-basic/src/retrieval_basic" = "cli/retrieval_basic_src"
 "../../packages/albert-client/src/albert" = "cli/albert_src"
 "../../packages/rag-core/src/rag_core" = "cli/rag_core_src"
+"../../packages/retrieval-albert/src/retrieval_albert" = "cli/retrieval_albert_src"
 "src/cli/templates/ragfacile.toml" = "cli/templates/ragfacile.toml"

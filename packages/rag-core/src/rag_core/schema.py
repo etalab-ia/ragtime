@@ -175,7 +175,7 @@ class EmbeddingConfig(BaseModel):
 class StorageConfig(BaseModel):
     """Configuration for vector storage."""
 
-    backend: Literal["albert-collections", "chroma", "local-sqlite"] = Field(
+    backend: Literal["albert-collections", "local-sqlite"] = Field(
         default="albert-collections",
         description="Vector store backend",
     )

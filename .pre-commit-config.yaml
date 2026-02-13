@@ -13,7 +13,7 @@ repos:
         name: Regenerate Moon templates
         entry: bash -c 'uv run python tools/generate_templates.py --all --force && git add .moon/templates/'
         language: system
-        files: ^(apps/(chainlit-chat|reflex-chat)|packages/(albert-client|rag-core|retrieval-basic))/
+        files: ^(apps/(chainlit-chat|reflex-chat)|packages/(albert-client|rag-core|retrieval-albert|retrieval-basic))/
         pass_filenames: false
       - id: ty
         name: ty

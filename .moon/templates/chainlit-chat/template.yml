@@ -28,9 +28,6 @@ variables:
   use_pdf:
     type: boolean
     default: false
-  use_chroma:
-    type: boolean
-    default: false
   welcome_message:
     type: string
     default: Welcome to Chainlit! 🚀🤖

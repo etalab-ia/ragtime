@@ -3,4 +3,3 @@
 
 context_providers:
   pdf: pdf_context
-  # chroma: chroma_context  # Coming soon
