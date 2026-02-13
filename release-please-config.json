@@ -5,6 +5,8 @@
 	"packages": {
 		"packages/albert-client": {
 			"release-type": "python",
+			"component": "albert-client",
+			"include-component-in-tag": true,
 			"changelog-path": "CHANGELOG.md",
 			"version-file": "pyproject.toml"
 		},
