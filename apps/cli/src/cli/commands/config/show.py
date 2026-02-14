@@ -13,6 +13,7 @@ from rich.text import Text
 
 from rag_core import (
     PIPELINE_STAGES,
+    PipelineStage,
     flatten_model_fields,
     get_env_override_docs,
     load_config_or_default,
@@ -154,10 +155,24 @@ def _show_table(config_dict: dict, path: str) -> None:
         )
     )
 
+    # Pre-compute all rows per stage so we can determine the widest setting
+    # name across every table and use it as a fixed column width.
+    stages_rows: list[tuple[int, PipelineStage, list[tuple[str, str, str]]]] = []
+    setting_width = len("Setting")  # minimum: the column header itself
+
     for step_number, stage in enumerate(PIPELINE_STAGES, start=1):
         if stage.key not in config_dict:
             continue
+        section_model = stage.model(**config_dict[stage.key])
+        rows = [
+            (key, _format_value(value), description)
+            for key, value, description in flatten_model_fields(section_model)
+        ]
+        for key, _, _ in rows:
+            setting_width = max(setting_width, len(key))
+        stages_rows.append((step_number, stage, rows))
 
+    for step_number, stage, rows in stages_rows:
         # Stage header: step number + emoji + title
         header = Text()
         header.append(f" {step_number}. ", style="bold blue")
@@ -169,18 +184,23 @@ def _show_table(config_dict: dict, path: str) -> None:
         console.print(f"    [dim]{stage.description}[/dim]")
         console.print()
 
-        # Build table with Setting / Value / Description columns
-        table = Table(show_header=True, header_style="bold cyan", pad_edge=False)
-        table.add_column("Setting", style="green", no_wrap=True)
-        table.add_column("Value", style="yellow")
-        table.add_column("Description", style="dim")
-
-        # Use the model instance from config_dict to flatten fields
-        section_model = stage.model(**config_dict[stage.key])
-        rows = flatten_model_fields(section_model)
+        # Build table with Setting / Value / Description columns.
+        # expand=True makes all tables the same full-terminal width.
+        # Setting uses a fixed min_width so the column aligns across tables.
+        table = Table(
+            show_header=True,
+            header_style="bold cyan",
+            pad_edge=False,
+            expand=True,
+        )
+        table.add_column(
+            "Setting", style="green", no_wrap=True, min_width=setting_width
+        )
+        table.add_column("Value", style="yellow", ratio=1)
+        table.add_column("Description", style="dim", ratio=2)
 
         for key, value, description in rows:
-            table.add_row(key, _format_value(value), description)
+            table.add_row(key, value, description)
 
         console.print(table)
         console.print()
