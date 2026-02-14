@@ -439,7 +439,12 @@ def generate_standalone(
     console.print("[bold green]Step 2:[/bold green] Generating project files...")
 
     # Create pyproject.toml for standalone mode
-    pdf_dep = '\n    "pypdf>=5.0.0",' if "PDF" in selected_modules else ""
+    # pypdf required for both PDF and Albert RAG (albert has local fallback in parser.py)
+    pdf_dep = (
+        '\n    "pypdf>=5.0.0",'
+        if ("PDF" in selected_modules or "Albert RAG" in selected_modules)
+        else ""
+    )
     setuptools_packages_list = ["albert", "rag_core", "retrieval"]
     setuptools_packages = f"packages = {setuptools_packages_list}"
 
