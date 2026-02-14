@@ -9,8 +9,14 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
+from rich.text import Text
 
-from rag_core import get_env_override_docs, load_config_or_default
+from rag_core import (
+    PIPELINE_STAGES,
+    flatten_model_fields,
+    get_env_override_docs,
+    load_config_or_default,
+)
 
 
 console = Console()
@@ -115,8 +121,24 @@ def _show_json(config_dict: dict) -> None:
     console.print(syntax)
 
 
+def _format_value(value: object) -> str:
+    """Format a config value for display.
+
+    Lists are joined with commas for readability instead of showing
+    raw Python list syntax.
+    """
+    if isinstance(value, list):
+        return ", ".join(str(item) for item in value)
+    return str(value)
+
+
 def _show_table(config_dict: dict, path: str) -> None:
-    """Display configuration as formatted table."""
+    """Display configuration as formatted tables in RAG pipeline order.
+
+    Each pipeline stage is shown with a step number, description, and a table
+    of settings with their values and descriptions. This layout is designed to
+    teach users about the RAG pipeline as they explore their configuration.
+    """
     # Show file path and preset
     meta = config_dict.get("meta", {})
     preset = meta.get("preset", "custom")
@@ -132,48 +154,38 @@ def _show_table(config_dict: dict, path: str) -> None:
         )
     )
 
-    # Key sections to highlight
-    sections = [
-        ("generation", "Response Generation", ["model", "temperature", "max_tokens"]),
-        ("storage", "Storage Backend", ["backend"]),
-        ("retrieval", "Retrieval", ["method", "top_k", "score_threshold"]),
-        ("reranking", "Reranking", ["enabled", "model", "top_n"]),
-        ("embedding", "Embedding", ["model", "batch_size"]),
-        ("chunking", "Chunking", ["strategy", "chunk_size", "chunk_overlap"]),
-        (
-            "hallucination",
-            "Hallucination Detection",
-            ["enabled", "method", "threshold"],
-        ),
-    ]
-
-    for section_key, section_title, fields in sections:
-        if section_key not in config_dict:
+    for step_number, stage in enumerate(PIPELINE_STAGES, start=1):
+        if stage.key not in config_dict:
             continue
 
-        section_data = config_dict[section_key]
-        table = Table(title=section_title, show_header=True, header_style="bold cyan")
-        table.add_column("Setting", style="green")
+        # Stage header: step number + emoji + title
+        header = Text()
+        header.append(f" {step_number}. ", style="bold blue")
+        header.append(f"{stage.emoji} ", style="")
+        header.append(stage.title, style="bold")
+        console.print(header)
+
+        # Stage description
+        console.print(f"    [dim]{stage.description}[/dim]")
+        console.print()
+
+        # Build table with Setting / Value / Description columns
+        table = Table(show_header=True, header_style="bold cyan", pad_edge=False)
+        table.add_column("Setting", style="green", no_wrap=True)
         table.add_column("Value", style="yellow")
+        table.add_column("Description", style="dim")
 
-        # Show highlighted fields
-        for field in fields:
-            if field in section_data:
-                value = section_data[field]
-                # Handle nested dicts
-                if isinstance(value, dict):
-                    value = str(value)
-                table.add_row(field, str(value))
+        # Use the model instance from config_dict to flatten fields
+        section_model = stage.model(**config_dict[stage.key])
+        rows = flatten_model_fields(section_model)
 
-        # Show remaining fields
-        for key, value in section_data.items():
-            if key not in fields and not isinstance(value, dict):
-                table.add_row(key, str(value))
+        for key, value, description in rows:
+            table.add_row(key, _format_value(value), description)
 
         console.print(table)
         console.print()
 
-    # Show note about env vars
+    # Helpful tips
     console.print(
         "[dim]💡 Tip: Use --format toml or --format json for complete config[/dim]"
     )

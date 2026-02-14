@@ -30,6 +30,7 @@ from .presets import (
 )
 from .runtime import get_config, has_config_file, reload_config
 from .schema import (
+    PIPELINE_STAGES,
     ChunkingConfig,
     ContextConfig,
     EmbeddingConfig,
@@ -39,11 +40,13 @@ from .schema import (
     HallucinationConfig,
     IngestionConfig,
     MetaConfig,
+    PipelineStage,
     QueryConfig,
     RAGConfig,
     RerankingConfig,
     RetrievalConfig,
     StorageConfig,
+    flatten_model_fields,
 )
 
 
@@ -66,6 +69,10 @@ __all__ = [
     "GenerationConfig",
     "HallucinationConfig",
     "FormattingConfig",
+    # Pipeline metadata
+    "PipelineStage",
+    "PIPELINE_STAGES",
+    "flatten_model_fields",
     # Loader functions
     "load_config",
     "load_config_or_default",

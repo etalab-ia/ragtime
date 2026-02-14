@@ -2,9 +2,14 @@
 
 This module defines the complete configuration schema for the RAG pipeline,
 covering all phases from document ingestion to response formatting.
+
+It also provides pipeline metadata (`PIPELINE_STAGES`) that defines the logical
+ordering and descriptions of each pipeline step, used by `config show` to present
+configuration in a way that teaches users about the RAG pipeline.
 """
 
-from typing import Literal
+from dataclasses import dataclass
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -506,3 +511,158 @@ class RAGConfig(BaseModel):
             ]
         }
     }
+
+
+# ==============================================================================
+# PIPELINE METADATA
+# ==============================================================================
+
+
+@dataclass(frozen=True)
+class PipelineStage:
+    """Metadata for a RAG pipeline stage, used by ``config show``.
+
+    Each stage maps to a section in ``ragfacile.toml`` and carries display
+    metadata so the CLI can present configuration in pipeline order with
+    educational descriptions.
+    """
+
+    key: str
+    """Config section key (e.g., ``"ingestion"``)."""
+
+    title: str
+    """Human-readable title (e.g., ``"Document Ingestion"``)."""
+
+    description: str
+    """One-line explanation of what this pipeline step does."""
+
+    emoji: str
+    """Visual indicator displayed next to the step number."""
+
+    model: type[BaseModel]
+    """Pydantic model class for this section (enables field introspection)."""
+
+
+PIPELINE_STAGES: list[PipelineStage] = [
+    PipelineStage(
+        key="ingestion",
+        title="Document Ingestion",
+        description="Load and pre-process documents (PDF, Markdown, text) with optional OCR.",
+        emoji="\U0001f4c4",
+        model=IngestionConfig,
+    ),
+    PipelineStage(
+        key="chunking",
+        title="Document Chunking",
+        description="Split documents into smaller, semantically meaningful chunks for indexing.",
+        emoji="\u2702\ufe0f",
+        model=ChunkingConfig,
+    ),
+    PipelineStage(
+        key="embedding",
+        title="Embedding Generation",
+        description="Convert text chunks into vector representations for similarity search.",
+        emoji="\U0001f522",
+        model=EmbeddingConfig,
+    ),
+    PipelineStage(
+        key="storage",
+        title="Vector Storage",
+        description="Store and index embedding vectors for efficient retrieval.",
+        emoji="\U0001f4be",
+        model=StorageConfig,
+    ),
+    PipelineStage(
+        key="query",
+        title="Query Enhancement",
+        description="Rewrite, expand, or correct user queries before retrieval.",
+        emoji="\U0001f50d",
+        model=QueryConfig,
+    ),
+    PipelineStage(
+        key="retrieval",
+        title="Retrieval",
+        description="Search the vector store to find the most relevant document chunks.",
+        emoji="\U0001f4e5",
+        model=RetrievalConfig,
+    ),
+    PipelineStage(
+        key="reranking",
+        title="Reranking",
+        description="Re-score retrieved chunks with a cross-encoder for higher precision.",
+        emoji="\U0001f3c6",
+        model=RerankingConfig,
+    ),
+    PipelineStage(
+        key="context",
+        title="Context Assembly",
+        description="Select, deduplicate, and format retrieved chunks into a context window.",
+        emoji="\U0001f4cb",
+        model=ContextConfig,
+    ),
+    PipelineStage(
+        key="generation",
+        title="Response Generation",
+        description="Generate an answer from the assembled context using an LLM.",
+        emoji="\U0001f4ac",
+        model=GenerationConfig,
+    ),
+    PipelineStage(
+        key="hallucination",
+        title="Hallucination Detection",
+        description="Verify the generated response is grounded in the provided context.",
+        emoji="\U0001f6e1\ufe0f",
+        model=HallucinationConfig,
+    ),
+    PipelineStage(
+        key="formatting",
+        title="Answer Formatting",
+        description="Format the final response (Markdown, HTML, citations, language).",
+        emoji="\u2728",
+        model=FormattingConfig,
+    ),
+    PipelineStage(
+        key="eval",
+        title="Evaluation",
+        description="Generate synthetic Q/A datasets to measure RAG pipeline quality.",
+        emoji="\U0001f4ca",
+        model=EvalConfig,
+    ),
+]
+
+
+def flatten_model_fields(
+    model_instance: BaseModel,
+    prefix: str = "",
+) -> list[tuple[str, Any, str]]:
+    """Flatten a Pydantic model into ``(key, value, description)`` tuples.
+
+    Nested :class:`BaseModel` fields are recursed with dot-separated keys.
+
+    Args:
+        model_instance: An instantiated Pydantic model.
+        prefix: Dot prefix for nested fields (used internally during recursion).
+
+    Returns:
+        List of ``(dotted_key, value, description)`` tuples.
+
+    Example:
+        >>> from rag_core.schema import IngestionConfig, flatten_model_fields
+        >>> rows = flatten_model_fields(IngestionConfig())
+        >>> rows[0]
+        ('file_types', ['.pdf', '.md', '.txt'], 'Supported file extensions')
+    """
+    rows: list[tuple[str, Any, str]] = []
+
+    for field_name, field_info in model_instance.model_fields.items():
+        value = getattr(model_instance, field_name)
+        dotted_key = f"{prefix}{field_name}" if not prefix else f"{prefix}.{field_name}"
+        description = field_info.description or ""
+
+        if isinstance(value, BaseModel):
+            # Recurse into nested models
+            rows.extend(flatten_model_fields(value, prefix=dotted_key))
+        else:
+            rows.append((dotted_key, value, description))
+
+    return rows
