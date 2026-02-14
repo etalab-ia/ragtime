@@ -513,9 +513,8 @@ def main():
             "chainlit-chat",
             "reflex-chat",
             "albert-client",
-            "retrieval-basic",
+            "retrieval",
             "rag-core",
-            "retrieval-albert",
         ]
     else:
         templates_to_generate = [args.template]

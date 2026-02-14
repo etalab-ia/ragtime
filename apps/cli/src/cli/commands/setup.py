@@ -150,8 +150,8 @@ FRONTENDS = {
 
 # Available modules (packages)
 MODULES = {
-    "PDF": {"template": "retrieval-basic", "available": True},
-    "Albert RAG": {"template": "retrieval-albert", "available": True},
+    "PDF": {"template": "retrieval", "available": True},
+    "Albert RAG": {"template": "retrieval", "available": True},
 }
 
 # Project structure options
@@ -448,7 +448,7 @@ def generate_standalone(
     setuptools_packages_list = ["albert", "rag_core", "retrieval"]
     setuptools_packages = f"packages = {setuptools_packages_list}"
 
-    # For standalone, albert-client, rag-core, and retrieval-basic are local modules (not dependencies)
+    # For standalone, albert-client, rag-core, and retrieval are local modules (not dependencies)
     pyproject_content = f'''[project]
 name = "{project_name}"
 version = "0.1.0"
@@ -917,8 +917,7 @@ def run(
         "chainlit-chat",
         "reflex-chat",
         "albert-client",
-        "retrieval-basic",
-        "retrieval-albert",
+        "retrieval",
         "rag-core",
     ]:
         src = templates_dir / template_name
@@ -1056,23 +1055,22 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
         console.print()
         console.print("[bold green]Step 6:[/bold green] Generating packages...")
 
+        # Collect unique templates (both PDF and Albert RAG use same retrieval template)
+        templates_to_generate = set()
         for module in selected_modules:
             module_info = MODULES[module]
-            if not module_info["available"]:
-                console.print(
-                    f"[yellow]⚠[/yellow] {module} is not yet available, skipping..."
-                )
-                continue
+            if module_info["available"]:
+                templates_to_generate.add(str(module_info["template"]))
 
-            template_name = str(module_info["template"])
-            console.print(f"  Generating {module}...")
+        for template_name in templates_to_generate:
+            console.print(f"  Generating {template_name}...")
             # Don't pass DEST - let the template.yml destination be used
             pkg_cmd: list[str] = ["moon", "generate", template_name, "--defaults"]
             if force:
                 pkg_cmd.append("--force")
             if not run_command(pkg_cmd, f"generate {template_name}", cwd=target_path):
                 raise typer.Exit(1)
-            console.print(f"  [green]✓[/green] {module} package generated")
+            console.print(f"  [green]✓[/green] {template_name} package generated")
 
     # Done with generation!
     console.print()
