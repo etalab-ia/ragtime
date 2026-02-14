@@ -1,16 +1,21 @@
 [project]
-name = "retrieval-basic"
+name = "retrieval"
 version = "0.10.1" # x-release-please-version
-description = "Basic retrieval components - PDF text extraction and context formatting"
+description = "Unified retrieval package - basic context injection and Albert RAG"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "albert-client",
     "rag-core",
 ]
+
+[tool.uv.sources]
+albert-client = { workspace = true }
+rag-core = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/retrieval_basic"]
+packages = ["src/retrieval"]

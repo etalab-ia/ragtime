@@ -135,7 +135,7 @@ my-rag-app/
 ├── packages/
 │   ├── rag-core/       # Configuration system
 │   ├── albert-client/  # Albert API SDK
-│   └── retrieval-basic/ OR retrieval-albert/  # Selected retrieval module
+│   └── retrieval/      # Unified retrieval package (basic + albert backends)
 ├── ragfacile.toml      # RAG pipeline configuration
 ├── justfile            # Common commands
 └── pyproject.toml      # Workspace root

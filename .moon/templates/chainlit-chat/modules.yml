@@ -2,4 +2,4 @@
 # Auto-generated based on selected modules
 
 context_providers:
-  retrieval: retrieval_{{ retrieval_module }}
+  retrieval: retrieval

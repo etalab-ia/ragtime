@@ -3,8 +3,8 @@
 import respx
 from httpx import Response
 
-from retrieval_albert import rerank_chunks, retrieve, search_chunks
-from retrieval_albert._types import RetrievedChunk
+from retrieval.albert import rerank_chunks, retrieve, search_chunks
+from retrieval._types import RetrievedChunk
 
 
 class TestSearchChunks:

@@ -4,7 +4,7 @@ import pytest
 import respx
 from httpx import Response
 
-from retrieval_albert import create_collection, delete_collection, ingest_documents
+from retrieval.ingestion import create_collection, delete_collection, ingest_documents
 
 
 class TestCreateCollection:

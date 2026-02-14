@@ -73,10 +73,9 @@ rag-facile/
 │   ├── chainlit-chat/       # Chainlit frontend (golden master)
 │   └── reflex-chat/         # Reflex frontend (golden master)
 ├── packages/                # Shared packages
-│   ├── rag-core/            # RAG Configuration System (replaces core-config)
+│   ├── rag-core/            # RAG Configuration System
 │   ├── albert-client/       # Albert API SDK
-│   ├── retrieval-basic/     # PDF extraction (local, offline)
-│   └── retrieval-albert/    # Albert RAG (server-side parsing & search)
+│   └── retrieval/           # Unified retrieval package (basic + albert backends)
 ├── docs/                    # User and contributor documentation
 │   ├── guides/              # Getting started, setup, pipelines
 │   ├── reference/           # Components, config, ragfacile.toml
@@ -102,27 +101,43 @@ Templates live in `.moon/templates/` and are automatically bundled into the CLI 
 moon run cli:test
 ```
 
-### Understanding Retrieval Modules
+### Understanding Retrieval System
 
-RAG Facile uses pluggable retrieval modules. Users select one during `rag-facile setup`:
+RAG Facile uses a **unified retrieval package** (`packages/retrieval/`) with two backends that are selected at runtime via `ragfacile.toml`:
 
-- **retrieval-basic** — Local PDF extraction via pypdf (lightweight, offline)
-- **retrieval-albert** — Server-side parsing via Albert API + fallback to local pypdf
+- **basic** — Local PDF extraction via pypdf (lightweight, offline)
+- **albert** — Full RAG via Albert API (ingestion, search, reranking)
 
-Both modules implement the same interface:
-- `process_file(path)` — Extract text from file
-- `extract_text_from_bytes(data, filename)` — Extract text from bytes
+Backend selection is automatic based on `storage.backend` config:
+```toml
+[storage]
+backend = "albert-collections"  # Uses Albert RAG
+# backend = "local-sqlite"      # Uses basic context injection
+```
 
-The `context_loader.py` in each app dynamically imports the selected module from `modules.yml`. Both modules are interchangeable from the app's perspective.
+Both backends implement the same interface through the factory pattern:
+```python
+from retrieval import get_provider
+provider = get_provider()  # Returns basic or albert based on config
+context = provider.process_file("document.pdf")
+```
+
+The `context_loader.py` in each app dynamically loads the retrieval package, which then internally selects the right backend based on configuration.
 
 **Key files:**
-- `packages/retrieval-basic/src/retrieval_basic/` — PDF extraction logic
-- `packages/retrieval-albert/src/retrieval_albert/parser.py` — Albert API + fallback logic
-- `packages/rag-core/src/rag_core/pdf.py` — Shared local PDF extraction (used by both)
+- `packages/retrieval/src/retrieval/` — Unified retrieval package
+  - `__init__.py` — Factory pattern for backend selection
+  - `basic.py` — Basic context injection provider
+  - `albert.py` — Albert RAG retrieval
+  - `parser.py` — Document parsing (Albert backend)
+  - `ingestion.py` — Collection management (Albert backend)
+  - `formatter.py` — Context formatting (Albert backend)
+- `packages/rag-core/src/rag_core/pdf.py` — Shared PDF extraction utilities
 
-When modifying retrieval logic, remember:
-- Test both modules (see test files in each package)
-- `rag-core/pdf.py` is the fallback for Albert RAG, so changes there affect both modules
+When modifying retrieval logic:
+- Test both backends (see `packages/retrieval/tests/`)
+- Backend switching happens at runtime - no code changes needed
+- `rag-core/pdf.py` provides shared PDF utilities used by both backends
 - The `modules.yml` file determines which module is active (auto-generated from templates)
 
 ### Testing the Generate Dataset Command

@@ -8,7 +8,7 @@ dependencies = [
     "albert-client",
     "chainlit>=1.3.0",
     "rag-core",
-    "retrieval-basic",
+    "retrieval",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.0",
 ]
@@ -22,4 +22,4 @@ py-modules = ["app", "context_loader"]
 [tool.uv.sources]
 albert-client = { workspace = true }
 rag-core = { workspace = true }
-retrieval-basic = { workspace = true }
+retrieval = { workspace = true }

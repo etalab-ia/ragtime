@@ -25,7 +25,3 @@ variables:
     type: string
     default: You are a friendly chatbot named Reflex. Respond in markdown.
     prompt: Initial system prompt for the assistant
-  retrieval_module:
-    type: string
-    default: basic
-    prompt: Retrieval module (basic or albert)

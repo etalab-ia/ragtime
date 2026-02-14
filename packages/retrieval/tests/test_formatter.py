@@ -1,7 +1,7 @@
 """Tests for formatter functions."""
 
-from retrieval_albert import format_context
-from retrieval_albert._types import RetrievedChunk
+from retrieval.formatter import format_context
+from retrieval._types import RetrievedChunk
 
 
 def _make_chunk(

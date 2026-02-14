@@ -1,11 +1,13 @@
-"""Context formatting module.
+"""Basic retrieval provider - PDF context injection.
 
-Provides functions to format extracted text for LLM context injection.
+Simple retrieval approach that extracts PDF text and injects the entire
+content into the LLM context. Suitable for smaller documents that fit
+within the model's context window.
 """
 
 from pathlib import Path
 
-from .extractor import extract_text_from_pdf
+from rag_core.pdf import extract_text_from_bytes, extract_text_from_pdf
 
 
 def format_as_context(text: str, filename: str) -> str:
@@ -52,6 +54,21 @@ def process_pdf_file(path: str | Path, filename: str | None = None) -> str:
     return format_as_context(text, display_name)
 
 
+def process_file(path: str | Path, filename: str | None = None) -> str:
+    """Process a file and return formatted context.
+
+    Generic interface that currently only supports PDF files.
+
+    Args:
+        path: Path to the file.
+        filename: Optional display name for the file.
+
+    Returns:
+        Formatted text ready for context injection.
+    """
+    return process_pdf_file(path, filename)
+
+
 def process_multiple_files(paths: list[str | Path]) -> str:
     """Process multiple PDF files and combine their context.
 
@@ -77,3 +94,20 @@ def process_multiple_files(paths: list[str | Path]) -> str:
             results.append(f"\n\nError reading PDF '{path_obj.name}': {e!s}\n")
 
     return "".join(results)
+
+
+# Supported file extensions and MIME types for context_loader
+SUPPORTED_EXTENSIONS = [".pdf"]
+ACCEPTED_MIME_TYPES = {"application/pdf": [".pdf"]}
+
+
+__all__ = [
+    "extract_text_from_pdf",
+    "extract_text_from_bytes",
+    "format_as_context",
+    "process_pdf_file",
+    "process_file",
+    "process_multiple_files",
+    "SUPPORTED_EXTENSIONS",
+    "ACCEPTED_MIME_TYPES",
+]

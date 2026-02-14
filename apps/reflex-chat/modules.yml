@@ -2,4 +2,4 @@
 # Enable/disable context providers by commenting/uncommenting
 
 context_providers:
-  retrieval: retrieval_basic
+  retrieval: retrieval

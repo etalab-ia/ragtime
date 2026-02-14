@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 from rag_core import get_config
 
 from ._types import RetrievedChunk
-from .retriever import retrieve
+from .albert import retrieve
 
 
 if TYPE_CHECKING:

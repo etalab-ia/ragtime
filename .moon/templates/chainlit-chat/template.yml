@@ -25,10 +25,6 @@ variables:
     type: string
     default: You are a helpful assistant.
     prompt: Initial system prompt for the assistant
-  retrieval_module:
-    type: string
-    default: basic
-    prompt: Retrieval module (basic or albert)
   welcome_message:
     type: string
     default: Welcome to Chainlit! 🚀🤖

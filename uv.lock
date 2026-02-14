@@ -15,8 +15,7 @@ members = [
     "rag-facile",
     "rag-facile-cli",
     "reflex-chat",
-    "retrieval-albert",
-    "retrieval-basic",
+    "retrieval",
 ]
 
 [[package]]
@@ -333,7 +332,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "rag-core" },
-    { name = "retrieval-basic" },
+    { name = "retrieval" },
 ]
 
 [package.metadata]
@@ -343,7 +342,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "rag-core", editable = "packages/rag-core" },
-    { name = "retrieval-basic", editable = "packages/retrieval-basic" },
+    { name = "retrieval", editable = "packages/retrieval" },
 ]
 
 [[package]]
@@ -2353,8 +2352,7 @@ dependencies = [
     { name = "rag-core" },
     { name = "rag-facile-cli" },
     { name = "reflex-chat" },
-    { name = "retrieval-albert" },
-    { name = "retrieval-basic" },
+    { name = "retrieval" },
 ]
 
 [package.dev-dependencies]
@@ -2376,8 +2374,7 @@ requires-dist = [
     { name = "rag-core", editable = "packages/rag-core" },
     { name = "rag-facile-cli", editable = "apps/cli" },
     { name = "reflex-chat", editable = "apps/reflex-chat" },
-    { name = "retrieval-albert", editable = "packages/retrieval-albert" },
-    { name = "retrieval-basic", editable = "packages/retrieval-basic" },
+    { name = "retrieval", editable = "packages/retrieval" },
 ]
 
 [package.metadata.requires-dev]
@@ -2407,7 +2404,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "questionary" },
     { name = "rag-core" },
-    { name = "retrieval-albert" },
+    { name = "retrieval" },
     { name = "rich" },
     { name = "typer" },
 ]
@@ -2430,7 +2427,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "questionary", specifier = ">=2.0.0" },
     { name = "rag-core", editable = "packages/rag-core" },
-    { name = "retrieval-albert", editable = "packages/retrieval-albert" },
+    { name = "retrieval", editable = "packages/retrieval" },
     { name = "rich", specifier = ">=13.0.0" },
     { name = "typer", specifier = ">=0.12.0" },
 ]
@@ -2501,7 +2498,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "rag-core" },
     { name = "reflex" },
-    { name = "retrieval-basic" },
+    { name = "retrieval" },
 ]
 
 [package.metadata]
@@ -2511,7 +2508,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "rag-core", editable = "packages/rag-core" },
     { name = "reflex", specifier = ">=0.7.11" },
-    { name = "retrieval-basic", editable = "packages/retrieval-basic" },
+    { name = "retrieval", editable = "packages/retrieval" },
 ]
 
 [[package]]
@@ -2558,9 +2555,9 @@ wheels = [
 ]
 
 [[package]]
-name = "retrieval-albert"
+name = "retrieval"
 version = "0.10.1"
-source = { editable = "packages/retrieval-albert" }
+source = { editable = "packages/retrieval" }
 dependencies = [
     { name = "albert-client" },
     { name = "rag-core" },
@@ -2571,17 +2568,6 @@ requires-dist = [
     { name = "albert-client", editable = "packages/albert-client" },
     { name = "rag-core", editable = "packages/rag-core" },
 ]
-
-[[package]]
-name = "retrieval-basic"
-version = "0.10.1"
-source = { editable = "packages/retrieval-basic" }
-dependencies = [
-    { name = "rag-core" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "rag-core", editable = "packages/rag-core" }]
 
 [[package]]
 name = "rich"

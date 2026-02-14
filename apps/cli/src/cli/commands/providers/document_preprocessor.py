@@ -11,15 +11,15 @@ from typing import Optional
 
 
 try:
-    from retrieval_basic import extract_text_from_pdf
+    from retrieval import extract_text_from_pdf
 except ImportError:
     try:
         # Fallback for development/editable install
-        from cli.retrieval_basic_src import extract_text_from_pdf
+        from cli.retrieval_src import extract_text_from_pdf
     except ImportError as e:
         raise ImportError(
-            "retrieval_basic module is required for PDF extraction. "
-            "Ensure the retrieval-basic package is installed."
+            "retrieval module is required for PDF extraction. "
+            "Ensure the retrieval package is installed."
         ) from e
 
 

@@ -47,23 +47,50 @@ results = client.search(
 
 Both are available during `rag-facile setup` and are pre-configured to work with the Albert API out of the box.
 
-## Retrieval Modules
+## Retrieval System
 
-RAG Facile provides two pluggable retrieval modules. Choose one during setup based on your needs.
+RAG Facile provides a **unified retrieval package** with two backends that can be switched at runtime. The backend is determined by your `ragfacile.toml` configuration.
 
-### PDF (retrieval-basic)
+### Architecture
+
+The retrieval system uses a factory pattern for runtime backend selection:
+
+```python
+from retrieval import get_provider
+
+# Backend determined by ragfacile.toml config
+provider = get_provider()
+context = provider.process_file("document.pdf")
+```
+
+### Backend Selection
+
+Backend is configured in `ragfacile.toml`:
+
+```toml
+[storage]
+backend = "local-sqlite"        # Uses Basic backend
+# backend = "albert-collections" # Uses Albert backend
+```
+
+To switch backends:
+1. Edit `ragfacile.toml`
+2. Restart your application
+
+No code changes or reinstallation needed!
+
+### Basic Backend (`local-sqlite`)
 
 **Best for:** Quick prototypes, offline usage, simple document processing
 
 - **Extraction:** Local pypdf library (no network calls)
-- **Fallback:** Automatic fallback from Albert API if parsing fails
 - **Supported formats:** PDF
 - **Features:** Simple, lightweight, no server dependencies
-- **Use case:** Getting started quickly, private/offline scenarios
+- **Use case:** Getting started quickly, private/offline scenarios, small documents
 
-### Albert RAG (retrieval-albert)
+### Albert Backend (`albert-collections`)
 
-**Best for:** Production deployments, multiple file formats, advanced search features
+**Best for:** Production deployments, large document collections, advanced search features
 
 - **Extraction:** Albert API server-side parsing (`/parse-beta`)
 - **Supported formats:** PDF, JSON, Markdown, HTML
@@ -71,10 +98,20 @@ RAG Facile provides two pluggable retrieval modules. Choose one during setup bas
   - Multi-format document support
   - Server-side chunking and vectorization
   - Hybrid search (semantic + lexical)
-  - Result reranking
+  - Result reranking with BGE models
+  - Collection-based document storage
   - Built-in fallback to local pypdf if parse API fails
-- **Use case:** Advanced RAG pipelines, production applications
+- **Use case:** Advanced RAG pipelines, production applications, large document sets
 
-> **Note:** Future releases will add collection-based search and RAG sessions to the Reflex and Chainlit apps when using Albert RAG. Currently, both modules extract text and inject it as context inline.
+### Comparison Table
 
-Modules are selected during `rag-facile setup` and automatically included in your project.
+| Feature | Basic | Albert |
+|---------|-------|--------|
+| **Extraction** | Local pypdf | Albert API + fallback |
+| **Formats** | PDF only | PDF, JSON, MD, HTML |
+| **Search** | None (context injection) | Semantic + Hybrid + Reranking |
+| **Persistence** | None (per-session) | Collections (persistent) |
+| **Network** | Offline | Requires API access |
+| **Use Case** | Small docs, prototypes | Production, large collections |
+
+> **Note:** Both backends implement the same interface, making them fully interchangeable. Apps automatically work with either backend without code changes.

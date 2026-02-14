@@ -51,9 +51,9 @@ def mock_config(monkeypatch):
             )
         ),
     )
-    monkeypatch.setattr("retrieval_albert.ingestion.get_config", lambda: config)
-    monkeypatch.setattr("retrieval_albert.retriever.get_config", lambda: config)
-    monkeypatch.setattr("retrieval_albert.formatter.get_config", lambda: config)
+    monkeypatch.setattr("retrieval.ingestion.get_config", lambda: config)
+    monkeypatch.setattr("retrieval.albert.get_config", lambda: config)
+    monkeypatch.setattr("retrieval.formatter.get_config", lambda: config)
     return config
 
 

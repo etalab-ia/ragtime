@@ -135,6 +135,7 @@ def _show_table(config_dict: dict, path: str) -> None:
     # Key sections to highlight
     sections = [
         ("generation", "Response Generation", ["model", "temperature", "max_tokens"]),
+        ("storage", "Storage Backend", ["backend"]),
         ("retrieval", "Retrieval", ["method", "top_k", "score_threshold"]),
         ("reranking", "Reranking", ["enabled", "model", "top_n"]),
         ("embedding", "Embedding", ["model", "batch_size"]),

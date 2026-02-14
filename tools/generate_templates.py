@@ -311,14 +311,14 @@ def generate_app_template(app_name: str, source_dir: Path, force: bool = False):
                 "[\"{{ project_name | replace(from='-', to='_') }}*\"]",
             )
 
-        # Make retrieval dependency configurable via retrieval_module variable
+        # Update retrieval dependency to unified package
         content = content.replace(
             '    "retrieval-basic",',
-            '    "retrieval-{{ retrieval_module }}",',
+            '    "retrieval",',
         )
         content = content.replace(
             "retrieval-basic = { workspace = true }",
-            "retrieval-{{ retrieval_module }} = { workspace = true }",
+            "retrieval = { workspace = true }",
         )
 
         # Add [tool.uv] package = true if not present
@@ -333,7 +333,7 @@ def generate_app_template(app_name: str, source_dir: Path, force: bool = False):
 # Auto-generated based on selected modules
 
 context_providers:
-  retrieval: retrieval_{{ retrieval_module }}
+  retrieval: retrieval
 """
     (target / "modules.yml").write_text(modules_yml_content)
     console.print("  [green]✓[/green] modules.yml template generated")
@@ -418,11 +418,6 @@ context_providers:
             if app_name == "chainlit-chat"
             else "You are a friendly chatbot named Reflex. Respond in markdown.",
             "prompt": "Initial system prompt for the assistant",
-        },
-        "retrieval_module": {
-            "type": "string",
-            "default": "basic",
-            "prompt": "Retrieval module (basic or albert)",
         },
     }
 
@@ -518,9 +513,8 @@ def main():
             "chainlit-chat",
             "reflex-chat",
             "albert-client",
-            "retrieval-basic",
+            "retrieval",
             "rag-core",
-            "retrieval-albert",
         ]
     else:
         templates_to_generate = [args.template]
@@ -553,10 +547,10 @@ def main():
             )
             if result is False:
                 success = False
-        elif template == "retrieval-basic":
+        elif template == "retrieval":
             result = generate_package_template(
-                "retrieval-basic",
-                REPO_ROOT / "packages" / "retrieval-basic",
+                "retrieval",
+                REPO_ROOT / "packages" / "retrieval",
                 force=args.force,
             )
             if result is False:
@@ -564,14 +558,6 @@ def main():
         elif template == "rag-core":
             result = generate_package_template(
                 "rag-core", REPO_ROOT / "packages" / "rag-core", force=args.force
-            )
-            if result is False:
-                success = False
-        elif template == "retrieval-albert":
-            result = generate_package_template(
-                "retrieval-albert",
-                REPO_ROOT / "packages" / "retrieval-albert",
-                force=args.force,
             )
             if result is False:
                 success = False

@@ -150,8 +150,8 @@ FRONTENDS = {
 
 # Available modules (packages)
 MODULES = {
-    "PDF": {"template": "retrieval-basic", "available": True},
-    "Albert RAG": {"template": "retrieval-albert", "available": True},
+    "PDF": {"template": "retrieval", "available": True},
+    "Albert RAG": {"template": "retrieval", "available": True},
 }
 
 # Project structure options
@@ -260,12 +260,12 @@ def _get_source_path(
     raise FileNotFoundError(error_message)
 
 
-def get_retrieval_basic_source() -> Path:
-    """Get the retrieval-basic source directory for inline copying."""
+def get_retrieval_source() -> Path:
+    """Get the unified retrieval source directory for inline copying."""
     return _get_source_path(
-        ("packages", "retrieval-basic", "src", "retrieval_basic"),
-        ("retrieval_basic_src",),
-        "retrieval-basic source not found. This is a packaging error - please reinstall the CLI.",
+        ("packages", "retrieval", "src", "retrieval"),
+        ("retrieval_src",),
+        "retrieval source not found. This is a packaging error - please reinstall the CLI.",
     )
 
 
@@ -275,15 +275,6 @@ def get_albert_client_source() -> Path:
         ("packages", "albert-client", "src", "albert"),
         ("albert_src",),
         "albert-client source not found. This is a packaging error - please reinstall the CLI.",
-    )
-
-
-def get_retrieval_albert_source() -> Path:
-    """Get the retrieval-albert source directory for inline copying."""
-    return _get_source_path(
-        ("packages", "retrieval-albert", "src", "retrieval_albert"),
-        ("retrieval_albert_src",),
-        "retrieval-albert source not found. This is a packaging error - please reinstall the CLI.",
     )
 
 
@@ -345,7 +336,10 @@ def render_template_file(template_path: Path, variables: dict[str, str | bool]) 
 
 
 def generate_config_file(
-    workspace_root: Path, preset: str, preset_config: PresetConfig
+    workspace_root: Path,
+    preset: str,
+    preset_config: PresetConfig,
+    selected_modules: list[str] | None = None,
 ) -> None:
     """Generate ragfacile.toml at workspace root using config package.
 
@@ -353,6 +347,7 @@ def generate_config_file(
         workspace_root: Root directory where ragfacile.toml will be created
         preset: Name of the preset (fast, balanced, accurate, legal, hr)
         preset_config: Preset configuration dict with model_alias, temperature, etc.
+        selected_modules: List of selected modules to determine storage backend
     """
     from rag_core import RAGConfig
     from rag_core.loader import save_config
@@ -365,7 +360,15 @@ def generate_config_file(
         MetaConfig,
         OCRConfig,
         RetrievalConfig,
+        StorageConfig,
     )
+
+    # Determine storage backend based on selected modules
+    # If Albert RAG is selected, use albert-collections; otherwise use local-sqlite
+    if selected_modules and "Albert RAG" in selected_modules:
+        storage_backend = "albert-collections"
+    else:
+        storage_backend = "local-sqlite"
 
     # Create config with preset values
     config = RAGConfig(
@@ -383,6 +386,7 @@ def generate_config_file(
             ocr=OCRConfig(enabled=True, dpi=300),
         ),
         chunking=ChunkingConfig(strategy="semantic", chunk_size=512, chunk_overlap=50),
+        storage=StorageConfig(backend=storage_backend),
         formatting=FormattingConfig(
             output_format="markdown",
             include_sources=True,
@@ -413,8 +417,6 @@ def generate_standalone(
 
     # Template variables
     project_name = target_path.name
-    # Determine retrieval module: "basic" for PDF, "albert" for Albert RAG
-    retrieval_module = "basic" if "PDF" in selected_modules else "albert"
 
     variables: dict[str, str | bool] = {
         "project_name": project_name,
@@ -422,7 +424,6 @@ def generate_standalone(
         "openai_api_key": env_config["openai_api_key"],
         "openai_base_url": env_config["openai_base_url"],
         "system_prompt": preset_config["system_prompt"],
-        "retrieval_module": retrieval_module,
         "welcome_message": f"Welcome to {project_name}!",
     }
 
@@ -438,15 +439,16 @@ def generate_standalone(
     console.print("[bold green]Step 2:[/bold green] Generating project files...")
 
     # Create pyproject.toml for standalone mode
-    pdf_dep = '\n    "pypdf>=5.0.0",' if "PDF" in selected_modules else ""
-    setuptools_packages_list = ["albert", "rag_core"]
-    if "PDF" in selected_modules:
-        setuptools_packages_list.append("retrieval_basic")
-    if "Albert RAG" in selected_modules:
-        setuptools_packages_list.append("retrieval_albert")
+    # pypdf required for both PDF and Albert RAG (albert has local fallback in parser.py)
+    pdf_dep = (
+        '\n    "pypdf>=5.0.0",'
+        if ("PDF" in selected_modules or "Albert RAG" in selected_modules)
+        else ""
+    )
+    setuptools_packages_list = ["albert", "rag_core", "retrieval"]
     setuptools_packages = f"packages = {setuptools_packages_list}"
 
-    # For standalone, albert-client, rag-core, and retrieval-basic are local modules (not dependencies)
+    # For standalone, albert-client, rag-core, and retrieval are local modules (not dependencies)
     pyproject_content = f'''[project]
 name = "{project_name}"
 version = "0.1.0"
@@ -548,7 +550,7 @@ package = true
     modules_yml_content = "# RAG Facile Module Configuration\n"
     modules_yml_content += "# Auto-generated based on selected modules\n\n"
     modules_yml_content += "context_providers:\n"
-    modules_yml_content += f"  retrieval: retrieval_{retrieval_module}\n"
+    modules_yml_content += "  retrieval: retrieval\n"
     (target_path / "modules.yml").write_text(modules_yml_content)
     console.print("[dim]  ✓ modules.yml[/dim]")
 
@@ -592,51 +594,24 @@ package = true
         console.print(f"[yellow]Warning: {e}[/yellow]")
         console.print("[yellow]You'll need to install rag_core manually.[/yellow]")
 
-    # Step 5: Copy retrieval_basic as local module if selected
-    if "PDF" in selected_modules:
-        console.print()
-        console.print("[bold green]Step 5:[/bold green] Adding PDF retrieval module...")
+    # Step 5: Copy unified retrieval module (always required)
+    console.print()
+    console.print("[bold green]Step 5:[/bold green] Adding retrieval module...")
 
-        try:
-            pdf_source = get_retrieval_basic_source()
-            target_pdf = target_path / "retrieval_basic"
-            if target_pdf.exists():
-                shutil.rmtree(target_pdf)
-            shutil.copytree(pdf_source, target_pdf)
-            # Remove __pycache__ if copied
-            pycache = target_pdf / "__pycache__"
-            if pycache.exists():
-                shutil.rmtree(pycache)
-            console.print("[green]✓[/green] PDF retrieval module added")
-        except FileNotFoundError as e:
-            console.print(f"[yellow]Warning: {e}[/yellow]")
-            console.print(
-                "[yellow]You'll need to install retrieval-basic manually.[/yellow]"
-            )
-
-    # Copy retrieval_albert as local module if selected
-    if "Albert RAG" in selected_modules:
-        console.print()
-        console.print(
-            "[bold green]Step 5b:[/bold green] Adding Albert RAG retrieval module..."
-        )
-
-        try:
-            albert_rag_source = get_retrieval_albert_source()
-            target_albert_rag = target_path / "retrieval_albert"
-            if target_albert_rag.exists():
-                shutil.rmtree(target_albert_rag)
-            shutil.copytree(albert_rag_source, target_albert_rag)
-            # Remove __pycache__ if copied
-            pycache = target_albert_rag / "__pycache__"
-            if pycache.exists():
-                shutil.rmtree(pycache)
-            console.print("[green]✓[/green] Albert RAG retrieval module added")
-        except FileNotFoundError as e:
-            console.print(f"[yellow]Warning: {e}[/yellow]")
-            console.print(
-                "[yellow]You'll need to install retrieval-albert manually.[/yellow]"
-            )
+    try:
+        retrieval_source = get_retrieval_source()
+        target_retrieval = target_path / "retrieval"
+        if target_retrieval.exists():
+            shutil.rmtree(target_retrieval)
+        shutil.copytree(retrieval_source, target_retrieval)
+        # Remove __pycache__ if copied
+        pycache = target_retrieval / "__pycache__"
+        if pycache.exists():
+            shutil.rmtree(pycache)
+        console.print("[green]✓[/green] Retrieval module added")
+    except FileNotFoundError as e:
+        console.print(f"[yellow]Warning: {e}[/yellow]")
+        console.print("[yellow]You'll need to install retrieval manually.[/yellow]")
 
     # Step 6: Create ragfacile.toml config file
     step_num = 6 if "PDF" in selected_modules else 5
@@ -672,7 +647,7 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
 
     # Generate ragfacile.toml with preset configuration
     console.print("[dim]  ✓ Generating configuration...[/dim]")
-    generate_config_file(target_path, preset, preset_config)
+    generate_config_file(target_path, preset, preset_config, selected_modules)
     console.print("[green]✓[/green] Created ragfacile.toml")
 
     # Step 5: Create .python-version
@@ -942,8 +917,7 @@ def run(
         "chainlit-chat",
         "reflex-chat",
         "albert-client",
-        "retrieval-basic",
-        "retrieval-albert",
+        "retrieval",
         "rag-core",
     ]:
         src = templates_dir / template_name
@@ -995,9 +969,6 @@ def run(
     app_cmd.append(f"--openai_api_key={env_config['openai_api_key']}")
     app_cmd.append(f"--openai_base_url={env_config['openai_base_url']}")
 
-    # Add retrieval module variable
-    retrieval_module = "basic" if "PDF" in selected_modules else "albert"
-    app_cmd.append(f"--retrieval_module={retrieval_module}")
     if not run_command(app_cmd, f"generate {frontend_template}", cwd=target_path):
         raise typer.Exit(1)
     console.print(f"[green]✓[/green] {frontend_choice} app generated")
@@ -1037,7 +1008,7 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
 
     # Generate ragfacile.toml at workspace root with preset configuration
     console.print("[dim]  ✓ Generating configuration...[/dim]")
-    generate_config_file(target_path, preset, preset_config)
+    generate_config_file(target_path, preset, preset_config, selected_modules)
     console.print("[green]✓[/green] Created ragfacile.toml at workspace root")
 
     # Create .env at workspace root (in addition to app-level .env)
@@ -1084,23 +1055,22 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
         console.print()
         console.print("[bold green]Step 6:[/bold green] Generating packages...")
 
+        # Collect unique templates (both PDF and Albert RAG use same retrieval template)
+        templates_to_generate = set()
         for module in selected_modules:
             module_info = MODULES[module]
-            if not module_info["available"]:
-                console.print(
-                    f"[yellow]⚠[/yellow] {module} is not yet available, skipping..."
-                )
-                continue
+            if module_info["available"]:
+                templates_to_generate.add(str(module_info["template"]))
 
-            template_name = str(module_info["template"])
-            console.print(f"  Generating {module}...")
+        for template_name in templates_to_generate:
+            console.print(f"  Generating {template_name}...")
             # Don't pass DEST - let the template.yml destination be used
             pkg_cmd: list[str] = ["moon", "generate", template_name, "--defaults"]
             if force:
                 pkg_cmd.append("--force")
             if not run_command(pkg_cmd, f"generate {template_name}", cwd=target_path):
                 raise typer.Exit(1)
-            console.print(f"  [green]✓[/green] {module} package generated")
+            console.print(f"  [green]✓[/green] {template_name} package generated")
 
     # Done with generation!
     console.print()
