@@ -19,6 +19,7 @@
 				"apps/chainlit-chat/pyproject.toml",
 				"apps/reflex-chat/pyproject.toml",
 				"packages/ingestion/pyproject.toml",
+				"packages/orchestration/pyproject.toml",
 				"packages/rag-core/pyproject.toml",
 				"packages/retrieval/pyproject.toml"
 			]

@@ -1,0 +1,27 @@
+[project]
+name = "orchestration"
+version = "1.0.0" # x-release-please-version
+description = "RAG pipeline orchestration - coordinate ingestion, retrieval, and context assembly"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "ingestion",
+    "retrieval",
+    "rag-core",
+]
+
+[tool.uv.sources]
+ingestion = { workspace = true }
+retrieval = { workspace = true }
+rag-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/orchestration"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

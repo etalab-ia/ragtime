@@ -1,5 +1,0 @@
-# RAG Facile Module Configuration
-# Enable/disable context providers by commenting/uncommenting
-
-context_providers:
-  retrieval: retrieval

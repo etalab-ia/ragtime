@@ -11,6 +11,8 @@ from cli.commands.setup import (
     FRONTENDS,
     MODULES,
     PROJECT_STRUCTURES,
+    get_ingestion_source,
+    get_orchestration_source,
     get_retrieval_source,
     get_templates_dir,
     render_template_file,
@@ -146,13 +148,66 @@ class TestGetRetrievalSource:
         assert init_file.exists(), f"__init__.py not found at {init_file}"
 
     def test_contains_required_modules(self):
-        """retrieval source should contain basic and albert backend modules."""
+        """retrieval source should contain search, format, and collection modules."""
         result = get_retrieval_source()
-        assert (result / "basic.py").exists()
         assert (result / "albert.py").exists()
-        assert (result / "parser.py").exists()
         assert (result / "ingestion.py").exists()
         assert (result / "formatter.py").exists()
+        assert (result / "_types.py").exists()
+
+
+class TestGetOrchestrationSource:
+    """Tests for get_orchestration_source function."""
+
+    def test_returns_path_object(self):
+        """Should return a Path object."""
+        result = get_orchestration_source()
+        assert isinstance(result, Path)
+
+    def test_path_ends_with_orchestration(self):
+        """Should return path ending with orchestration."""
+        result = get_orchestration_source()
+        assert result.name == "orchestration"
+
+    def test_path_exists_in_repo(self):
+        """orchestration source should exist when running from repo."""
+        result = get_orchestration_source()
+        assert result.exists(), f"orchestration source not found at {result}"
+
+    def test_contains_required_modules(self):
+        """orchestration source should contain pipeline modules."""
+        result = get_orchestration_source()
+        assert (result / "__init__.py").exists()
+        assert (result / "_base.py").exists()
+        assert (result / "basic.py").exists()
+        assert (result / "albert.py").exists()
+
+
+class TestGetIngestionSource:
+    """Tests for get_ingestion_source function."""
+
+    def test_returns_path_object(self):
+        """Should return a Path object."""
+        result = get_ingestion_source()
+        assert isinstance(result, Path)
+
+    def test_path_ends_with_ingestion(self):
+        """Should return path ending with ingestion."""
+        result = get_ingestion_source()
+        assert result.name == "ingestion"
+
+    def test_path_exists_in_repo(self):
+        """ingestion source should exist when running from repo."""
+        result = get_ingestion_source()
+        assert result.exists(), f"ingestion source not found at {result}"
+
+    def test_contains_required_modules(self):
+        """ingestion source should contain provider modules."""
+        result = get_ingestion_source()
+        assert (result / "__init__.py").exists()
+        assert (result / "_base.py").exists()
+        assert (result / "local.py").exists()
+        assert (result / "albert.py").exists()
 
 
 class TestRenderTemplateFile:
@@ -315,7 +370,7 @@ class TestGenerateStandalone:
     def test_creates_app_files(
         self, standalone_target, mock_standalone_deps, preset_config
     ):
-        """Should create app.py and context_loader.py."""
+        """Should create app.py (context_loader.py replaced by orchestration)."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -333,7 +388,8 @@ class TestGenerateStandalone:
         )
 
         assert (standalone_target / "app.py").exists()
-        assert (standalone_target / "context_loader.py").exists()
+        # context_loader.py no longer exists — replaced by orchestration package
+        assert not (standalone_target / "context_loader.py").exists()
 
     def test_creates_env_file(
         self, standalone_target, mock_standalone_deps, preset_config
@@ -363,10 +419,10 @@ class TestGenerateStandalone:
         # OPENAI_MODEL is now in ragfacile.toml, not .env
         assert "OPENAI_MODEL" not in content
 
-    def test_creates_modules_yml(
+    def test_copies_orchestration_module(
         self, standalone_target, mock_standalone_deps, preset_config
     ):
-        """Should create modules.yml."""
+        """Should copy orchestration module to standalone project."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -383,8 +439,10 @@ class TestGenerateStandalone:
             force=False,
         )
 
-        modules_yml = standalone_target / "modules.yml"
-        assert modules_yml.exists()
+        orchestration = standalone_target / "orchestration"
+        assert orchestration.exists()
+        assert (orchestration / "__init__.py").exists()
+        assert (orchestration / "_base.py").exists()
 
     def test_creates_python_version_file(
         self, standalone_target, mock_standalone_deps, preset_config
@@ -413,7 +471,7 @@ class TestGenerateStandalone:
     def test_copies_retrieval_module(
         self, standalone_target, mock_standalone_deps, preset_config
     ):
-        """Should always copy unified retrieval module."""
+        """Should always copy simplified retrieval module."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -433,8 +491,8 @@ class TestGenerateStandalone:
         retrieval = standalone_target / "retrieval"
         assert retrieval.exists()
         assert (retrieval / "__init__.py").exists()
-        assert (retrieval / "basic.py").exists()
         assert (retrieval / "albert.py").exists()
+        assert (retrieval / "formatter.py").exists()
 
     def test_pyproject_includes_pypdf_when_pdf_selected(
         self, standalone_target, mock_standalone_deps, preset_config
@@ -463,10 +521,10 @@ class TestGenerateStandalone:
         assert "'albert'" in content or '"albert"' in content
         assert "'retrieval'" in content or '"retrieval"' in content
 
-    def test_modules_yml_includes_retrieval_provider(
+    def test_copies_ingestion_module(
         self, standalone_target, mock_standalone_deps, preset_config
     ):
-        """Should configure retrieval provider in modules.yml."""
+        """Should copy ingestion module to standalone project."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -483,9 +541,10 @@ class TestGenerateStandalone:
             force=False,
         )
 
-        modules_yml = standalone_target / "modules.yml"
-        content = modules_yml.read_text()
-        assert "retrieval: retrieval" in content
+        ingestion = standalone_target / "ingestion"
+        assert ingestion.exists()
+        assert (ingestion / "__init__.py").exists()
+        assert (ingestion / "_base.py").exists()
 
     def test_creates_chainlit_md_for_chainlit(
         self, standalone_target, mock_standalone_deps, preset_config

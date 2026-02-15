@@ -12,6 +12,7 @@ members = [
     "albert-client",
     "chainlit-chat",
     "ingestion",
+    "orchestration",
     "rag-core",
     "rag-facile",
     "rag-facile-cli",
@@ -330,20 +331,18 @@ source = { editable = "apps/chainlit-chat" }
 dependencies = [
     { name = "albert-client" },
     { name = "chainlit" },
+    { name = "orchestration" },
     { name = "python-dotenv" },
-    { name = "pyyaml" },
     { name = "rag-core" },
-    { name = "retrieval" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "albert-client", editable = "packages/albert-client" },
     { name = "chainlit", specifier = ">=1.3.0" },
+    { name = "orchestration", editable = "packages/orchestration" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "rag-core", editable = "packages/rag-core" },
-    { name = "retrieval", editable = "packages/retrieval" },
 ]
 
 [[package]]
@@ -1917,6 +1916,23 @@ wheels = [
 ]
 
 [[package]]
+name = "orchestration"
+version = "1.0.0"
+source = { editable = "packages/orchestration" }
+dependencies = [
+    { name = "ingestion" },
+    { name = "rag-core" },
+    { name = "retrieval" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ingestion", editable = "packages/ingestion" },
+    { name = "rag-core", editable = "packages/rag-core" },
+    { name = "retrieval", editable = "packages/retrieval" },
+]
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2366,6 +2382,7 @@ dependencies = [
     { name = "albert-client" },
     { name = "chainlit-chat" },
     { name = "ingestion" },
+    { name = "orchestration" },
     { name = "rag-core" },
     { name = "rag-facile-cli" },
     { name = "reflex-chat" },
@@ -2389,6 +2406,7 @@ requires-dist = [
     { name = "albert-client", editable = "packages/albert-client" },
     { name = "chainlit-chat", editable = "apps/chainlit-chat" },
     { name = "ingestion", editable = "packages/ingestion" },
+    { name = "orchestration", editable = "packages/orchestration" },
     { name = "rag-core", editable = "packages/rag-core" },
     { name = "rag-facile-cli", editable = "apps/cli" },
     { name = "reflex-chat", editable = "apps/reflex-chat" },
@@ -2415,8 +2433,10 @@ dependencies = [
     { name = "albert-client" },
     { name = "datasets" },
     { name = "huggingface-hub" },
+    { name = "ingestion" },
     { name = "letta-client" },
     { name = "libcst" },
+    { name = "orchestration" },
     { name = "pypdf" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
@@ -2438,8 +2458,10 @@ requires-dist = [
     { name = "albert-client", editable = "packages/albert-client" },
     { name = "datasets", specifier = ">=3.0.0" },
     { name = "huggingface-hub", specifier = ">=1.3.0" },
+    { name = "ingestion", editable = "packages/ingestion" },
     { name = "letta-client", specifier = ">=0.1.0" },
     { name = "libcst", specifier = ">=1.8.6" },
+    { name = "orchestration", editable = "packages/orchestration" },
     { name = "pypdf", specifier = ">=5.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
@@ -2512,21 +2534,19 @@ version = "1.0.0"
 source = { editable = "apps/reflex-chat" }
 dependencies = [
     { name = "albert-client" },
+    { name = "orchestration" },
     { name = "python-dotenv" },
-    { name = "pyyaml" },
     { name = "rag-core" },
     { name = "reflex" },
-    { name = "retrieval" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "albert-client", editable = "packages/albert-client" },
+    { name = "orchestration", editable = "packages/orchestration" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "rag-core", editable = "packages/rag-core" },
     { name = "reflex", specifier = ">=0.7.11" },
-    { name = "retrieval", editable = "packages/retrieval" },
 ]
 
 [[package]]

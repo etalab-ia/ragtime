@@ -260,10 +260,6 @@ def generate_app_template(app_name: str, source_dir: Path, force: bool = False):
     # Phase 1: LibCST transformation for Python files (handles string literals)
     python_files = list(target.rglob("*.py"))
     for py_file in python_files:
-        # Skip context_loader.py - it should not be parameterized
-        if py_file.name == "context_loader.py":
-            continue
-
         code = py_file.read_text()
         try:
             tree = cst.parse_module(code)
@@ -277,8 +273,6 @@ def generate_app_template(app_name: str, source_dir: Path, force: bool = False):
     # Phase 1.5: Text-based replacement for import statements
     # LibCST doesn't parameterize module names in imports, so we do text replace
     for py_file in python_files:
-        if py_file.name == "context_loader.py":
-            continue
         code = py_file.read_text()
         modified = code
         for golden, tag in mappings.items():
@@ -311,16 +305,6 @@ def generate_app_template(app_name: str, source_dir: Path, force: bool = False):
                 "[\"{{ project_name | replace(from='-', to='_') }}*\"]",
             )
 
-        # Update retrieval dependency to unified package
-        content = content.replace(
-            '    "retrieval-basic",',
-            '    "retrieval",',
-        )
-        content = content.replace(
-            "retrieval-basic = { workspace = true }",
-            "retrieval = { workspace = true }",
-        )
-
         # Add [tool.uv] package = true if not present
         if "[tool.uv]\npackage = true" not in content:
             content += "\n[tool.uv]\npackage = true\n"
@@ -328,17 +312,7 @@ def generate_app_template(app_name: str, source_dir: Path, force: bool = False):
         pyproject_path.write_text(content)
         console.print("  [green]✓[/green] pyproject.toml parameterized")
 
-    # Phase 3: Generate modules.yml as Tera template
-    modules_yml_content = """# RAG Facile Module Configuration
-# Auto-generated based on selected modules
-
-context_providers:
-  retrieval: retrieval
-"""
-    (target / "modules.yml").write_text(modules_yml_content)
-    console.print("  [green]✓[/green] modules.yml template generated")
-
-    # Phase 4: Generate .env.template
+    # Phase 3: Generate .env.template
     env_content = (
         "OPENAI_API_KEY={{ openai_api_key }}\n"
         "OPENAI_BASE_URL={{ openai_base_url }}\n"
@@ -481,9 +455,10 @@ def main():
             "chainlit-chat",
             "reflex-chat",
             "albert-client",
-            "retrieval-basic",
+            "ingestion",
+            "orchestration",
             "rag-core",
-            "retrieval-albert",
+            "retrieval",
         ],
         help="Generate a specific template",
     )
@@ -513,8 +488,10 @@ def main():
             "chainlit-chat",
             "reflex-chat",
             "albert-client",
-            "retrieval",
+            "ingestion",
+            "orchestration",
             "rag-core",
+            "retrieval",
         ]
     else:
         templates_to_generate = [args.template]
@@ -543,6 +520,22 @@ def main():
             result = generate_package_template(
                 "albert-client",
                 REPO_ROOT / "packages" / "albert-client",
+                force=args.force,
+            )
+            if result is False:
+                success = False
+        elif template == "ingestion":
+            result = generate_package_template(
+                "ingestion",
+                REPO_ROOT / "packages" / "ingestion",
+                force=args.force,
+            )
+            if result is False:
+                success = False
+        elif template == "orchestration":
+            result = generate_package_template(
+                "orchestration",
+                REPO_ROOT / "packages" / "orchestration",
                 force=args.force,
             )
             if result is False:

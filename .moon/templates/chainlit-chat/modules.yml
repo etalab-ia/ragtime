@@ -1,5 +1,0 @@
-# RAG Facile Module Configuration
-# Auto-generated based on selected modules
-
-context_providers:
-  retrieval: retrieval

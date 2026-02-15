@@ -4,7 +4,7 @@ from reflex.constants.colors import ColorType
 from typing import cast
 from collections.abc import Sequence
 
-from context_loader import get_accepted_mime_types
+from orchestration import get_accepted_mime_types
 from {{ project_name | replace(from='-', to='_') }}.state import QA, State
 
 

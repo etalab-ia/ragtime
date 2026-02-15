@@ -261,11 +261,29 @@ def _get_source_path(
 
 
 def get_retrieval_source() -> Path:
-    """Get the unified retrieval source directory for inline copying."""
+    """Get the retrieval source directory for inline copying."""
     return _get_source_path(
         ("packages", "retrieval", "src", "retrieval"),
         ("retrieval_src",),
         "retrieval source not found. This is a packaging error - please reinstall the CLI.",
+    )
+
+
+def get_orchestration_source() -> Path:
+    """Get the orchestration source directory for inline copying."""
+    return _get_source_path(
+        ("packages", "orchestration", "src", "orchestration"),
+        ("orchestration_src",),
+        "orchestration source not found. This is a packaging error - please reinstall the CLI.",
+    )
+
+
+def get_ingestion_source() -> Path:
+    """Get the ingestion source directory for inline copying."""
+    return _get_source_path(
+        ("packages", "ingestion", "src", "ingestion"),
+        ("ingestion_src",),
+        "ingestion source not found. This is a packaging error - please reinstall the CLI.",
     )
 
 
@@ -438,16 +456,22 @@ def generate_standalone(
     console.print("[bold green]Step 2:[/bold green] Generating project files...")
 
     # Create pyproject.toml for standalone mode
-    # pypdf required for both PDF and Albert RAG (albert has local fallback in parser.py)
+    # pypdf required for both PDF and Albert RAG (albert has local fallback)
     pdf_dep = (
         '\n    "pypdf>=5.0.0",'
         if ("PDF" in selected_modules or "Albert RAG" in selected_modules)
         else ""
     )
-    setuptools_packages_list = ["albert", "rag_core", "retrieval"]
+    setuptools_packages_list = [
+        "albert",
+        "ingestion",
+        "orchestration",
+        "rag_core",
+        "retrieval",
+    ]
     setuptools_packages = f"packages = {setuptools_packages_list}"
 
-    # For standalone, albert-client, rag-core, and retrieval are local modules (not dependencies)
+    # For standalone, all pipeline packages are local modules (not dependencies)
     pyproject_content = f'''[project]
 name = "{project_name}"
 version = "0.1.0"
@@ -460,12 +484,11 @@ dependencies = [
     "openai>=1.0.0",
     "pydantic>=2.0.0",
     "python-dotenv>=1.0.0",
-    "pyyaml>=6.0.0",
     "tomli-w>=1.0.0",{pdf_dep}
 ]
 
 [tool.setuptools]
-py-modules = ["app", "context_loader"]
+py-modules = ["app"]
 {setuptools_packages}
 
 [tool.uv]
@@ -485,12 +508,10 @@ dependencies = [
     "openai>=1.0.0",
     "pydantic>=2.0.0",
     "python-dotenv>=1.0.0",
-    "pyyaml>=6.0.0",
     "tomli-w>=1.0.0",{pdf_dep}
 ]
 
 [tool.setuptools]
-py-modules = ["app", "context_loader"]
 {setuptools_packages}
 
 [tool.uv]
@@ -502,7 +523,6 @@ package = true
 
     # Copy and render app files from template
     files_to_copy = [
-        "context_loader.py",
         ".env.template",
         ".envrc",
         "README.md",
@@ -545,14 +565,6 @@ package = true
                     target_file.write_text(content)
                     console.print(f"[dim]  ✓ {snake_name}/{rel_path_str}[/dim]")
 
-    # Generate modules.yml with proper content
-    modules_yml_content = "# RAG Facile Module Configuration\n"
-    modules_yml_content += "# Auto-generated based on selected modules\n\n"
-    modules_yml_content += "context_providers:\n"
-    modules_yml_content += "  retrieval: retrieval\n"
-    (target_path / "modules.yml").write_text(modules_yml_content)
-    console.print("[dim]  ✓ modules.yml[/dim]")
-
     console.print("[green]✓[/green] Project files generated")
 
     # Step 3: Copy albert as local module (always required)
@@ -593,9 +605,27 @@ package = true
         console.print(f"[yellow]Warning: {e}[/yellow]")
         console.print("[yellow]You'll need to install rag_core manually.[/yellow]")
 
-    # Step 5: Copy unified retrieval module (always required)
+    # Step 5: Copy ingestion module (document parsing)
     console.print()
-    console.print("[bold green]Step 5:[/bold green] Adding retrieval module...")
+    console.print("[bold green]Step 5:[/bold green] Adding ingestion module...")
+
+    try:
+        ingestion_source = get_ingestion_source()
+        target_ingestion = target_path / "ingestion"
+        if target_ingestion.exists():
+            shutil.rmtree(target_ingestion)
+        shutil.copytree(ingestion_source, target_ingestion)
+        pycache = target_ingestion / "__pycache__"
+        if pycache.exists():
+            shutil.rmtree(pycache)
+        console.print("[green]✓[/green] Ingestion module added")
+    except FileNotFoundError as e:
+        console.print(f"[yellow]Warning: {e}[/yellow]")
+        console.print("[yellow]You'll need to install ingestion manually.[/yellow]")
+
+    # Step 6: Copy retrieval module (search & reranking)
+    console.print()
+    console.print("[bold green]Step 6:[/bold green] Adding retrieval module...")
 
     try:
         retrieval_source = get_retrieval_source()
@@ -603,7 +633,6 @@ package = true
         if target_retrieval.exists():
             shutil.rmtree(target_retrieval)
         shutil.copytree(retrieval_source, target_retrieval)
-        # Remove __pycache__ if copied
         pycache = target_retrieval / "__pycache__"
         if pycache.exists():
             shutil.rmtree(pycache)
@@ -612,8 +641,26 @@ package = true
         console.print(f"[yellow]Warning: {e}[/yellow]")
         console.print("[yellow]You'll need to install retrieval manually.[/yellow]")
 
-    # Step 6: Create ragfacile.toml config file
-    step_num = 6 if "PDF" in selected_modules else 5
+    # Step 7: Copy orchestration module (pipeline coordination)
+    console.print()
+    console.print("[bold green]Step 7:[/bold green] Adding orchestration module...")
+
+    try:
+        orchestration_source = get_orchestration_source()
+        target_orchestration = target_path / "orchestration"
+        if target_orchestration.exists():
+            shutil.rmtree(target_orchestration)
+        shutil.copytree(orchestration_source, target_orchestration)
+        pycache = target_orchestration / "__pycache__"
+        if pycache.exists():
+            shutil.rmtree(pycache)
+        console.print("[green]✓[/green] Orchestration module added")
+    except FileNotFoundError as e:
+        console.print(f"[yellow]Warning: {e}[/yellow]")
+        console.print("[yellow]You'll need to install orchestration manually.[/yellow]")
+
+    # Step 8: Create ragfacile.toml config file
+    step_num = 8 if "PDF" in selected_modules else 7
     console.print()
     console.print(
         f"[bold green]Step {step_num}:[/bold green] Creating configuration file..."
@@ -630,8 +677,8 @@ package = true
             "[yellow]You can create config later with: rag-facile config preset apply balanced[/yellow]"
         )
 
-    # Step 7: Create .env file
-    step_num = 7 if "PDF" in selected_modules else 6
+    # Step 9: Create .env file
+    step_num = 9 if "PDF" in selected_modules else 8
     console.print()
     console.print(
         f"[bold green]Step {step_num}:[/bold green] Creating environment file..."

@@ -20,7 +20,7 @@ from ingestion.local import LocalProvider
 def test_ingestion_provider_is_abstract():
     """IngestionProvider cannot be instantiated directly."""
     with pytest.raises(TypeError):
-        IngestionProvider()  # type: ignore[abstract]
+        IngestionProvider()
 
 
 def test_local_provider_implements_interface():
