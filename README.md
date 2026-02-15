@@ -1,6 +1,6 @@
 # RAG Facile
 
-[![Release](https://img.shields.io/github/v/release/etalab-ia/rag-facile?style=flat-square)](https://github.com/etalab-ia/rag-facile/releases)
+[![Release](https://img.shields.io/github/v/release/etalab-ia/rag-facile?sort=date&style=flat-square)](https://github.com/etalab-ia/rag-facile/releases)
 [![License](https://img.shields.io/github/license/etalab-ia/rag-facile?style=flat-square)](LICENSE)
 
 ```
