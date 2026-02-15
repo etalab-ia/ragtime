@@ -37,7 +37,7 @@ batch_size = 32
 normalization = "L2"
 
 [storage]
-backend = "albert-collections"
+provider = "albert-collections"
 collection_naming = "workspace"
 distance_metric = "cosine"
 
@@ -47,7 +47,7 @@ expand_enabled = false
 spell_check = false
 
 [retrieval]
-method = "hybrid"
+strategy = "hybrid"
 top_k = 10
 score_threshold = 0.0
 
@@ -65,9 +65,7 @@ max_tokens = 4096
 deduplicate = true
 ordering = "by-score"
 
-[context.formatting]
-include_citations = true
-citation_style = "inline"
+
 
 [generation]
 model = "openweight-medium"
@@ -78,12 +76,16 @@ system_prompt = "You are a helpful assistant for the French government.\nAnswer 
 
 [hallucination]
 enabled = false
-method = "citation-check"
+strategy = "citation-check"
 threshold = 0.8
 fallback = "warn"
 
 [formatting]
 output_format = "markdown"
-include_sources = true
 include_confidence = false
 language = "fr"
+
+[formatting.citations]
+enabled = true
+style = "inline"
+include_sources = true

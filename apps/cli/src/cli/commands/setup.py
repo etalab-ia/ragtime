@@ -380,16 +380,15 @@ def generate_config_file(
             streaming=True,
             system_prompt=preset_config["system_prompt"],
         ),
-        retrieval=RetrievalConfig(method="hybrid"),
+        retrieval=RetrievalConfig(strategy="hybrid"),
         eval=EvalConfig(provider="albert", target_samples=50),
         ingestion=IngestionConfig(
             ocr=OCRConfig(enabled=True, dpi=300),
         ),
         chunking=ChunkingConfig(strategy="semantic", chunk_size=512, chunk_overlap=50),
-        storage=StorageConfig(backend=storage_backend),
+        storage=StorageConfig(provider=storage_backend),
         formatting=FormattingConfig(
             output_format="markdown",
-            include_sources=True,
             include_confidence=False,
             language=preset_config["language"],
         ),

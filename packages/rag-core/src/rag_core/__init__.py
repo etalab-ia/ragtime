@@ -32,6 +32,7 @@ from .runtime import get_config, has_config_file, reload_config
 from .schema import (
     PIPELINE_STAGES,
     ChunkingConfig,
+    CitationsConfig,
     ContextConfig,
     EmbeddingConfig,
     EvalConfig,
@@ -69,6 +70,7 @@ __all__ = [
     "GenerationConfig",
     "HallucinationConfig",
     "FormattingConfig",
+    "CitationsConfig",
     # Pipeline metadata
     "PIPELINE_STAGES",
     "PipelineStage",

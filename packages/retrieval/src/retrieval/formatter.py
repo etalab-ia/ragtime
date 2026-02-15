@@ -51,12 +51,12 @@ def format_context(
     include_citations = (
         include_citations
         if include_citations is not None
-        else config.context.formatting.include_citations
+        else config.formatting.citations.enabled
     )
     citation_style = (
         citation_style
         if citation_style is not None
-        else config.context.formatting.citation_style
+        else config.formatting.citations.style
     )
 
     lines: list[str] = ["", "--- Retrieved context ---"]

@@ -76,7 +76,7 @@ def show(
         settings = [
             ("Generation Model", config.generation.model),
             ("Temperature", config.generation.temperature),
-            ("Retrieval Method", config.retrieval.method),
+            ("Retrieval Strategy", config.retrieval.strategy),
             ("Retrieval Top K", config.retrieval.top_k),
             ("Reranking Enabled", config.reranking.enabled),
             (

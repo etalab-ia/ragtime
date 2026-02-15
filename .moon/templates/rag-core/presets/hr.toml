@@ -37,7 +37,7 @@ batch_size = 32
 normalization = "L2"
 
 [storage]
-backend = "albert-collections"
+provider = "albert-collections"
 collection_naming = "workspace"
 distance_metric = "cosine"
 
@@ -47,7 +47,7 @@ expand_enabled = true  # Find related policies
 spell_check = true  # Friendly to typos
 
 [retrieval]
-method = "hybrid"  # Balance semantic understanding with keyword matching
+strategy = "hybrid"  # Balance semantic understanding with keyword matching
 top_k = 12
 score_threshold = 0.3  # Lower threshold for broader policy coverage
 
@@ -65,9 +65,7 @@ max_tokens = 4096
 deduplicate = true
 ordering = "by-score"
 
-[context.formatting]
-include_citations = true
-citation_style = "inline"  # Clear policy attribution
+
 
 [generation]
 model = "openweight-medium"  # Good for conversational HR responses
@@ -82,12 +80,16 @@ If a policy doesn't cover the question, suggest who to contact (e.g., "Contact H
 
 [hallucination]
 enabled = true  # Important for policy accuracy
-method = "citation-check"
+strategy = "citation-check"
 threshold = 0.85
 fallback = "warn"  # Warn but allow response with disclaimer
 
 [formatting]
 output_format = "markdown"
-include_sources = true  # Show which policies were consulted
 include_confidence = false  # Keep responses simple
 language = "fr"
+
+[formatting.citations]
+enabled = true
+style = "inline"  # Clear policy attribution
+include_sources = true  # Show which policies were consulted

@@ -6,7 +6,7 @@ This package provides document retrieval capabilities with two backends:
 
 Backend selection is driven by `ragfacile.toml`:
     [storage]
-    backend = "albert-collections"  # or "local-sqlite"
+    provider = "albert-collections"  # or "local-sqlite"
 
 Example usage with factory:
     from retrieval import get_provider
@@ -41,8 +41,8 @@ def get_provider(config: Any | None = None) -> Any:
 
         config = get_config()
 
-    # Determine backend from storage.backend config field
-    backend = config.storage.backend
+    # Determine backend from storage.provider config field
+    backend = config.storage.provider
 
     if backend == "albert-collections":
         # Albert RAG: full pipeline with ingestion + search + reranking

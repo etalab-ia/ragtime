@@ -37,7 +37,7 @@ batch_size = 16  # Smaller batches for stability
 normalization = "L2"
 
 [storage]
-backend = "albert-collections"
+provider = "albert-collections"
 collection_naming = "workspace"
 distance_metric = "cosine"
 
@@ -47,7 +47,7 @@ expand_enabled = true  # Find more relevant results
 spell_check = true  # Fix typos
 
 [retrieval]
-method = "hybrid"  # Best of both worlds
+strategy = "hybrid"  # Best of both worlds
 top_k = 20  # More candidates for reranking
 score_threshold = 0.5  # Only high-quality results
 
@@ -65,9 +65,7 @@ max_tokens = 8192  # Large context window
 deduplicate = true
 ordering = "by-score"
 
-[context.formatting]
-include_citations = true
-citation_style = "inline"
+
 
 [generation]
 model = "openweight-large"  # Best generation model
@@ -81,12 +79,16 @@ If you're unsure about any information, explicitly state it."""
 
 [hallucination]
 enabled = true  # Critical for accuracy
-method = "citation-check"
+strategy = "citation-check"
 threshold = 0.9  # Strict threshold
 fallback = "warn"
 
 [formatting]
 output_format = "markdown"
-include_sources = true
 include_confidence = true  # Show confidence scores
 language = "fr"
+
+[formatting.citations]
+enabled = true
+style = "inline"
+include_sources = true

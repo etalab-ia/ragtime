@@ -37,7 +37,7 @@ batch_size = 64  # Larger batches for speed
 normalization = "L2"
 
 [storage]
-backend = "albert-collections"
+provider = "albert-collections"
 collection_naming = "workspace"
 distance_metric = "cosine"
 
@@ -47,7 +47,7 @@ expand_enabled = false
 spell_check = false
 
 [retrieval]
-method = "semantic"  # Skip lexical component for speed
+strategy = "semantic"  # Skip lexical component for speed
 top_k = 5  # Fewer results
 score_threshold = 0.0
 
@@ -65,9 +65,7 @@ max_tokens = 2048  # Smaller context
 deduplicate = false  # Skip for speed
 ordering = "by-score"
 
-[context.formatting]
-include_citations = true
-citation_style = "inline"
+
 
 [generation]
 model = "openweight-small"  # Fastest model
@@ -78,12 +76,16 @@ system_prompt = """You are a helpful assistant. Answer concisely based on the co
 
 [hallucination]
 enabled = false
-method = "citation-check"
+strategy = "citation-check"
 threshold = 0.8
 fallback = "warn"
 
 [formatting]
 output_format = "markdown"
-include_sources = false  # Skip for speed
 include_confidence = false
 language = "fr"
+
+[formatting.citations]
+enabled = true
+style = "inline"
+include_sources = false  # Skip for speed

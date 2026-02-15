@@ -180,9 +180,9 @@ class EmbeddingConfig(BaseModel):
 class StorageConfig(BaseModel):
     """Configuration for vector storage."""
 
-    backend: Literal["albert-collections", "local-sqlite"] = Field(
+    provider: Literal["albert-collections", "local-sqlite"] = Field(
         default="albert-collections",
-        description="Vector store backend",
+        description="Vector store provider",
     )
     collection_naming: Literal["workspace", "app", "custom"] = Field(
         default="workspace",
@@ -235,9 +235,9 @@ class HybridRetrievalConfig(BaseModel):
 class RetrievalConfig(BaseModel):
     """Configuration for retrieval."""
 
-    method: Literal["hybrid", "semantic", "lexical"] = Field(
+    strategy: Literal["hybrid", "semantic", "lexical"] = Field(
         default="hybrid",
-        description="Retrieval method",
+        description="Retrieval strategy",
     )
     top_k: int = Field(
         default=10,
@@ -286,19 +286,6 @@ class RerankingConfig(BaseModel):
 # ==============================================================================
 
 
-class ContextFormattingConfig(BaseModel):
-    """Context formatting settings."""
-
-    include_citations: bool = Field(
-        default=True,
-        description="Include source citations in context",
-    )
-    citation_style: Literal["inline", "footnote"] = Field(
-        default="inline",
-        description="Citation style",
-    )
-
-
 class ContextConfig(BaseModel):
     """Configuration for context selection."""
 
@@ -319,10 +306,6 @@ class ContextConfig(BaseModel):
     ordering: Literal["by-score", "by-document", "by-date"] = Field(
         default="by-score",
         description="Ordering of context chunks",
-    )
-    formatting: ContextFormattingConfig = Field(
-        default_factory=ContextFormattingConfig,
-        description="Context formatting settings",
     )
 
 
@@ -376,9 +359,9 @@ class HallucinationConfig(BaseModel):
         default=False,
         description="Enable hallucination detection",
     )
-    method: Literal["entailment", "fact-check", "citation-check"] = Field(
+    strategy: Literal["entailment", "fact-check", "citation-check"] = Field(
         default="citation-check",
-        description="Detection method",
+        description="Detection strategy",
     )
     threshold: float = Field(
         default=0.8,
@@ -397,16 +380,29 @@ class HallucinationConfig(BaseModel):
 # ==============================================================================
 
 
+class CitationsConfig(BaseModel):
+    """Citation settings for context markers and source attribution."""
+
+    enabled: bool = Field(
+        default=True,
+        description="Include source citations ([1], [2], ...) in context",
+    )
+    style: Literal["inline", "footnote"] = Field(
+        default="inline",
+        description="Citation style (inline or footnote)",
+    )
+    include_sources: bool = Field(
+        default=True,
+        description="Append source list (URLs, document names) to the response",
+    )
+
+
 class FormattingConfig(BaseModel):
     """Configuration for answer formatting."""
 
     output_format: Literal["markdown", "html", "plain-text"] = Field(
         default="markdown",
         description="Output format",
-    )
-    include_sources: bool = Field(
-        default=True,
-        description="Include retrieved sources in response",
     )
     include_confidence: bool = Field(
         default=False,
@@ -415,6 +411,10 @@ class FormattingConfig(BaseModel):
     language: Literal["fr", "en"] = Field(
         default="fr",
         description="Response language",
+    )
+    citations: CitationsConfig = Field(
+        default_factory=CitationsConfig,
+        description="Citation and source attribution settings",
     )
 
 
@@ -503,7 +503,7 @@ class RAGConfig(BaseModel):
                         "max_tokens": 1024,
                     },
                     "retrieval": {
-                        "method": "hybrid",
+                        "strategy": "hybrid",
                         "top_k": 10,
                         "hybrid": {"alpha": 0.5},
                     },

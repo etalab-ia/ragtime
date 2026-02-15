@@ -37,7 +37,7 @@ batch_size = 16
 normalization = "L2"
 
 [storage]
-backend = "albert-collections"
+provider = "albert-collections"
 collection_naming = "workspace"
 distance_metric = "cosine"
 
@@ -47,7 +47,7 @@ expand_enabled = false  # Legal terms are precise
 spell_check = true  # Catch typos but preserve legal terms
 
 [retrieval]
-method = "hybrid"  # Lexical important for exact legal terms
+strategy = "hybrid"  # Lexical important for exact legal terms
 top_k = 15
 score_threshold = 0.6  # Higher threshold for relevance
 
@@ -65,9 +65,7 @@ max_tokens = 6144  # Large context for legal reasoning
 deduplicate = true
 ordering = "by-document"  # Preserve document order for legal context
 
-[context.formatting]
-include_citations = true  # Mandatory for legal
-citation_style = "footnote"  # Formal citation style
+
 
 [generation]
 model = "openweight-large"  # Best for legal reasoning
@@ -83,12 +81,16 @@ Never make assumptions or provide information not supported by the context."""
 
 [hallucination]
 enabled = true  # Essential for legal applications
-method = "citation-check"  # Every claim must cite source
+strategy = "citation-check"  # Every claim must cite source
 threshold = 0.95  # Very strict
 fallback = "reject"  # Reject hallucinated responses
 
 [formatting]
 output_format = "markdown"
-include_sources = true  # Show all sources consulted
 include_confidence = true  # Transparency about certainty
 language = "fr"
+
+[formatting.citations]
+enabled = true  # Mandatory for legal
+style = "footnote"  # Formal citation style
+include_sources = true  # Show all sources consulted

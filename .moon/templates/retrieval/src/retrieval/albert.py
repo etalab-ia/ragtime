@@ -150,7 +150,7 @@ def retrieve(
         query: Search query text.
         collection_ids: Collections to search in.
         top_k: Number of search results (defaults to config.retrieval.top_k).
-        method: Search method (defaults to config.retrieval.method).
+        method: Search method (defaults to config.retrieval.strategy).
         score_threshold: Min score (defaults to config.retrieval.score_threshold).
         rerank: Whether to rerank (defaults to config.reranking.enabled).
         rerank_model: Reranker model (defaults to config.reranking.model).
@@ -163,7 +163,7 @@ def retrieve(
 
     # Apply config defaults
     top_k = top_k if top_k is not None else config.retrieval.top_k
-    method = method if method is not None else config.retrieval.method
+    method = method if method is not None else config.retrieval.strategy
     score_threshold = (
         score_threshold
         if score_threshold is not None

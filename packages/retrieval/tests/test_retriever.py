@@ -220,7 +220,7 @@ class TestRetrieve:
 
         # Verify search was called with config defaults
         request_body = mock_route.calls.last.request.content.decode()
-        assert '"hybrid"' in request_body  # config.retrieval.method
+        assert '"hybrid"' in request_body  # config.retrieval.strategy
         assert '"limit":10' in request_body or '"limit": 10' in request_body
 
     @respx.mock

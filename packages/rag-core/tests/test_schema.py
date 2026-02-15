@@ -36,14 +36,14 @@ def test_embedding_config_validation():
 def test_retrieval_config_validation():
     """Test retrieval configuration validation."""
     # Valid config
-    config = RetrievalConfig(method="hybrid", top_k=10)
-    assert config.method == "hybrid"
+    config = RetrievalConfig(strategy="hybrid", top_k=10)
+    assert config.strategy == "hybrid"
     assert config.hybrid.alpha == 0.5  # Default
 
-    # Invalid method
+    # Invalid strategy
     with pytest.raises(ValidationError) as exc_info:
-        RetrievalConfig(method="invalid")  # type: ignore[arg-type]
-    assert "method" in str(exc_info.value)
+        RetrievalConfig(strategy="invalid")  # type: ignore[arg-type]
+    assert "strategy" in str(exc_info.value)
 
     # Invalid top_k (too large)
     with pytest.raises(ValidationError) as exc_info:
@@ -91,7 +91,7 @@ def test_nested_config_validation():
 
     # Access nested values
     assert config.retrieval.hybrid.alpha == 0.5
-    assert config.context.formatting.include_citations is True
+    assert config.formatting.citations.enabled is True
     assert config.ingestion.ocr.enabled is True
 
     # Modify nested values
@@ -118,7 +118,7 @@ def test_config_from_dict():
             "temperature": 0.5,
         },
         "retrieval": {
-            "method": "semantic",
+            "strategy": "semantic",
             "top_k": 15,
         },
     }
@@ -126,7 +126,7 @@ def test_config_from_dict():
     config = RAGConfig(**config_dict)  # type: ignore[arg-type]
     assert config.generation.model == "openweight-large"
     assert config.generation.temperature == 0.5
-    assert config.retrieval.method == "semantic"
+    assert config.retrieval.strategy == "semantic"
     assert config.retrieval.top_k == 15
 
 

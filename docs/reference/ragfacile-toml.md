@@ -116,7 +116,7 @@ normalization = "L2"              # "L2" or "none"
 # VECTOR STORAGE
 # ==========================================================
 [storage]
-backend = "albert-collections"  # "albert-collections", "local-sqlite"
+provider = "albert-collections"  # "albert-collections", "local-sqlite"
 collection_naming = "workspace" # "workspace", "app", or "custom"
 distance_metric = "cosine"      # "cosine", "euclidean", "dot-product"
 
@@ -132,7 +132,7 @@ spell_check = false             # Fix typos in queries
 # RETRIEVAL
 # ==========================================================
 [retrieval]
-method = "hybrid"               # "hybrid", "semantic", "lexical"
+strategy = "hybrid"               # "hybrid", "semantic", "lexical"
 top_k = 10                      # Number of chunks to retrieve (1–100)
 score_threshold = 0.0           # Minimum relevance score (0.0–1.0)
 
@@ -156,10 +156,6 @@ max_tokens = 4096               # Token budget for context (512–32768)
 deduplicate = true              # Remove duplicate/similar chunks
 ordering = "by-score"           # "by-score", "by-document", "by-date"
 
-[context.formatting]
-include_citations = true        # Add source indices ([1], [2], ...)
-citation_style = "inline"       # "inline" or "footnote"
-
 # ==========================================================
 # RESPONSE GENERATION
 # ==========================================================
@@ -177,7 +173,7 @@ Always cite your sources using [1], [2], etc."""
 # ==========================================================
 [hallucination]
 enabled = false                 # Enable hallucination detection
-method = "citation-check"       # "citation-check", "fact-check", "entailment"
+strategy = "citation-check"     # "citation-check", "fact-check", "entailment"
 threshold = 0.8                 # Confidence threshold (0.0–1.0)
 fallback = "warn"               # "warn", "reject", "regenerate"
 
@@ -186,9 +182,13 @@ fallback = "warn"               # "warn", "reject", "regenerate"
 # ==========================================================
 [formatting]
 output_format = "markdown"      # "markdown", "html", "plain-text"
-include_sources = true          # Append source list to response
 include_confidence = false      # Show confidence scores
 language = "fr"                 # "fr" or "en"
+
+[formatting.citations]
+enabled = true                  # Add source citations ([1], [2], ...)
+style = "inline"                # "inline" or "footnote"
+include_sources = true          # Append source list to response
 ```
 
 ## Presets
@@ -209,7 +209,7 @@ rag-facile config preset apply legal    # Apply a preset
 | **Chunking strategy** | semantic | fixed-size | semantic | paragraph | semantic |
 | **Chunk size** | 512 | 512 | 768 | 768 | 512 |
 | **Embedding model** | openweight-embeddings | openweight-embeddings | openweight-embeddings | openweight-embeddings | openweight-embeddings |
-| **Retrieval method** | hybrid | semantic | hybrid | hybrid | hybrid |
+| **Retrieval strategy** | hybrid | semantic | hybrid | hybrid | hybrid |
 | **top_k** | 10 | 5 | 20 | 15 | 12 |
 | **Reranking** | on | **off** | on | on | on |
 | **Generation model** | medium | small | large | large | medium |

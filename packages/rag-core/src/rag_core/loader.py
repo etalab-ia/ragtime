@@ -240,10 +240,10 @@ def get_env_override_docs() -> str:
     sections = [
         ("eval", ["provider", "target_samples"]),
         ("embedding", ["model", "batch_size"]),
-        ("retrieval", ["method", "top_k", "score_threshold"]),
+        ("retrieval", ["strategy", "top_k", "score_threshold"]),
         ("reranking", ["enabled", "model", "top_n"]),
         ("generation", ["model", "temperature", "max_tokens"]),
-        ("hallucination", ["enabled", "method"]),
+        ("hallucination", ["enabled", "strategy"]),
     ]
 
     docs = ["# Environment Variable Overrides\n"]

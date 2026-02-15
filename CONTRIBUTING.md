@@ -108,11 +108,11 @@ RAG Facile uses a **unified retrieval package** (`packages/retrieval/`) with two
 - **basic** — Local PDF extraction via pypdf (lightweight, offline)
 - **albert** — Full RAG via Albert API (ingestion, search, reranking)
 
-Backend selection is automatic based on `storage.backend` config:
+Backend selection is automatic based on `storage.provider` config:
 ```toml
 [storage]
-backend = "albert-collections"  # Uses Albert RAG
-# backend = "local-sqlite"      # Uses basic context injection
+provider = "albert-collections"  # Uses Albert RAG
+# provider = "local-sqlite"      # Uses basic context injection
 ```
 
 Both backends implement the same interface through the factory pattern:

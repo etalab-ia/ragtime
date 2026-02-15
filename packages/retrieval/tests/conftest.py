@@ -5,8 +5,8 @@ import pytest
 from albert import AlbertClient
 from rag_core.schema import (
     ChunkingConfig,
-    ContextConfig,
-    ContextFormattingConfig,
+    CitationsConfig,
+    FormattingConfig,
     RAGConfig,
     RerankingConfig,
     RetrievalConfig,
@@ -43,12 +43,10 @@ def mock_config(monkeypatch):
     """Patch rag_core.get_config() with test values."""
     config = RAGConfig(
         chunking=ChunkingConfig(chunk_size=512, chunk_overlap=50),
-        retrieval=RetrievalConfig(method="hybrid", top_k=10, score_threshold=0.0),
+        retrieval=RetrievalConfig(strategy="hybrid", top_k=10, score_threshold=0.0),
         reranking=RerankingConfig(enabled=True, model="openweight-rerank", top_n=3),
-        context=ContextConfig(
-            formatting=ContextFormattingConfig(
-                include_citations=True, citation_style="inline"
-            )
+        formatting=FormattingConfig(
+            citations=CitationsConfig(enabled=True, style="inline")
         ),
     )
     monkeypatch.setattr("retrieval.ingestion.get_config", lambda: config)

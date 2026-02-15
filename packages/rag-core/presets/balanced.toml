@@ -52,7 +52,7 @@ normalization = "L2"
 # VECTOR STORAGE / INDEX
 # ==============================================================================
 [storage]
-backend = "albert-collections"
+provider = "albert-collections"
 collection_naming = "workspace"
 distance_metric = "cosine"
 
@@ -68,7 +68,7 @@ spell_check = false
 # RETRIEVAL
 # ==============================================================================
 [retrieval]
-method = "hybrid"
+strategy = "hybrid"
 top_k = 10
 score_threshold = 0.0
 
@@ -92,9 +92,7 @@ max_tokens = 4096
 deduplicate = true
 ordering = "by-score"
 
-[context.formatting]
-include_citations = true
-citation_style = "inline"
+
 
 # ==============================================================================
 # RESPONSE GENERATION
@@ -113,7 +111,7 @@ Always cite your sources using [1], [2], etc."""
 # ==============================================================================
 [hallucination]
 enabled = false
-method = "citation-check"
+strategy = "citation-check"
 threshold = 0.8
 fallback = "warn"
 
@@ -122,6 +120,10 @@ fallback = "warn"
 # ==============================================================================
 [formatting]
 output_format = "markdown"
-include_sources = true
 include_confidence = false
 language = "fr"
+
+[formatting.citations]
+enabled = true
+style = "inline"
+include_sources = true

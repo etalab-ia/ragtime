@@ -65,7 +65,7 @@ config = get_config()
 # Use in your RAG pipeline
 search_results = client.search(
     query=user_query,
-    method=config.retrieval.method,
+    method=config.retrieval.strategy,
     top_k=config.retrieval.top_k,
 )
 

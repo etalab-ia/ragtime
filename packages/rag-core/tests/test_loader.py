@@ -165,11 +165,11 @@ model = "openweight-medium"  # Default model
 temperature = 0.7
 
 [retrieval]
-method = "hybrid"
+strategy = "hybrid"
 top_k = 10
 """)
 
     # Load - should work despite comments
     config = load_config(config_file)
     assert config.generation.model == "openweight-medium"
-    assert config.retrieval.method == "hybrid"
+    assert config.retrieval.strategy == "hybrid"

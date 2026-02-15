@@ -32,7 +32,7 @@ def test_load_balanced_preset():
 
     assert config.meta.preset == "balanced"
     assert config.generation.model == "openweight-medium"
-    assert config.retrieval.method == "hybrid"
+    assert config.retrieval.strategy == "hybrid"
     assert config.reranking.enabled is True
 
 
@@ -66,7 +66,7 @@ def test_load_legal_preset():
     assert config.hallucination.enabled is True
     assert config.hallucination.threshold == 0.95  # Very strict
     assert config.hallucination.fallback == "reject"
-    assert config.context.formatting.citation_style == "footnote"
+    assert config.formatting.citations.style == "footnote"
 
 
 def test_load_hr_preset():
