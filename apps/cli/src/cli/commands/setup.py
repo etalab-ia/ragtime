@@ -532,9 +532,11 @@ def generate_standalone(
     )
     setuptools_packages_list = [
         "albert",
+        "context",
         "ingestion",
         "pipelines",
         "rag_core",
+        "reranking",
         "retrieval",
         "storage",
     ]
