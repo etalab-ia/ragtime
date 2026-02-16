@@ -3,6 +3,10 @@
 # Use PowerShell on Windows, sh on Unix
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
+# Workaround for moon not supporting bare repo worktrees (moonrepo/moon#2162).
+# Fixed in moon v2 — remove this once upgraded.
+export GIT_WORK_TREE := `pwd`
+
 # Display available commands
 default:
     @just --list
