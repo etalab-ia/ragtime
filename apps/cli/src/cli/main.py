@@ -4,7 +4,7 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from cli.commands import config, generate_dataset, setup
+from cli.commands import collections, config, generate_dataset, setup
 
 
 console = Console()
@@ -50,6 +50,17 @@ def main_callback(
 
 
 # Register commands in alphabetical order
+
+# Collections command group
+collections_app = typer.Typer(
+    name="collections",
+    help="Discover and manage Albert API collections",
+    no_args_is_help=True,
+)
+collections_app.command("list", help="List accessible collections")(
+    collections.list_collections
+)
+app.add_typer(collections_app, name="collections")
 
 # Config command group
 config_app = typer.Typer(

@@ -217,6 +217,10 @@ class StorageConfig(BaseModel):
         default="cosine",
         description="Distance metric for similarity search",
     )
+    collections: list[int] = Field(
+        default=[],
+        description="Albert collection IDs to search (e.g., public MediaTech collections)",
+    )
 
 
 # ==============================================================================

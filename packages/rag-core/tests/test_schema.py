@@ -9,6 +9,7 @@ from rag_core.schema import (
     GenerationConfig,
     RAGConfig,
     RetrievalConfig,
+    StorageConfig,
 )
 
 
@@ -128,6 +129,27 @@ def test_config_from_dict():
     assert config.generation.temperature == 0.5
     assert config.retrieval.strategy == "semantic"
     assert config.retrieval.top_k == 15
+
+
+def test_storage_config_collections_default():
+    """Test that storage.collections defaults to empty list."""
+    config = StorageConfig()
+    assert config.collections == []
+
+
+def test_storage_config_collections_accepts_list():
+    """Test that storage.collections accepts a list of ints."""
+    config = StorageConfig(collections=[42, 87, 103])
+    assert config.collections == [42, 87, 103]
+
+
+def test_storage_config_in_rag_config():
+    """Test that storage.collections is accessible from RAGConfig."""
+    config = RAGConfig()
+    assert config.storage.collections == []
+
+    config_with_collections = RAGConfig(storage=StorageConfig(collections=[1, 2, 3]))
+    assert config_with_collections.storage.collections == [1, 2, 3]
 
 
 def test_json_schema_generation():
