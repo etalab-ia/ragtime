@@ -41,7 +41,7 @@ normalization = "L2"
 provider = "albert-collections"
 collection_naming = "workspace"
 distance_metric = "cosine"
-collections = []  # Albert collection IDs to search (discover with: rag-facile collections list --public)
+collections = [785]  # service-public (discover more with: rag-facile collections list)
 
 [query]
 rewrite_enabled = false

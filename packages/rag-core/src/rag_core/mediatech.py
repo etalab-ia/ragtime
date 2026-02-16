@@ -4,13 +4,9 @@ Well-known public collections available on the Albert API, sourced from
 https://huggingface.co/collections/AgentPublic/mediatech
 
 These datasets are chunked, vectorized, and ready to use in RAG pipelines.
-Collection IDs are specific to the Albert API instance — use
-``rag-facile collections list --public`` to discover current IDs.
+Collection IDs are specific to the etalab Albert API instance.
 
-Once IDs are known, add them to ragfacile.toml::
-
-    [storage]
-    collections = [42, 87]
+Use ``rag-facile collections list`` to discover all available collections.
 """
 
 from __future__ import annotations
@@ -21,47 +17,32 @@ from typing import TypedDict
 class MediaTechEntry(TypedDict):
     """Metadata for a MediaTech collection."""
 
+    id: int
     description: str
     presets: list[str]
 
 
-#: Maps dataset name → metadata.
-#: Names match the HuggingFace dataset names at AgentPublic/<name>.
+#: Maps collection name → metadata.
+#: IDs correspond to the etalab Albert API instance (albert.api.etalab.gouv.fr).
 MEDIATECH_CATALOG: dict[str, MediaTechEntry] = {
-    "legi": {
-        "description": "Législation française (codes, lois, décrets)",
-        "presets": ["legal"],
-    },
-    "constit": {
-        "description": "Conseil constitutionnel (décisions, textes fondamentaux)",
-        "presets": ["legal"],
-    },
-    "cnil": {
-        "description": "Commission nationale de l'informatique et des libertés",
-        "presets": ["legal"],
-    },
-    "dole": {
-        "description": "Direction de l'information légale et administrative",
-        "presets": ["legal"],
-    },
-    "travail-emploi": {
-        "description": "Droit du travail et de l'emploi",
-        "presets": ["hr"],
-    },
     "service-public": {
-        "description": "Fiches pratiques Service-Public.fr",
+        "id": 785,
+        "description": "Fiches pratiques Service Public",
         "presets": ["balanced", "fast", "accurate"],
     },
-    "local-administrations-directory": {
-        "description": "Annuaire des administrations locales",
-        "presets": ["balanced"],
+    "travail-emploi": {
+        "id": 784,
+        "description": "Fiches pratiques Travail Emploi",
+        "presets": ["hr"],
     },
-    "state-administrations-directory": {
-        "description": "Annuaire des administrations de l'État",
+    "annuaire-administrations-etat": {
+        "id": 783,
+        "description": "Annuaire des administrations d'état",
         "presets": ["balanced"],
     },
     "data-gouv-datasets-catalog": {
-        "description": "Catalogue des jeux de données data.gouv.fr",
+        "id": 1094,
+        "description": "Catalogue des jeux de données publiées sur data.gouv.fr",
         "presets": ["balanced"],
     },
 }

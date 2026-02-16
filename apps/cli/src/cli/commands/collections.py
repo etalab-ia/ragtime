@@ -11,10 +11,6 @@ console = Console()
 
 
 def list_collections(
-    public: Annotated[
-        bool,
-        typer.Option("--public", help="Show only public collections"),
-    ] = False,
     limit: Annotated[
         int,
         typer.Option("--limit", "-n", help="Maximum number of collections to show"),
@@ -22,17 +18,18 @@ def list_collections(
 ) -> None:
     """List accessible collections on the Albert API.
 
+    Shows all collections you have access to, including public collections
+    shared across the platform. Public collections (marked in green) can be
+    added to your RAG pipeline configuration.
+
     Requires ALBERT_API_KEY or OPENAI_API_KEY environment variable.
 
     Examples:
         # List all accessible collections
         rag-facile collections list
 
-        # List only public collections
-        rag-facile collections list --public
-
         # Limit results
-        rag-facile collections list --public --limit 20
+        rag-facile collections list --limit 20
     """
     try:
         from albert import AlbertClient
@@ -52,22 +49,19 @@ def list_collections(
         raise typer.Exit(1)
 
     # Fetch collections
-    visibility = "public" if public else None
     try:
-        result = client.list_collections(visibility=visibility, limit=limit)
+        result = client.list_collections(limit=limit)
     except Exception as e:
         console.print(f"[red]✗ Failed to fetch collections: {e}[/red]")
         raise typer.Exit(1)
 
     collections = result.data
     if not collections:
-        label = "public " if public else ""
-        console.print(f"[yellow]No {label}collections found.[/yellow]")
+        console.print("[yellow]No collections found.[/yellow]")
         raise typer.Exit(0)
 
     # Build table
-    title = "📚 Public Collections" if public else "📚 Collections"
-    table = Table(title=title, expand=True)
+    table = Table(title="📚 Collections", expand=True)
     table.add_column("ID", style="cyan", no_wrap=True, min_width=6)
     table.add_column("Name", style="bold", min_width=20)
     table.add_column("Description", ratio=1)
@@ -88,11 +82,20 @@ def list_collections(
     console.print(table)
     console.print()
 
-    # Educational hint
-    console.print(
-        "[dim]💡 Add collections to your RAG pipeline in ragfacile.toml:[/dim]"
-    )
-    if collections:
+    # Educational hint: show public collection IDs for easy copy-paste
+    public_cols = [c for c in collections if c.visibility == "public"]
+    if public_cols:
+        public_ids = [str(c.id) for c in public_cols]
+        console.print(
+            "[dim]💡 Add public collections to your RAG pipeline in ragfacile.toml:[/dim]"
+        )
+        console.print(
+            f'[dim]   rag-facile config set storage.collections "[{", ".join(public_ids)}]"[/dim]'
+        )
+    else:
+        console.print(
+            "[dim]💡 Add collection IDs to your RAG pipeline in ragfacile.toml:[/dim]"
+        )
         example_ids = [str(c.id) for c in collections[:2]]
         console.print(
             f'[dim]   rag-facile config set storage.collections "[{", ".join(example_ids)}]"[/dim]'
