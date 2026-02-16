@@ -9,7 +9,7 @@ Install proto (version manager):
 curl -fsSL https://moonrepo.dev/install/proto.sh | bash
 ```
 
-Then **restart your terminal** (or `source ~/.zshrc` on macOS, `source ~/.bashrc` on Linux).
+Then **restart your terminal** (or run the `source` command shown by the installer).
 
 Install required tools via proto:
 ```bash
