@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0](https://github.com/etalab-ia/rag-facile/compare/v0.11.1...v0.12.0) (2026-02-16)
+
+
+### Features
+
+* true RAG pipeline with auto-managed collections and tuned presets ([e912ca5](https://github.com/etalab-ia/rag-facile/commit/e912ca521dc31c4389c6eea8e6b190369ff15f86))
+* true RAG pipeline with auto-managed collections and tuned presets ([4fa5cd2](https://github.com/etalab-ia/rag-facile/commit/4fa5cd2359fc8349caf035a6069915f760b3172c))
+
+
+### Bug Fixes
+
+* address review comments on context injection and session naming ([b89e69e](https://github.com/etalab-ia/rag-facile/commit/b89e69ef9eb6ed05021ec048c437b45d5ac2820b))
+* increase retrieval depth for better recall on long sections ([48de5c4](https://github.com/etalab-ia/rag-facile/commit/48de5c4c94052f1cb9329deb7bf55779525b54df))
+* make Collection model fields optional for create response ([8e18529](https://github.com/etalab-ia/rag-facile/commit/8e185297eae58010f809f4b856fb8382aa9395f1))
+* use date-sorted release badge to avoid shields.io semver bug ([54586ef](https://github.com/etalab-ia/rag-facile/commit/54586efc80f858955ed3efd174199d4d27a53426))
+* use date-sorted release badge to avoid shields.io semver bug ([8d6175a](https://github.com/etalab-ia/rag-facile/commit/8d6175a7e882072fa3f67004ed45f1a14d734660))
+
 ## [0.11.1](https://github.com/etalab-ia/rag-facile/compare/v0.11.0...v0.11.1) (2026-02-15)
 
 
