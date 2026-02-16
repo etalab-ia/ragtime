@@ -5,6 +5,18 @@ All notable changes to albert-client will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses independent versioning (matches Albert API spec, not monorepo releases).
 
+## [0.5.0](https://github.com/etalab-ia/rag-facile/compare/albert-client-v0.4.0...albert-client-v0.5.0) (2026-02-16)
+
+
+### Features
+
+* true RAG pipeline with auto-managed collections and tuned presets ([e912ca5](https://github.com/etalab-ia/rag-facile/commit/e912ca521dc31c4389c6eea8e6b190369ff15f86))
+
+
+### Bug Fixes
+
+* make Collection model fields optional for create response ([8e18529](https://github.com/etalab-ia/rag-facile/commit/8e185297eae58010f809f4b856fb8382aa9395f1))
+
 ## [0.4.0](https://github.com/etalab-ia/rag-facile/compare/albert-client-v0.3.7...albert-client-v0.4.0) (2026-02-13)
 
 
