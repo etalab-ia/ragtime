@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.1](https://github.com/etalab-ia/rag-facile/compare/v0.12.0...v0.12.1) (2026-02-16)
+
+
+### Bug Fixes
+
+* add GIT_WORK_TREE workaround for moon in bare repo worktrees ([a45e1e3](https://github.com/etalab-ia/rag-facile/commit/a45e1e3b84bd98939ce1ef5b5d9d2c45ee5b706e))
+* add GIT_WORK_TREE workaround for moon in bare repo worktrees ([1563b56](https://github.com/etalab-ia/rag-facile/commit/1563b566e822f0f84d6ffcbb1d73fc79ba7bb50d))
+* add missing context and reranking packages to standalone setup ([a6e880e](https://github.com/etalab-ia/rag-facile/commit/a6e880e12faa950710ddbb84679b5f68defa9dc4))
+* add missing context and reranking packages to standalone setup ([75c0264](https://github.com/etalab-ia/rag-facile/commit/75c0264596af13f714350aee3631ed2d4de9f0ce))
+
+
+### Documentation
+
+* fix install instructions for macOS/zsh compatibility ([8c27ef3](https://github.com/etalab-ia/rag-facile/commit/8c27ef31f24911ff5f72c276251ef5289a0affe6))
+* fix install instructions for macOS/zsh compatibility ([1d336f6](https://github.com/etalab-ia/rag-facile/commit/1d336f6e987f9807ef257f0b07f0aa7a227680c3))
+
 ## [0.12.0](https://github.com/etalab-ia/rag-facile/compare/v0.11.1...v0.12.0) (2026-02-16)
 
 
