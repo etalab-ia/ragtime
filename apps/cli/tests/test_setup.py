@@ -11,12 +11,6 @@ from cli.commands.setup import (
     FRONTENDS,
     MODULES,
     PROJECT_STRUCTURES,
-    get_context_source,
-    get_ingestion_source,
-    get_pipelines_source,
-    get_reranking_source,
-    get_retrieval_source,
-    get_storage_source,
     get_templates_dir,
     render_template_file,
     run_command,
@@ -124,166 +118,6 @@ class TestConstants:
         """Should have monorepo project structure option."""
         assert "Monorepo (for multi-app projects)" in PROJECT_STRUCTURES
         assert PROJECT_STRUCTURES["Monorepo (for multi-app projects)"] == "monorepo"
-
-
-class TestGetRetrievalSource:
-    """Tests for get_retrieval_source function."""
-
-    def test_returns_path_object(self):
-        """Should return a Path object."""
-        result = get_retrieval_source()
-        assert isinstance(result, Path)
-
-    def test_path_ends_with_retrieval(self):
-        """Should return path ending with retrieval."""
-        result = get_retrieval_source()
-        assert result.name == "retrieval"
-
-    def test_path_exists_in_repo(self):
-        """retrieval source should exist when running from repo."""
-        result = get_retrieval_source()
-        assert result.exists(), f"retrieval source not found at {result}"
-
-    def test_contains_init_file(self):
-        """retrieval source should contain __init__.py."""
-        result = get_retrieval_source()
-        init_file = result / "__init__.py"
-        assert init_file.exists(), f"__init__.py not found at {init_file}"
-
-    def test_contains_required_modules(self):
-        """retrieval source should contain search module."""
-        result = get_retrieval_source()
-        assert (result / "albert.py").exists()
-
-
-class TestGetPipelinesSource:
-    """Tests for get_pipelines_source function."""
-
-    def test_returns_path_object(self):
-        """Should return a Path object."""
-        result = get_pipelines_source()
-        assert isinstance(result, Path)
-
-    def test_path_ends_with_pipelines(self):
-        """Should return path ending with pipelines."""
-        result = get_pipelines_source()
-        assert result.name == "pipelines"
-
-    def test_path_exists_in_repo(self):
-        """pipelines source should exist when running from repo."""
-        result = get_pipelines_source()
-        assert result.exists(), f"pipelines source not found at {result}"
-
-    def test_contains_required_modules(self):
-        """pipelines source should contain pipeline modules."""
-        result = get_pipelines_source()
-        assert (result / "__init__.py").exists()
-        assert (result / "_base.py").exists()
-        assert (result / "basic.py").exists()
-        assert (result / "albert.py").exists()
-
-
-class TestGetIngestionSource:
-    """Tests for get_ingestion_source function."""
-
-    def test_returns_path_object(self):
-        """Should return a Path object."""
-        result = get_ingestion_source()
-        assert isinstance(result, Path)
-
-    def test_path_ends_with_ingestion(self):
-        """Should return path ending with ingestion."""
-        result = get_ingestion_source()
-        assert result.name == "ingestion"
-
-    def test_path_exists_in_repo(self):
-        """ingestion source should exist when running from repo."""
-        result = get_ingestion_source()
-        assert result.exists(), f"ingestion source not found at {result}"
-
-    def test_contains_required_modules(self):
-        """ingestion source should contain provider modules."""
-        result = get_ingestion_source()
-        assert (result / "__init__.py").exists()
-        assert (result / "_base.py").exists()
-        assert (result / "local.py").exists()
-        assert (result / "albert.py").exists()
-
-
-class TestGetContextSource:
-    """Tests for get_context_source function."""
-
-    def test_returns_path_object(self):
-        """Should return a Path object."""
-        result = get_context_source()
-        assert isinstance(result, Path)
-
-    def test_path_ends_with_context(self):
-        """Should return path ending with context."""
-        result = get_context_source()
-        assert result.name == "context"
-
-    def test_path_exists_in_repo(self):
-        """context source should exist when running from repo."""
-        result = get_context_source()
-        assert result.exists(), f"context source not found at {result}"
-
-    def test_contains_required_modules(self):
-        """context source should contain formatter module."""
-        result = get_context_source()
-        assert (result / "__init__.py").exists()
-        assert (result / "formatter.py").exists()
-
-
-class TestGetRerankingSource:
-    """Tests for get_reranking_source function."""
-
-    def test_returns_path_object(self):
-        """Should return a Path object."""
-        result = get_reranking_source()
-        assert isinstance(result, Path)
-
-    def test_path_ends_with_reranking(self):
-        """Should return path ending with reranking."""
-        result = get_reranking_source()
-        assert result.name == "reranking"
-
-    def test_path_exists_in_repo(self):
-        """reranking source should exist when running from repo."""
-        result = get_reranking_source()
-        assert result.exists(), f"reranking source not found at {result}"
-
-    def test_contains_required_modules(self):
-        """reranking source should contain Albert module."""
-        result = get_reranking_source()
-        assert (result / "__init__.py").exists()
-        assert (result / "albert.py").exists()
-
-
-class TestGetStorageSource:
-    """Tests for get_storage_source function."""
-
-    def test_returns_path_object(self):
-        """Should return a Path object."""
-        result = get_storage_source()
-        assert isinstance(result, Path)
-
-    def test_path_ends_with_storage(self):
-        """Should return path ending with storage."""
-        result = get_storage_source()
-        assert result.name == "storage"
-
-    def test_path_exists_in_repo(self):
-        """storage source should exist when running from repo."""
-        result = get_storage_source()
-        assert result.exists(), f"storage source not found at {result}"
-
-    def test_contains_required_modules(self):
-        """storage source should contain provider modules."""
-        result = get_storage_source()
-        assert (result / "__init__.py").exists()
-        assert (result / "_base.py").exists()
-        assert (result / "albert.py").exists()
 
 
 class TestRenderTemplateFile:
@@ -438,7 +272,7 @@ class TestGenerateStandalone:
         assert pyproject.exists()
         content = pyproject.read_text()
         assert "chainlit>=1.3.0" in content
-        assert "openai>=1.0.0" in content
+        assert "rag-facile-lib" in content
         assert "python-dotenv>=1.0.0" in content
 
     def test_creates_app_files(
@@ -491,10 +325,10 @@ class TestGenerateStandalone:
         # OPENAI_MODEL is now in ragfacile.toml, not .env
         assert "OPENAI_MODEL" not in content
 
-    def test_copies_pipelines_module(
+    def test_pyproject_includes_library_dependency(
         self, standalone_target, mock_standalone_deps, preset_config
     ):
-        """Should copy pipelines module to standalone project."""
+        """Should include rag-facile-lib as a dependency instead of copying modules."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -510,10 +344,10 @@ class TestGenerateStandalone:
             preset_config=preset_config,
         )
 
-        pipelines = standalone_target / "pipelines"
-        assert pipelines.exists()
-        assert (pipelines / "__init__.py").exists()
-        assert (pipelines / "_base.py").exists()
+        pyproject = standalone_target / "pyproject.toml"
+        assert pyproject.exists()
+        content = pyproject.read_text()
+        assert "rag-facile-lib" in content
 
     def test_creates_python_version_file(
         self, standalone_target, mock_standalone_deps, preset_config
@@ -538,34 +372,10 @@ class TestGenerateStandalone:
         assert python_version.exists()
         assert "3.13" in python_version.read_text()
 
-    def test_copies_retrieval_module(
-        self, standalone_target, mock_standalone_deps, preset_config
-    ):
-        """Should always copy simplified retrieval module."""
-        from cli.commands.setup import generate_standalone
-
-        generate_standalone(
-            target_path=standalone_target,
-            target_display=str(standalone_target),
-            frontend_choice="Chainlit",
-            selected_modules=["Local"],
-            env_config={
-                "openai_api_key": "test-key",
-                "openai_base_url": "https://api.test.com",
-            },
-            preset="balanced",
-            preset_config=preset_config,
-        )
-
-        retrieval = standalone_target / "retrieval"
-        assert retrieval.exists()
-        assert (retrieval / "__init__.py").exists()
-        assert (retrieval / "albert.py").exists()
-
     def test_pyproject_includes_pypdf_when_local_selected(
         self, standalone_target, mock_standalone_deps, preset_config
     ):
-        """Should include pypdf dependency when Local module is selected."""
+        """Should include rag-facile-lib dependency which provides pypdf and other modules."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -583,107 +393,8 @@ class TestGenerateStandalone:
 
         pyproject = standalone_target / "pyproject.toml"
         content = pyproject.read_text()
-        assert "pypdf>=5.0.0" in content
-        # Both albert (always included) and retrieval should be in packages
-        assert "'albert'" in content or '"albert"' in content
-        assert "'retrieval'" in content or '"retrieval"' in content
-
-    def test_copies_ingestion_module(
-        self, standalone_target, mock_standalone_deps, preset_config
-    ):
-        """Should copy ingestion module to standalone project."""
-        from cli.commands.setup import generate_standalone
-
-        generate_standalone(
-            target_path=standalone_target,
-            target_display=str(standalone_target),
-            frontend_choice="Chainlit",
-            selected_modules=["Local"],
-            env_config={
-                "openai_api_key": "test-key",
-                "openai_base_url": "https://api.test.com",
-            },
-            preset="balanced",
-            preset_config=preset_config,
-        )
-
-        ingestion = standalone_target / "ingestion"
-        assert ingestion.exists()
-        assert (ingestion / "__init__.py").exists()
-        assert (ingestion / "_base.py").exists()
-
-    def test_copies_storage_module(
-        self, standalone_target, mock_standalone_deps, preset_config
-    ):
-        """Should copy storage module to standalone project."""
-        from cli.commands.setup import generate_standalone
-
-        generate_standalone(
-            target_path=standalone_target,
-            target_display=str(standalone_target),
-            frontend_choice="Chainlit",
-            selected_modules=["Local"],
-            env_config={
-                "openai_api_key": "test-key",
-                "openai_base_url": "https://api.test.com",
-            },
-            preset="balanced",
-            preset_config=preset_config,
-        )
-
-        storage = standalone_target / "storage"
-        assert storage.exists()
-        assert (storage / "__init__.py").exists()
-        assert (storage / "_base.py").exists()
-        assert (storage / "albert.py").exists()
-
-    def test_copies_context_module(
-        self, standalone_target, mock_standalone_deps, preset_config
-    ):
-        """Should copy context module to standalone project."""
-        from cli.commands.setup import generate_standalone
-
-        generate_standalone(
-            target_path=standalone_target,
-            target_display=str(standalone_target),
-            frontend_choice="Chainlit",
-            selected_modules=["Local"],
-            env_config={
-                "openai_api_key": "test-key",
-                "openai_base_url": "https://api.test.com",
-            },
-            preset="balanced",
-            preset_config=preset_config,
-        )
-
-        context = standalone_target / "context"
-        assert context.exists()
-        assert (context / "__init__.py").exists()
-        assert (context / "formatter.py").exists()
-
-    def test_copies_reranking_module(
-        self, standalone_target, mock_standalone_deps, preset_config
-    ):
-        """Should copy reranking module to standalone project."""
-        from cli.commands.setup import generate_standalone
-
-        generate_standalone(
-            target_path=standalone_target,
-            target_display=str(standalone_target),
-            frontend_choice="Chainlit",
-            selected_modules=["Local"],
-            env_config={
-                "openai_api_key": "test-key",
-                "openai_base_url": "https://api.test.com",
-            },
-            preset="balanced",
-            preset_config=preset_config,
-        )
-
-        reranking = standalone_target / "reranking"
-        assert reranking.exists()
-        assert (reranking / "__init__.py").exists()
-        assert (reranking / "albert.py").exists()
+        # pypdf and other dependencies come via rag-facile-lib
+        assert "rag-facile-lib" in content
 
     def test_creates_chainlit_md_for_chainlit(
         self, standalone_target, mock_standalone_deps, preset_config

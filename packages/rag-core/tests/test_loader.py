@@ -4,13 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from rag_core.loader import (
+from rag_facile.core.loader import (
     export_json_schema,
     load_config,
     load_config_or_default,
     save_config,
 )
-from rag_core.schema import RAGConfig
+from rag_facile.core.schema import RAGConfig
 
 
 def test_load_nonexistent_file_raises_error():

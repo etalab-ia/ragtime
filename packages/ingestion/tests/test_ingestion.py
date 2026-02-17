@@ -7,9 +7,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ingestion import IngestionProvider, get_provider
-from ingestion._base import IngestionProvider as BaseClass
-from ingestion.local import LocalProvider
+from rag_facile.ingestion import IngestionProvider, get_provider
+from rag_facile.ingestion._base import IngestionProvider as BaseClass
+from rag_facile.ingestion.local import LocalProvider
 
 
 # ---------------------------------------------------------------------------
@@ -101,7 +101,7 @@ class TestGetProvider:
         assert isinstance(provider, LocalProvider)
 
     def test_albert_provider(self):
-        from ingestion.albert import AlbertProvider
+        from rag_facile.ingestion.albert import AlbertProvider
 
         config = MagicMock()
         config.ingestion.provider = "albert"

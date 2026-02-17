@@ -1,6 +1,6 @@
 [project]
 name = "reranking"
-version = "0.14.0" # x-release-please-version
+version = "0.15.0" # x-release-please-version
 description = "Reranking - re-score retrieved chunks with a cross-encoder for higher precision"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -18,7 +18,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/reranking"]
+packages = ["src/rag_facile/reranking"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

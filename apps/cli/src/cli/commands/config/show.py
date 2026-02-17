@@ -11,7 +11,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
-from rag_core import (
+from rag_facile.core import (
     PIPELINE_STAGES,
     PipelineStage,
     flatten_model_fields,

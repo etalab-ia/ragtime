@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from rag_core.presets import (
+from rag_facile.core.presets import (
     apply_preset,
     compare_presets,
     get_preset_description,
@@ -99,7 +99,7 @@ def test_apply_preset(tmp_path: Path):
     assert config_file.exists()
 
     # Load and verify
-    from rag_core import load_config
+    from rag_facile.core import load_config
 
     config = load_config(config_file)
     assert config.meta.preset == "accurate"

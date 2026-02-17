@@ -3,7 +3,7 @@
 import pytest
 
 from albert import AlbertClient
-from rag_core import RetrievedChunk
+from rag_facile.core import RetrievedChunk
 
 
 @pytest.fixture(autouse=True)

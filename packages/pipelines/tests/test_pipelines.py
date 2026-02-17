@@ -6,10 +6,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pipelines import get_pipeline
-from pipelines._base import RAGPipeline as RAGPipelineABC
-from pipelines.albert import AlbertPipeline
-from pipelines.basic import BasicPipeline
+from rag_facile.pipelines import get_pipeline
+from rag_facile.pipelines._base import RAGPipeline as RAGPipelineABC
+from rag_facile.pipelines.albert import AlbertPipeline
+from rag_facile.pipelines.basic import BasicPipeline
 
 
 # ── ABC tests ──
@@ -57,7 +57,7 @@ class TestGetPipeline:
         config.ingestion.provider = "local"
         return config
 
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_local_sqlite_returns_basic_pipeline(self, mock_get_provider):
         """local-sqlite config should return BasicPipeline."""
         mock_get_provider.return_value = MagicMock()
@@ -65,8 +65,8 @@ class TestGetPipeline:
         pipeline = get_pipeline(config)
         assert isinstance(pipeline, BasicPipeline)
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_albert_collections_returns_albert_pipeline(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -90,7 +90,7 @@ class TestGetPipeline:
 class TestBasicPipeline:
     """Verify BasicPipeline delegates to the ingestion provider."""
 
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_file_delegates_to_ingestion(self, mock_get_provider):
         """process_file should delegate to ingestion provider."""
         mock_provider = MagicMock()
@@ -103,7 +103,7 @@ class TestBasicPipeline:
         assert result == "parsed content"
         mock_provider.process_file.assert_called_once_with("/tmp/test.pdf", "test.pdf")
 
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_bytes_delegates_to_ingestion(self, mock_get_provider):
         """process_bytes should delegate to ingestion provider."""
         mock_provider = MagicMock()
@@ -118,14 +118,14 @@ class TestBasicPipeline:
             b"fake pdf data", "test.pdf"
         )
 
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_query_returns_empty(self, mock_get_provider):
         """BasicPipeline should return empty string for queries (context stuffing)."""
         mock_get_provider.return_value = MagicMock()
         pipeline = BasicPipeline()
         assert pipeline.process_query("what is RAG?") == ""
 
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_supported_extensions_from_ingestion(self, mock_get_provider):
         """supported_extensions should come from the ingestion provider."""
         mock_provider = MagicMock()
@@ -135,7 +135,7 @@ class TestBasicPipeline:
         pipeline = BasicPipeline()
         assert pipeline.supported_extensions == [".pdf"]
 
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_accepted_mime_types_from_ingestion(self, mock_get_provider):
         """accepted_mime_types should come from the ingestion provider."""
         mock_provider = MagicMock()
@@ -152,8 +152,8 @@ class TestBasicPipeline:
 class TestAlbertPipeline:
     """Verify AlbertPipeline delegates to ingestion, retrieval, and storage."""
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_file_ingests_into_collection(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -170,8 +170,8 @@ class TestAlbertPipeline:
         mock_storage.create_collection.assert_called_once()
         mock_storage.ingest_documents.assert_called_once()
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_bytes_ingests_into_collection(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -188,8 +188,8 @@ class TestAlbertPipeline:
         mock_storage.create_collection.assert_called_once()
         mock_storage.ingest_documents.assert_called_once()
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_query_orchestrates_search_rerank_format(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -202,12 +202,16 @@ class TestAlbertPipeline:
         mock_reranked = [{"content": "chunk1", "score": 0.99}]
 
         with (
-            patch("retrieval.search_chunks", return_value=mock_chunks) as mock_search,
-            patch("reranking.rerank_chunks", return_value=mock_reranked) as mock_rerank,
             patch(
-                "context.format_context", return_value="formatted context"
+                "rag_facile.retrieval.search_chunks", return_value=mock_chunks
+            ) as mock_search,
+            patch(
+                "rag_facile.reranking.rerank_chunks", return_value=mock_reranked
+            ) as mock_rerank,
+            patch(
+                "rag_facile.context.format_context", return_value="formatted context"
             ) as mock_format,
-            patch("rag_core.get_config") as mock_get_config,
+            patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
             mock_config.retrieval.top_k = 10
@@ -228,8 +232,8 @@ class TestAlbertPipeline:
         mock_rerank.assert_called_once()
         mock_format.assert_called_once_with(mock_reranked)
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_query_skips_rerank_when_disabled(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -241,12 +245,12 @@ class TestAlbertPipeline:
         mock_chunks = [{"content": "chunk1", "score": 0.9}]
 
         with (
-            patch("retrieval.search_chunks", return_value=mock_chunks),
-            patch("reranking.rerank_chunks") as mock_rerank,
+            patch("rag_facile.retrieval.search_chunks", return_value=mock_chunks),
+            patch("rag_facile.reranking.rerank_chunks") as mock_rerank,
             patch(
-                "context.format_context", return_value="formatted context"
+                "rag_facile.context.format_context", return_value="formatted context"
             ) as mock_format,
-            patch("rag_core.get_config") as mock_get_config,
+            patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
             mock_config.retrieval.top_k = 10
@@ -263,8 +267,8 @@ class TestAlbertPipeline:
         mock_rerank.assert_not_called()
         mock_format.assert_called_once_with(mock_chunks)
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_query_returns_empty_when_no_results(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -274,8 +278,8 @@ class TestAlbertPipeline:
         pipeline = AlbertPipeline()
 
         with (
-            patch("retrieval.search_chunks", return_value=[]),
-            patch("rag_core.get_config") as mock_get_config,
+            patch("rag_facile.retrieval.search_chunks", return_value=[]),
+            patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
             mock_config.retrieval.top_k = 10
@@ -290,8 +294,8 @@ class TestAlbertPipeline:
 
         assert result == ""
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_supported_extensions_from_ingestion(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -305,8 +309,8 @@ class TestAlbertPipeline:
         pipeline = AlbertPipeline()
         assert pipeline.supported_extensions == expected_extensions
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_accepted_mime_types_from_ingestion(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -325,8 +329,8 @@ class TestAlbertPipeline:
             "text/markdown": [".md"],
         }
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_query_uses_config_collections(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -338,9 +342,11 @@ class TestAlbertPipeline:
         mock_chunks = [{"content": "chunk1", "score": 0.9}]
 
         with (
-            patch("retrieval.search_chunks", return_value=mock_chunks) as mock_search,
-            patch("context.format_context", return_value="context"),
-            patch("rag_core.get_config") as mock_get_config,
+            patch(
+                "rag_facile.retrieval.search_chunks", return_value=mock_chunks
+            ) as mock_search,
+            patch("rag_facile.context.format_context", return_value="context"),
+            patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
             mock_config.storage.collections = [42, 87]
@@ -359,8 +365,8 @@ class TestAlbertPipeline:
         call_args = mock_search.call_args
         assert call_args[0][2] == [42, 87]  # collection_ids
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_query_merges_config_and_session_collections(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -373,9 +379,11 @@ class TestAlbertPipeline:
         mock_chunks = [{"content": "chunk1", "score": 0.9}]
 
         with (
-            patch("retrieval.search_chunks", return_value=mock_chunks) as mock_search,
-            patch("context.format_context", return_value="context"),
-            patch("rag_core.get_config") as mock_get_config,
+            patch(
+                "rag_facile.retrieval.search_chunks", return_value=mock_chunks
+            ) as mock_search,
+            patch("rag_facile.context.format_context", return_value="context"),
+            patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
             mock_config.storage.collections = [42, 87]
@@ -393,8 +401,8 @@ class TestAlbertPipeline:
         call_args = mock_search.call_args
         assert set(call_args[0][2]) == {42, 87, 999}
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_query_returns_empty_when_no_collections(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -403,7 +411,7 @@ class TestAlbertPipeline:
         mock_get_storage.return_value = MagicMock()
         pipeline = AlbertPipeline()
 
-        with patch("rag_core.get_config") as mock_get_config:
+        with patch("rag_facile.core.get_config") as mock_get_config:
             mock_config = MagicMock()
             mock_config.storage.collections = []
             mock_get_config.return_value = mock_config
@@ -414,8 +422,8 @@ class TestAlbertPipeline:
 
         assert result == ""
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_process_query_session_only_when_no_config_collections(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -428,9 +436,11 @@ class TestAlbertPipeline:
         mock_chunks = [{"content": "chunk1", "score": 0.9}]
 
         with (
-            patch("retrieval.search_chunks", return_value=mock_chunks) as mock_search,
-            patch("context.format_context", return_value="context"),
-            patch("rag_core.get_config") as mock_get_config,
+            patch(
+                "rag_facile.retrieval.search_chunks", return_value=mock_chunks
+            ) as mock_search,
+            patch("rag_facile.context.format_context", return_value="context"),
+            patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
             mock_config.storage.collections = []
@@ -448,8 +458,8 @@ class TestAlbertPipeline:
         call_args = mock_search.call_args
         assert call_args[0][2] == [555]
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_create_collection_delegates_to_storage(
         self, mock_get_ingestion, mock_get_storage
     ):
@@ -468,8 +478,8 @@ class TestAlbertPipeline:
             mock_client, "test", "description"
         )
 
-    @patch("storage.get_provider")
-    @patch("ingestion.get_provider")
+    @patch("rag_facile.storage.get_provider")
+    @patch("rag_facile.ingestion.get_provider")
     def test_ingest_documents_delegates_to_storage(
         self, mock_get_ingestion, mock_get_storage
     ):

@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from rag_core.schema import (
+from rag_facile.core.schema import (
     ChunkingConfig,
     EmbeddingConfig,
     GenerationConfig,

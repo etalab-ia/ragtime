@@ -3,12 +3,12 @@ import json
 from typing import Any, TypedDict
 
 import reflex as rx
-from pipelines import process_bytes, process_query
+from rag_facile.pipelines import process_bytes, process_query
 from dotenv import load_dotenv
 
 from albert import AlbertClient, ChatCompletionMessageParam
-from rag_core import get_config
-from rag_core.mediatech import get_collection_name
+from rag_facile.core import get_config
+from rag_facile.core.mediatech import get_collection_name
 
 
 # Load .env file

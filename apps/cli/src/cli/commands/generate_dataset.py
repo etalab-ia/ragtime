@@ -15,7 +15,7 @@ import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from rag_core import get_config
+from rag_facile.core import get_config
 
 
 console = Console()

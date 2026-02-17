@@ -3,7 +3,7 @@
 import respx
 from httpx import Response
 
-from retrieval.albert import search_chunks
+from rag_facile.retrieval.albert import search_chunks
 
 
 class TestSearchChunks:

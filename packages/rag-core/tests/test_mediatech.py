@@ -1,6 +1,6 @@
 """Tests for MediaTech collection catalog."""
 
-from rag_core.mediatech import MEDIATECH_CATALOG
+from rag_facile.core.mediatech import MEDIATECH_CATALOG
 
 
 def test_catalog_is_not_empty():

@@ -3,7 +3,7 @@
 import respx
 from httpx import Response
 
-from reranking import rerank_chunks
+from rag_facile.reranking import rerank_chunks
 
 
 class TestRerankChunks:

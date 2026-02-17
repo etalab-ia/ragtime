@@ -1,8 +1,8 @@
 """Tests for context formatter functions."""
 
-from rag_core import RetrievedChunk
+from rag_facile.core import RetrievedChunk
 
-from context import format_context
+from rag_facile.context import format_context
 
 
 def _make_chunk(

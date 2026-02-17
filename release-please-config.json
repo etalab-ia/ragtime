@@ -17,7 +17,8 @@
 				"packages/rag-core/pyproject.toml",
 				"packages/reranking/pyproject.toml",
 				"packages/retrieval/pyproject.toml",
-				"packages/storage/pyproject.toml"
+				"packages/rag-facile-lib/pyproject.toml",
+			"packages/storage/pyproject.toml"
 			]
 		}
 	}

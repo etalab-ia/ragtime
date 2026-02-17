@@ -6,12 +6,12 @@ import chainlit as cl
 import engineio
 import engineio.payload
 from chainlit.input_widget import Switch
-from pipelines import get_accepted_mime_types, process_file, process_query
+from rag_facile.pipelines import get_accepted_mime_types, process_file, process_query
 from dotenv import load_dotenv
 
 from albert import AsyncAlbertClient
-from rag_core import get_config
-from rag_core.mediatech import get_collection_name
+from rag_facile.core import get_config
+from rag_facile.core.mediatech import get_collection_name
 
 
 # Increase the number of packets allowed in a single payload to prevent "Too

@@ -4,7 +4,7 @@ from reflex.constants.colors import ColorType
 from typing import cast
 from collections.abc import Sequence
 
-from pipelines import get_accepted_mime_types
+from rag_facile.pipelines import get_accepted_mime_types
 from {{ project_name | replace(from='-', to='_') }}.state import QA, State
 
 
