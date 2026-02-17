@@ -182,12 +182,12 @@ def _clean_windows_path() -> bool:
 
 
 def run(
-    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
     all_tools: bool = typer.Option(
         False,
         "--all",
         help="Also remove the toolchain (proto, moon, uv, just, direnv)",
     ),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
 ) -> None:
     """Remove the RAG Facile CLI.
 
