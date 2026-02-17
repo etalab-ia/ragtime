@@ -746,14 +746,6 @@ def run(
         str,
         typer.Argument(help="Target directory for the new workspace"),
     ] = "",
-    preset: Annotated[
-        str | None,
-        typer.Option(help="Configuration preset (fast, balanced, accurate, legal, hr)"),
-    ] = None,
-    force: Annotated[
-        bool,
-        typer.Option("--force", "-f", help="Overwrite existing files"),
-    ] = False,
     expert: Annotated[
         bool,
         typer.Option(
@@ -761,19 +753,27 @@ def run(
             help="Show advanced options (project structure, frontend, pipeline selection)",
         ),
     ] = False,
-    yes: Annotated[
+    force: Annotated[
         bool,
-        typer.Option(
-            "--yes",
-            "-y",
-            help="Skip all prompts (use defaults and env vars for API key)",
-        ),
+        typer.Option("--force", "-f", help="Overwrite existing files"),
     ] = False,
     no_serve: Annotated[
         bool,
         typer.Option(
             "--no-serve",
             help="Skip launching the dev server after setup",
+        ),
+    ] = False,
+    preset: Annotated[
+        str | None,
+        typer.Option(help="Configuration preset (fast, balanced, accurate, legal, hr)"),
+    ] = None,
+    yes: Annotated[
+        bool,
+        typer.Option(
+            "--yes",
+            "-y",
+            help="Skip all prompts (use defaults and env vars for API key)",
         ),
     ] = False,
 ):
