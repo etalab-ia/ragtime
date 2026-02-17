@@ -122,12 +122,12 @@ def _print_gh_issue_command(
         "### Reproduction",
         "",
         "```bash",
-        "curl -s -X POST \\",
+        f"curl -s -X {method.upper()} \\",
         '  -H "Authorization: Bearer $ALBERT_API_KEY" \\',
-        '  -H "Content-Type: application/json" \\',
     ]
 
     if request_body:
+        body_parts.append('  -H "Content-Type: application/json" \\')
         body_parts.append(f"  -d '{request_body}' \\")
 
     base_url = str(response.request.url).rsplit(path, 1)[0]
