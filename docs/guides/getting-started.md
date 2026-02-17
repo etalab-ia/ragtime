@@ -78,15 +78,19 @@ rag-facile setup my-rag-app
 
 The CLI will interactively guide you through:
 
-1. **Project structure** — Simple or Monorepo (see below)
-2. **Configuration preset** — Balanced, Fast, Accurate, Legal, or HR
-3. **Frontend** — Chainlit or Reflex
-4. **Retrieval module** — PDF (local extraction) or Albert RAG (server-side parsing + search)
-5. **Environment** — Your Albert API key (presets handle the rest)
+1. **Configuration preset** — Balanced, Fast, Accurate, Legal, or HR
+2. **Frontend** — Chainlit or Reflex
+3. **Environment** — Your Albert API key (presets handle the rest)
+
+By default, the CLI creates a simple standalone project using the Albert RAG pipeline. For advanced options (project structure, pipeline selection), use `--expert`:
+
+```bash
+rag-facile setup my-rag-app --expert
+```
 
 After configuration, the CLI automatically:
 
-- Creates your workspace with the selected components
+- Creates your project with all pipeline components
 - Writes `ragfacile.toml` based on your chosen preset
 - Creates your `.env` file with your credentials
 - Installs all dependencies with `uv sync`
@@ -94,49 +98,62 @@ After configuration, the CLI automatically:
 
 Your app will open in the browser, ready to use.
 
-## Project Structure Options
-
-### Simple (Recommended for Getting Started)
-
-Best for: **Quick prototypes, single-app deployments, learning RAG Facile**
+## Project Structure
 
 ```
 my-rag-app/
 ├── pyproject.toml          # All dependencies in one place
 ├── .env                    # Your API credentials
-├── app.py                  # Your application code
-├── context_loader.py       # Module loading logic
-├── modules.yml             # Retrieval module configuration
 ├── ragfacile.toml          # RAG pipeline configuration
+├── app.py                  # Your application code
 ├── chainlit.md             # Chat welcome message (Chainlit only)
-└── retrieval_basic/ OR retrieval_albert/   # Selected retrieval module
+├── albert/                 # Albert API client
+├── rag_core/               # Configuration system
+├── pipelines/              # Pipeline orchestration
+├── ingestion/              # Document parsing
+├── retrieval/              # Vector search
+├── reranking/              # Cross-encoder re-scoring
+├── context/                # Context assembly
+└── storage/                # Collection management
 ```
 
-**Advantages:**
+## Running Your App
+
+```bash
+cd my-rag-app
+just run
+```
+
+## Advanced: Project Structures (`--expert`)
+
+With `--expert`, you can choose between a simple standalone project or a monorepo:
+
+### Simple (Default)
+
+Best for: **Quick prototypes, single-app deployments, learning RAG Facile**
+
 - Familiar single-project structure
 - No build tools to learn
 - Easy to understand and modify
-- Simple deployment
 
-### Monorepo (For Multi-App Projects)
+### Monorepo
 
 Best for: **Team projects, multiple apps sharing code, production deployments**
 
 ```
 my-rag-app/
 ├── .moon/              # Moon workspace configuration
-│   ├── templates/      # Templates for adding new apps
-│   ├── toolchain.yml   # Python/uv configuration
-│   └── workspace.yml   # Workspace settings
 ├── apps/
 │   └── chainlit-chat/  # Your selected frontend app
-│       ├── app.py
-│       ├── .env        # Your API credentials
-│       └── ...
 ├── packages/
 │   ├── rag-core/       # Configuration system
 │   ├── albert-client/  # Albert API SDK
-│   └── retrieval/      # Unified retrieval package (basic + albert backends)
+│   ├── retrieval/      # Vector search
+│   ├── reranking/      # Cross-encoder re-scoring
+│   ├── context/        # Context assembly
+│   ├── storage/        # Collection management
+│   ├── ingestion/      # Document parsing
+│   └── pipelines/      # Pipeline orchestration
 ├── ragfacile.toml      # RAG pipeline configuration
 ├── justfile            # Common commands
 └── pyproject.toml      # Workspace root
@@ -152,23 +169,14 @@ my-rag-app/
 
 | Scenario | Recommendation |
 |----------|----------------|
-| First time using RAG Facile | **Simple** |
-| Building a quick prototype | **Simple** |
-| Single application deployment | **Simple** |
-| Multiple related apps | **Monorepo** |
-| Team with shared components | **Monorepo** |
-| Need to add apps later | **Monorepo** |
+| First time using RAG Facile | **Simple** (default) |
+| Building a quick prototype | **Simple** (default) |
+| Single application deployment | **Simple** (default) |
+| Multiple related apps | **Monorepo** (`--expert`) |
+| Team with shared components | **Monorepo** (`--expert`) |
+| Need to add apps later | **Monorepo** (`--expert`) |
 
-## Running Your App
-
-### Simple Structure
-
-```bash
-cd my-rag-app
-just run
-```
-
-### Monorepo Structure
+### Running a Monorepo
 
 ```bash
 cd my-rag-app

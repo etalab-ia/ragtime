@@ -151,7 +151,7 @@ FRONTENDS = {
 
 # Available modules (packages)
 MODULES = {
-    "PDF": {"template": "retrieval", "available": True},
+    "Local": {"template": "retrieval", "available": True},
     "Albert RAG": {"template": "retrieval", "available": True},
 }
 
@@ -166,7 +166,7 @@ PRESET_CONFIGS: dict[str, PresetConfig] = {
     "fast": {
         "description": "Fast responses, lower accuracy",
         "model_alias": "openweight-small",
-        "retrieval_module": "PDF",
+        "retrieval_module": "Local",
         "temperature": 0.7,
         "language": "fr",
         "system_prompt": "Vous êtes un assistant utile et concis.",
@@ -175,7 +175,7 @@ PRESET_CONFIGS: dict[str, PresetConfig] = {
     "balanced": {
         "description": "Balanced speed and accuracy (recommended)",
         "model_alias": "openweight-medium",
-        "retrieval_module": "PDF",
+        "retrieval_module": "Local",
         "temperature": 0.7,
         "language": "fr",
         "system_prompt": "Vous êtes un assistant utile.",
@@ -184,7 +184,7 @@ PRESET_CONFIGS: dict[str, PresetConfig] = {
     "accurate": {
         "description": "Best accuracy, slower responses",
         "model_alias": "openweight-large",
-        "retrieval_module": "PDF",
+        "retrieval_module": "Local",
         "temperature": 0.7,
         "language": "fr",
         "system_prompt": "Vous êtes un assistant expert et précis.",
@@ -193,7 +193,7 @@ PRESET_CONFIGS: dict[str, PresetConfig] = {
     "legal": {
         "description": "Optimized for legal documents",
         "model_alias": "openweight-large",
-        "retrieval_module": "PDF",
+        "retrieval_module": "Local",
         "temperature": 0.3,
         "language": "fr",
         "system_prompt": "Vous êtes un assistant spécialisé dans l'analyse de documents juridiques.",
@@ -202,7 +202,7 @@ PRESET_CONFIGS: dict[str, PresetConfig] = {
     "hr": {
         "description": "Optimized for HR documents",
         "model_alias": "openweight-medium",
-        "retrieval_module": "PDF",
+        "retrieval_module": "Local",
         "temperature": 0.7,
         "language": "fr",
         "system_prompt": "Vous êtes un assistant spécialisé dans les ressources humaines.",
@@ -524,10 +524,10 @@ def generate_standalone(
     console.print("[bold green]Step 2:[/bold green] Generating project files...")
 
     # Create pyproject.toml for standalone mode
-    # pypdf required for both PDF and Albert RAG (albert has local fallback)
+    # pypdf required for both Local and Albert RAG (albert has local fallback)
     pdf_dep = (
         '\n    "pypdf>=5.0.0",'
-        if ("PDF" in selected_modules or "Albert RAG" in selected_modules)
+        if ("Local" in selected_modules or "Albert RAG" in selected_modules)
         else ""
     )
     # Single source of truth for pipeline modules copied into standalone projects.
@@ -650,7 +650,7 @@ package = true
         )
 
     # Step 8: Create ragfacile.toml config file
-    step_num = 8 if "PDF" in selected_modules else 7
+    step_num = 8 if "Local" in selected_modules else 7
     console.print()
     console.print(
         f"[bold green]Step {step_num}:[/bold green] Creating configuration file..."
@@ -668,7 +668,7 @@ package = true
         )
 
     # Step 9: Create .env file
-    step_num = 9 if "PDF" in selected_modules else 8
+    step_num = 9 if "Local" in selected_modules else 8
     console.print()
     console.print(
         f"[bold green]Step {step_num}:[/bold green] Creating environment file..."
@@ -747,6 +747,13 @@ def run(
         bool,
         typer.Option("--force", "-f", help="Overwrite existing files"),
     ] = False,
+    expert: Annotated[
+        bool,
+        typer.Option(
+            "--expert",
+            help="Show advanced options (project structure, pipeline selection)",
+        ),
+    ] = False,
 ):
     """Setup a new RAG Facile workspace with interactive configuration.
 
@@ -783,16 +790,18 @@ def run(
             console.print("[yellow]Aborted.[/yellow]")
             raise typer.Exit(0)
 
-    # Select project structure first
-    structure_choice = questionary.select(
-        "What type of project structure do you want?",
-        choices=list(PROJECT_STRUCTURES.keys()),
-    ).ask()
-    if not structure_choice:
-        console.print("[red]Aborted.[/red]")
-        raise typer.Exit(1)
-
-    is_standalone = PROJECT_STRUCTURES[structure_choice] == "standalone"
+    # Select project structure (only shown with --expert)
+    if expert:
+        structure_choice = questionary.select(
+            "What type of project structure do you want?",
+            choices=list(PROJECT_STRUCTURES.keys()),
+        ).ask()
+        if not structure_choice:
+            console.print("[red]Aborted.[/red]")
+            raise typer.Exit(1)
+        is_standalone = PROJECT_STRUCTURES[structure_choice] == "standalone"
+    else:
+        is_standalone = True
 
     # Select preset
     if not preset:
@@ -828,24 +837,26 @@ def run(
         console.print("[red]Aborted.[/red]")
         raise typer.Exit(1)
 
-    # Select retrieval module — both handle PDF file attachments,
-    # but use different backends (local pypdf vs Albert parse API).
-    module_choice = questionary.select(
-        "Select your retrieval module:",
-        choices=[
-            questionary.Choice(
-                "Albert RAG - Server-side parsing, search & reranking (recommended)",
-                value="Albert RAG",
-            ),
-            questionary.Choice(
-                "PDF - Local text extraction (offline, simple)",
-                value="PDF",
-            ),
-        ],
-    ).ask()
-    if not module_choice:
-        console.print("[red]Aborted.[/red]")
-        raise typer.Exit(1)
+    # Select RAG pipeline (only shown with --expert)
+    if expert:
+        module_choice = questionary.select(
+            "Select your RAG pipeline:",
+            choices=[
+                questionary.Choice(
+                    "Albert RAG - Server-side parsing, search & reranking (recommended)",
+                    value="Albert RAG",
+                ),
+                questionary.Choice(
+                    "Local - Local text extraction (offline, simple)",
+                    value="Local",
+                ),
+            ],
+        ).ask()
+        if not module_choice:
+            console.print("[red]Aborted.[/red]")
+            raise typer.Exit(1)
+    else:
+        module_choice = "Albert RAG"
 
     selected_modules = [module_choice]
 
@@ -882,7 +893,7 @@ def run(
     console.print(f"  Preset: {preset} ({preset_config['description']})")
     console.print(f"  Frontend: {frontend_choice}")
     console.print(f"  Model: {preset_config['model_alias']}")
-    console.print(f"  Retrieval: {module_choice}")
+    console.print(f"  Pipeline: {module_choice}")
     console.print(f"  API: {env_config['openai_base_url']}")
     console.print()
 

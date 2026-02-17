@@ -9,146 +9,124 @@
 
 ---
 
-## 🏗️ Scenario A: Standalone with PDF Retrieval (retrieval-basic)
-*Focus: Testing the "Lambda Developer" path with local PDF extraction.*
+## 🏗️ Scenario A: Standalone with Albert RAG (Default)
+*Focus: Testing the default "Lambda Developer" path — no `--expert` flag needed.*
 
 ### Step 1: Run the Installer
 
 **macOS/Linux:**
 ```bash
-export RAG_FACILE_BRANCH="feat/retrieval-albert"
-curl -sSL "https://raw.githubusercontent.com/etalab-ia/rag-facile/refs/heads/${RAG_FACILE_BRANCH}/install.sh" | bash
+curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-$env:RAG_FACILE_BRANCH = "feat/retrieval-albert"
-irm "https://raw.githubusercontent.com/etalab-ia/rag-facile/refs/heads/$env:RAG_FACILE_BRANCH/install.ps1" | iex
+irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
 ```
-
-> **Important**: Use double quotes `"` in the curl URL so the shell expands `${RAG_FACILE_BRANCH}`. Single quotes will prevent variable expansion and cause a 404 error.
 
 ### Step 2: Verify CLI Installation
 ```bash
 rag-facile --version
-# Should output: rag-facile v0.10.1
 ```
 
-### Step 3: Run Setup (Standalone with PDF)
+### Step 3: Run Setup (Default Mode)
 ```bash
 mkdir -p ~/tmp/rf-testing && cd ~/tmp/rf-testing
-rag-facile setup my-pdf-app
+rag-facile setup my-rag-app
 ```
 
 **Interactive Prompts** — Select:
-- **Structure**: "Simple (recommended for getting started)"
 - **Preset**: "balanced"
 - **Frontend**: "Chainlit"
-- **Retrieval module**: "PDF - Local text extraction (offline, simple)"
-- **API Key**: Provide your Albert API key (or dummy value for testing)
+- **API Key**: Provide your Albert API key
 - **Confirm**: "Yes"
 
+> **Note**: No structure or pipeline prompts appear — the default is standalone + Albert RAG.
+
 ### Step 4: Verify Generated Files
-Navigate to `my-pdf-app/` and check:
+Navigate to `my-rag-app/` and check:
 - [ ] `albert/` directory exists
 - [ ] `rag_core/` directory exists
-- [ ] `retrieval_basic/` directory exists
-- [ ] `pyproject.toml` contains: `packages = ["albert", "rag_core", "retrieval_basic"]`
+- [ ] `pipelines/` directory exists
+- [ ] `ingestion/` directory exists
+- [ ] `retrieval/` directory exists
+- [ ] `reranking/` directory exists
+- [ ] `context/` directory exists
+- [ ] `storage/` directory exists
+- [ ] `pyproject.toml` contains all pipeline packages in `packages = [...]`
 - [ ] `.env` file contains `OPENAI_API_KEY` and `OPENAI_BASE_URL`
+- [ ] `ragfacile.toml` exists with `provider = "albert-collections"` in `[storage]`
 - [ ] `.envrc` file exists (direnv configuration)
-- [ ] `modules.yml` contains `pdf: retrieval_basic`
-
-**Enable direnv** (optional but recommended):
-```bash
-direnv allow  # Trust the .envrc file
-```
 
 ### Step 5: Run the App
 ```bash
-cd my-pdf-app
-just sync
+cd my-rag-app
 just run
 ```
 
 **Expected**: Chainlit opens in browser at `http://localhost:8000`
 
-### Step 6: Test PDF Upload
-- [ ] Upload a `.pdf` file — should extract text and include in chat context
-- [ ] Uploading a `.docx` or other non-PDF file — should show "Unsupported file type"
-
----
-
-## 🔬 Scenario B: Standalone with Albert RAG (retrieval-albert)
-*Focus: Testing the Albert API-powered retrieval path with multi-format support.*
-
-### Step 1: Run Setup (Standalone with Albert RAG)
-```bash
-cd ~/tmp/rf-testing
-rag-facile setup my-albert-app
-```
-
-**Interactive Prompts** — Select:
-- **Structure**: "Simple (recommended for getting started)"
-- **Preset**: "balanced"
-- **Frontend**: "Chainlit"
-- **Retrieval module**: "Albert RAG - Server-side parsing, search & reranking"
-- **API Key**: Provide your Albert API key (required for Albert RAG)
-- **Confirm**: "Yes"
-
-### Step 2: Verify Generated Files
-Navigate to `my-albert-app/` and check:
-- [ ] `albert/` directory exists
-- [ ] `rag_core/` directory exists
-- [ ] `retrieval_albert/` directory exists (NOT `retrieval_basic/`)
-- [ ] `pyproject.toml` contains: `packages = ["albert", "rag_core", "retrieval_albert"]`
-- [ ] `.env` file contains `OPENAI_API_KEY` and `OPENAI_BASE_URL`
-- [ ] `modules.yml` contains `pdf: retrieval_albert`
-
-### Step 3: Run the App
-```bash
-cd my-albert-app
-just sync
-just run
-```
-
-**Expected**: Chainlit opens in browser at `http://localhost:8000`
-
-### Step 4: Test Multi-Format File Upload
+### Step 6: Test File Upload
 Albert RAG supports the following formats via Albert's parse API:
 - [ ] Upload a `.pdf` file — should parse via Albert API and include in chat
 - [ ] Upload a `.json` file — should parse and include in chat
 - [ ] Upload a `.md` (Markdown) file — should parse and include in chat
 - [ ] Upload an `.html` file — should parse and include in chat
-- [ ] Upload an unsupported format (e.g., `.docx`, `.xlsx`, `.txt`) — should show "Unsupported file type" or fall back to local extraction
 
 **Note**: If Albert's parse API returns a 500 error (server issue), the app automatically falls back to local pypdf extraction for PDF files.
 
-### Step 5: Verify the Retrieval Module API
-```python
-# In a Python shell within the project
-from retrieval_albert import SUPPORTED_EXTENSIONS, process_file, extract_text
+---
 
-# Check supported extensions
-print(SUPPORTED_EXTENSIONS)
-# Should be: ['.pdf', '.json', '.md', '.html']
+## 🔬 Scenario B: Standalone with Local Pipeline (`--expert`)
+*Focus: Testing the offline Local pipeline path using the `--expert` flag.*
+
+### Step 1: Run Setup (Expert Mode, Local Pipeline)
+```bash
+cd ~/tmp/rf-testing
+rag-facile setup my-local-app --expert
 ```
+
+**Interactive Prompts** — Select:
+- **Structure**: "Simple (recommended for getting started)"
+- **Preset**: "balanced"
+- **Frontend**: "Chainlit"
+- **Pipeline**: "Local - Local text extraction (offline, simple)"
+- **API Key**: Provide your Albert API key (or dummy value for testing)
+- **Confirm**: "Yes"
+
+### Step 2: Verify Generated Files
+Navigate to `my-local-app/` and check:
+- [ ] Same pipeline package directories as Scenario A
+- [ ] `ragfacile.toml` exists with `provider = "local-sqlite"` in `[storage]`
+- [ ] `.env` file contains `OPENAI_API_KEY` and `OPENAI_BASE_URL`
+
+### Step 3: Run the App
+```bash
+cd my-local-app
+just run
+```
+
+**Expected**: Chainlit opens in browser at `http://localhost:8000`
+
+### Step 4: Test PDF Upload
+- [ ] Upload a `.pdf` file — should extract text locally and include in chat context
 
 ---
 
-## 🏢 Scenario C: Monorepo Installation
+## 🏢 Scenario C: Monorepo (`--expert`)
 *Focus: Testing the "Advanced Developer" path with a Moonrepo workspace.*
 
-### Step 1: Run Setup (Monorepo)
+### Step 1: Run Setup (Expert Mode, Monorepo)
 ```bash
 cd ~/tmp/rf-testing
-rag-facile setup rf-monorepo
+rag-facile setup rf-monorepo --expert
 ```
 
 **Interactive Prompts** — Select:
 - **Structure**: "Monorepo (for multi-app projects)"
 - **Preset**: "accurate"
 - **Frontend**: "Reflex"
-- **Retrieval module**: "Albert RAG - Server-side parsing, search & reranking"
+- **Pipeline**: "Albert RAG - Server-side parsing, search & reranking (recommended)"
 - **API Key**: Provide your Albert API key (or dummy value)
 - **Confirm**: "Yes"
 
@@ -160,19 +138,12 @@ cd rf-monorepo
 Check that these directories exist:
 - [ ] `.moon/templates/rag-core/`
 - [ ] `.moon/templates/albert-client/`
-- [ ] `.moon/templates/retrieval-albert/`
+- [ ] `.moon/templates/retrieval/`
 - [ ] `packages/rag-core/src/rag_core/`
 - [ ] `packages/albert-client/src/albert/`
-- [ ] `packages/retrieval-albert/src/retrieval_albert/`
+- [ ] `packages/retrieval/src/retrieval/`
 
-### Step 3: Verify Imports
-Open `apps/reflex-chat/reflex_chat/state.py` and verify:
-```python
-from rag_core import get_config
-from albert import AlbertClient
-```
-
-### Step 4: Enable direnv and Run Workspace Sync
+### Step 3: Enable direnv and Run Workspace Sync
 **Enable direnv** (optional but recommended):
 ```bash
 direnv allow  # Trust the .envrc file
@@ -185,14 +156,14 @@ just sync
 
 **Expected**: Dependencies installed, pre-commit hooks configured, and `.env` automatically loaded by direnv
 
-### Step 5: Run Type Checking
+### Step 4: Run Type Checking
 ```bash
 just type-check
 ```
 
 **Expected**: All checks pass
 
-### Step 6: Run the App
+### Step 5: Run the App
 ```bash
 just run reflex-chat
 ```
@@ -336,36 +307,34 @@ export PATH="$HOME/.local/bin:$PATH"
 Keep track of your testing:
 
 ```markdown
-### Standalone Test — PDF Retrieval (Chainlit)
+### Default Standalone Test — Albert RAG (Chainlit)
 - [ ] Installation successful
 - [ ] rag-facile --version works
-- [ ] Setup shows retrieval module choice (PDF vs Albert RAG)
-- [ ] Setup creates correct directory structure
-- [ ] retrieval_basic/ included when PDF selected
-- [ ] App runs: `just run` starts Chainlit server
-- [ ] PDF upload works
-- [ ] Non-PDF files correctly rejected
-- [ ] Config commands work
-- [ ] modules.yml contains `pdf: retrieval_basic`
-
-### Standalone Test — Albert RAG (Chainlit)
-- [ ] Setup creates correct directory structure
-- [ ] retrieval_albert/ included when Albert RAG selected
+- [ ] Default setup (no --expert) skips structure and pipeline prompts
+- [ ] Setup creates correct directory structure (flat, no apps/ or .moon/)
+- [ ] All pipeline packages present (albert/, rag_core/, pipelines/, etc.)
+- [ ] ragfacile.toml has provider = "albert-collections"
 - [ ] App runs: `just run` starts Chainlit server
 - [ ] PDF upload works (via Albert parse API)
-- [ ] DOCX upload works (multi-format support)
-- [ ] PPTX upload works
-- [ ] modules.yml contains `pdf: retrieval_albert`
+- [ ] Config commands work
 
-### Monorepo Test (Reflex)
-- [ ] Installation successful
+### Expert Standalone Test — Local Pipeline (Chainlit)
+- [ ] `rag-facile setup <name> --expert` shows structure and pipeline prompts
+- [ ] Selecting "Local" pipeline creates correct directory structure
+- [ ] ragfacile.toml has provider = "local-sqlite"
+- [ ] App runs: `just run` starts Chainlit server
+- [ ] PDF upload works (local extraction)
+
+### Expert Monorepo Test (Reflex)
+- [ ] `rag-facile setup <name> --expert` with monorepo selection works
 - [ ] Setup creates monorepo structure
-- [ ] Templates exist for all packages (including retrieval-albert)
+- [ ] Templates exist for all packages
+- [ ] `ragfacile.toml` has provider = "albert-collections"
 - [ ] just sync completes without errors
 - [ ] just type-check passes
-- [ ] just run reflex-chat starts dev server
-- [ ] No import errors in state.py
-- [ ] Dataset generation works
+- [ ] `just run reflex-chat` starts dev server
+- [ ] File upload works
+- [ ] Config commands work
 
 ### Quality Checks
 - [ ] No legacy imports found

@@ -106,11 +106,11 @@ class TestConstants:
         assert "Reflex" in FRONTENDS
         assert FRONTENDS["Reflex"] == "reflex-chat"
 
-    def test_modules_has_pdf(self):
-        """Should have PDF module option."""
-        assert "PDF" in MODULES
-        assert MODULES["PDF"]["template"] == "retrieval"
-        assert MODULES["PDF"]["available"] is True
+    def test_modules_has_local(self):
+        """Should have Local module option."""
+        assert "Local" in MODULES
+        assert MODULES["Local"]["template"] == "retrieval"
+        assert MODULES["Local"]["available"] is True
 
     def test_project_structures_has_standalone(self):
         """Should have standalone project structure option."""
@@ -554,7 +554,7 @@ class TestGenerateStandalone:
             target_path=standalone_target,
             target_display=str(standalone_target),
             frontend_choice="Chainlit",
-            selected_modules=["PDF"],
+            selected_modules=["Local"],
             env_config={
                 "openai_api_key": "test-key",
                 "openai_base_url": "https://api.test.com",
@@ -569,17 +569,17 @@ class TestGenerateStandalone:
         assert (retrieval / "__init__.py").exists()
         assert (retrieval / "albert.py").exists()
 
-    def test_pyproject_includes_pypdf_when_pdf_selected(
+    def test_pyproject_includes_pypdf_when_local_selected(
         self, standalone_target, mock_standalone_deps, preset_config
     ):
-        """Should include pypdf dependency when PDF module is selected."""
+        """Should include pypdf dependency when Local module is selected."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
             target_path=standalone_target,
             target_display=str(standalone_target),
             frontend_choice="Chainlit",
-            selected_modules=["PDF"],
+            selected_modules=["Local"],
             env_config={
                 "openai_api_key": "test-key",
                 "openai_base_url": "https://api.test.com",
@@ -606,7 +606,7 @@ class TestGenerateStandalone:
             target_path=standalone_target,
             target_display=str(standalone_target),
             frontend_choice="Chainlit",
-            selected_modules=["PDF"],
+            selected_modules=["Local"],
             env_config={
                 "openai_api_key": "test-key",
                 "openai_base_url": "https://api.test.com",
@@ -631,7 +631,7 @@ class TestGenerateStandalone:
             target_path=standalone_target,
             target_display=str(standalone_target),
             frontend_choice="Chainlit",
-            selected_modules=["PDF"],
+            selected_modules=["Local"],
             env_config={
                 "openai_api_key": "test-key",
                 "openai_base_url": "https://api.test.com",
@@ -657,7 +657,7 @@ class TestGenerateStandalone:
             target_path=standalone_target,
             target_display=str(standalone_target),
             frontend_choice="Chainlit",
-            selected_modules=["PDF"],
+            selected_modules=["Local"],
             env_config={
                 "openai_api_key": "test-key",
                 "openai_base_url": "https://api.test.com",
@@ -682,7 +682,7 @@ class TestGenerateStandalone:
             target_path=standalone_target,
             target_display=str(standalone_target),
             frontend_choice="Chainlit",
-            selected_modules=["PDF"],
+            selected_modules=["Local"],
             env_config={
                 "openai_api_key": "test-key",
                 "openai_base_url": "https://api.test.com",
@@ -884,14 +884,14 @@ class TestWorkspaceCommand:
         # Mock shutil.which to pretend moon is installed
         mocker.patch("shutil.which", return_value="/usr/bin/moon")
 
-        # Mock questionary interactions - select monorepo mode
+        # Mock questionary interactions - select monorepo mode (requires --expert)
         mock_q = mocker.patch("cli.commands.setup.questionary")
         # Use side_effect to return different values for different select calls
         mock_q.select.return_value.ask.side_effect = [
             "Monorepo (for multi-app projects)",  # First call: structure selection
             "balanced",  # Second call: preset selection
             "Chainlit",  # Third call: frontend selection
-            "PDF",  # Fourth call: retrieval module selection
+            "Local",  # Fourth call: pipeline selection
         ]
         mock_q.confirm.return_value.ask.return_value = True
         mock_q.text.return_value.ask.return_value = "test-value"
@@ -919,17 +919,17 @@ class TestWorkspaceCommand:
 
     @pytest.fixture
     def mock_generation_standalone(self, mocker, tmp_path):
-        """Mock all external calls for standalone workspace generation."""
+        """Mock all external calls for standalone workspace generation (--expert mode)."""
         # Mock shutil.which to pretend tools are installed
         mocker.patch("shutil.which", return_value="/usr/bin/uv")
 
-        # Mock questionary interactions - select standalone mode
+        # Mock questionary interactions - select standalone mode (requires --expert)
         mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
             "Simple (recommended for getting started)",  # First call: structure selection
             "balanced",  # Second call: preset selection
             "Chainlit",  # Third call: frontend selection
-            "PDF",  # Fourth call: retrieval module selection
+            "Local",  # Fourth call: pipeline selection
         ]
         mock_q.confirm.return_value.ask.return_value = True
         mock_q.text.return_value.ask.return_value = "test-value"
@@ -960,7 +960,7 @@ class TestWorkspaceCommand:
         # Create the app directory structure that moon generate would create
         (target / "apps" / "chainlit-chat").mkdir(parents=True)
 
-        result = runner.invoke(main_app, ["setup", str(target)])
+        result = runner.invoke(main_app, ["setup", str(target), "--expert"])
 
         # Should complete successfully
         assert result.exit_code == 0, f"Failed with: {result.output}"
@@ -971,7 +971,7 @@ class TestWorkspaceCommand:
         target = tmp_path / "new-app"
         assert not target.exists()
 
-        runner.invoke(main_app, ["setup", str(target)])
+        runner.invoke(main_app, ["setup", str(target), "--expert"])
 
         assert target.exists()
 
@@ -979,7 +979,7 @@ class TestWorkspaceCommand:
         """Should run moon init in the target directory."""
         target = tmp_path / "test-app"
 
-        runner.invoke(main_app, ["setup", str(target)])
+        runner.invoke(main_app, ["setup", str(target), "--expert"])
 
         # Check moon init was called
         calls = mock_generation["subprocess_run"].call_args_list
@@ -990,7 +990,7 @@ class TestWorkspaceCommand:
         """Should run moon generate for templates."""
         target = tmp_path / "test-app"
 
-        runner.invoke(main_app, ["setup", str(target)])
+        runner.invoke(main_app, ["setup", str(target), "--expert"])
 
         # Check moon generate was called for sys-config and chainlit-chat
         calls = mock_generation["subprocess_run"].call_args_list
@@ -1003,7 +1003,7 @@ class TestWorkspaceCommand:
         """Should pass --force flag to moon generate."""
         target = tmp_path / "test-app"
 
-        runner.invoke(main_app, ["setup", str(target), "--force"])
+        runner.invoke(main_app, ["setup", str(target), "--force", "--expert"])
 
         calls = mock_generation["subprocess_run"].call_args_list
         force_calls = [c for c in calls if "--force" in c[0][0]]
@@ -1013,7 +1013,7 @@ class TestWorkspaceCommand:
         """Should copy templates to target workspace."""
         target = tmp_path / "test-app"
 
-        runner.invoke(main_app, ["setup", str(target)])
+        runner.invoke(main_app, ["setup", str(target), "--expert"])
 
         # copytree should be called for each template
         assert mock_generation["copytree"].call_count >= 1
@@ -1024,17 +1024,15 @@ class TestStandaloneWorkspaceCommand:
 
     @pytest.fixture
     def mock_standalone_cli(self, mocker, tmp_path):
-        """Mock all external calls for standalone CLI generation."""
+        """Mock all external calls for standalone CLI generation (default mode, no --expert)."""
         # Mock shutil.which to pretend tools are installed
         mocker.patch("shutil.which", return_value="/usr/bin/uv")
 
-        # Mock questionary interactions - select standalone mode
+        # Mock questionary interactions - default mode skips structure and pipeline
         mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
-            "Simple (recommended for getting started)",  # First call: structure selection
-            "balanced",  # Second call: preset selection
-            "Chainlit",  # Third call: frontend selection
-            "PDF",  # Fourth call: retrieval module selection
+            "balanced",  # First call: preset selection
+            "Chainlit",  # Second call: frontend selection
         ]
         mock_q.confirm.return_value.ask.return_value = True
         mock_q.text.return_value.ask.return_value = "test-value"
@@ -1123,10 +1121,10 @@ class TestPathNormalization:
         """Should normalize /private/tmp to /tmp in output."""
         # Create a path that looks like macOS /private/tmp
         mock_q = mocker.patch("cli.commands.setup.questionary")
-        # Need to handle both select calls (structure and frontend)
+        # Default mode: only preset and frontend selects (no structure/pipeline)
         mock_q.select.return_value.ask.side_effect = [
-            "Simple (recommended for getting started)",
-            "Chainlit",
+            "balanced",  # Preset
+            "Chainlit",  # Frontend
         ]
         mock_q.checkbox.return_value.ask.return_value = []
         mock_q.confirm.return_value.ask.return_value = False  # Abort early
@@ -1142,8 +1140,8 @@ class TestPathNormalization:
 class TestStructureSelectionPrompt:
     """Tests for the project structure selection prompt."""
 
-    def test_structure_prompt_appears_before_frontend(self, mocker):
-        """Should ask for structure, then preset, then frontend."""
+    def test_structure_prompt_appears_in_expert_mode(self, mocker):
+        """With --expert, should ask for structure, then preset, then frontend, then pipeline."""
         mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
             "Simple (recommended for getting started)",  # Structure
@@ -1151,9 +1149,9 @@ class TestStructureSelectionPrompt:
             None,  # Frontend - return None to abort
         ]
 
-        runner.invoke(main_app, ["setup", "/tmp/test"])
+        runner.invoke(main_app, ["setup", "/tmp/test", "--expert"])
 
-        # Should have been called three times for select
+        # Should have been called three times before abort
         assert mock_q.select.call_count == 3
 
         # First call should be for structure
@@ -1169,13 +1167,49 @@ class TestStructureSelectionPrompt:
         assert "frontend" in third_call_prompt.lower()
 
     def test_aborts_when_structure_not_selected(self, mocker):
-        """Should abort when user doesn't select a structure."""
+        """Should abort when user doesn't select a structure in expert mode."""
         mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
             None,  # No structure selected
         ]
 
-        result = runner.invoke(main_app, ["setup", "/tmp/test"])
+        result = runner.invoke(main_app, ["setup", "/tmp/test", "--expert"])
 
         assert result.exit_code == 1
         assert "Aborted" in result.output
+
+    def test_default_mode_skips_structure_and_pipeline_prompts(self, mocker):
+        """Without --expert, should only ask for preset and frontend (2 selects)."""
+        mock_q = mocker.patch("cli.commands.setup.questionary")
+        mock_q.select.return_value.ask.side_effect = [
+            "balanced",  # First call: preset selection
+            None,  # Second call: frontend - return None to abort
+        ]
+
+        runner.invoke(main_app, ["setup", "/tmp/test"])
+
+        # Should have been called twice (preset + frontend), no structure or pipeline
+        assert mock_q.select.call_count == 2
+
+        # First call should be for preset (not structure)
+        first_call_prompt = mock_q.select.call_args_list[0][0][0]
+        assert "preset" in first_call_prompt.lower()
+
+    def test_default_mode_defaults_to_standalone_and_albert_rag(self, mocker):
+        """Without --expert, should default to standalone + Albert RAG."""
+        mock_q = mocker.patch("cli.commands.setup.questionary")
+        mock_q.select.return_value.ask.side_effect = [
+            "balanced",  # Preset
+            "Chainlit",  # Frontend
+        ]
+        mock_q.text.return_value.ask.return_value = "test-key"
+        mock_q.confirm.return_value.ask.return_value = False  # Abort at confirmation
+
+        result = runner.invoke(main_app, ["setup", "/tmp/test"])
+
+        # Summary should show Albert RAG as pipeline
+        assert "Albert RAG" in result.output
+        # Summary should show standalone structure
+        # Rich adds ANSI codes around parentheses, so check substrings separately
+        assert "Simple" in result.output
+        assert "standalone" in result.output

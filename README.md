@@ -47,7 +47,7 @@ rag-facile --help
 rag-facile setup my-rag-app
 ```
 
-The CLI will guide you through choosing a project structure, a configuration preset, and a frontend. After setup, it installs dependencies and starts the dev server — your app opens in the browser, ready to use.
+The CLI will guide you through choosing a configuration preset and a frontend. After setup, it installs dependencies and starts the dev server — your app opens in the browser, ready to use. Use `--expert` for advanced options like project structure and pipeline selection.
 
 ## Upgrade
 
