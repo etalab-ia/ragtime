@@ -3,6 +3,9 @@
 # See: https://moonrepo.dev/docs/proto
 
 python = "3.13.11"
+moon = "1.41.8"
+uv = "0.10.3"
+just = "1.46.0"
 
 # Plugins for non-core tools
 [plugins]

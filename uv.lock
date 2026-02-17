@@ -329,7 +329,7 @@ wheels = [
 
 [[package]]
 name = "chainlit-chat"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "apps/chainlit-chat" }
 dependencies = [
     { name = "albert-client" },
@@ -405,7 +405,7 @@ wheels = [
 
 [[package]]
 name = "context"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "packages/context" }
 dependencies = [
     { name = "rag-core" },
@@ -849,7 +849,7 @@ wheels = [
 
 [[package]]
 name = "ingestion"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "packages/ingestion" }
 dependencies = [
     { name = "albert-client" },
@@ -1968,7 +1968,7 @@ wheels = [
 
 [[package]]
 name = "pipelines"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "packages/pipelines" }
 dependencies = [
     { name = "context" },
@@ -2379,7 +2379,7 @@ wheels = [
 
 [[package]]
 name = "rag-core"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "packages/rag-core" }
 dependencies = [
     { name = "pydantic" },
@@ -2396,7 +2396,7 @@ requires-dist = [
 
 [[package]]
 name = "rag-facile"
-version = "0.13.0"
+version = "0.14.0"
 source = { virtual = "." }
 dependencies = [
     { name = "albert-client" },
@@ -2453,7 +2453,7 @@ dev = [
 
 [[package]]
 name = "rag-facile-cli"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "apps/cli" }
 dependencies = [
     { name = "albert-client" },
@@ -2562,7 +2562,7 @@ wheels = [
 
 [[package]]
 name = "reflex-chat"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "apps/reflex-chat" }
 dependencies = [
     { name = "albert-client" },
@@ -2614,7 +2614,7 @@ wheels = [
 
 [[package]]
 name = "reranking"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "packages/reranking" }
 dependencies = [
     { name = "albert-client" },
@@ -2641,7 +2641,7 @@ wheels = [
 
 [[package]]
 name = "retrieval"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "packages/retrieval" }
 dependencies = [
     { name = "albert-client" },
@@ -2832,7 +2832,7 @@ wheels = [
 
 [[package]]
 name = "storage"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "packages/storage" }
 dependencies = [
     { name = "albert-client" },
