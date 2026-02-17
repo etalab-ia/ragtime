@@ -123,7 +123,7 @@ rag-facile/
 ### Command Structure
 **Current commands** (alphabetically ordered):
 - `generate-dataset` - Generate synthetic Q/A evaluation datasets
-- `setup <name> [--expert]` - Setup a new RAG Facile workspace (--expert shows project structure and pipeline options)
+- `setup <name> [--expert]` - Setup a new RAG Facile workspace (--expert shows project structure, frontend, and pipeline options)
 - `version` - Show CLI version
 
 **Key Pattern**: Alphabetical ordering is important - check help output order when adding commands

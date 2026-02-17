@@ -1028,11 +1028,10 @@ class TestStandaloneWorkspaceCommand:
         # Mock shutil.which to pretend tools are installed
         mocker.patch("shutil.which", return_value="/usr/bin/uv")
 
-        # Mock questionary interactions - default mode skips structure and pipeline
+        # Mock questionary interactions - default mode skips structure, frontend, and pipeline
         mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
-            "balanced",  # First call: preset selection
-            "Chainlit",  # Second call: frontend selection
+            "balanced",  # Only call: preset selection
         ]
         mock_q.confirm.return_value.ask.return_value = True
         mock_q.text.return_value.ask.return_value = "test-value"
@@ -1121,10 +1120,9 @@ class TestPathNormalization:
         """Should normalize /private/tmp to /tmp in output."""
         # Create a path that looks like macOS /private/tmp
         mock_q = mocker.patch("cli.commands.setup.questionary")
-        # Default mode: only preset and frontend selects (no structure/pipeline)
+        # Default mode: only preset select (no structure/frontend/pipeline)
         mock_q.select.return_value.ask.side_effect = [
             "balanced",  # Preset
-            "Chainlit",  # Frontend
         ]
         mock_q.checkbox.return_value.ask.return_value = []
         mock_q.confirm.return_value.ask.return_value = False  # Abort early
@@ -1146,13 +1144,14 @@ class TestStructureSelectionPrompt:
         mock_q.select.return_value.ask.side_effect = [
             "Simple (recommended for getting started)",  # Structure
             "balanced",  # Preset
-            None,  # Frontend - return None to abort
+            "Chainlit",  # Frontend
+            None,  # Pipeline - return None to abort
         ]
 
         runner.invoke(main_app, ["setup", "/tmp/test", "--expert"])
 
-        # Should have been called three times before abort
-        assert mock_q.select.call_count == 3
+        # Should have been called four times before abort
+        assert mock_q.select.call_count == 4
 
         # First call should be for structure
         first_call_prompt = mock_q.select.call_args_list[0][0][0]
@@ -1166,6 +1165,10 @@ class TestStructureSelectionPrompt:
         third_call_prompt = mock_q.select.call_args_list[2][0][0]
         assert "frontend" in third_call_prompt.lower()
 
+        # Fourth call should be for pipeline
+        fourth_call_prompt = mock_q.select.call_args_list[3][0][0]
+        assert "pipeline" in fourth_call_prompt.lower()
+
     def test_aborts_when_structure_not_selected(self, mocker):
         """Should abort when user doesn't select a structure in expert mode."""
         mock_q = mocker.patch("cli.commands.setup.questionary")
@@ -1178,29 +1181,29 @@ class TestStructureSelectionPrompt:
         assert result.exit_code == 1
         assert "Aborted" in result.output
 
-    def test_default_mode_skips_structure_and_pipeline_prompts(self, mocker):
-        """Without --expert, should only ask for preset and frontend (2 selects)."""
+    def test_default_mode_skips_structure_frontend_and_pipeline_prompts(self, mocker):
+        """Without --expert, should only ask for preset (1 select)."""
         mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
-            "balanced",  # First call: preset selection
-            None,  # Second call: frontend - return None to abort
+            "balanced",  # Only call: preset selection
         ]
+        mock_q.text.return_value.ask.return_value = "test-key"
+        mock_q.confirm.return_value.ask.return_value = False  # Abort at confirmation
 
         runner.invoke(main_app, ["setup", "/tmp/test"])
 
-        # Should have been called twice (preset + frontend), no structure or pipeline
-        assert mock_q.select.call_count == 2
+        # Should have been called once (preset only), no structure, frontend, or pipeline
+        assert mock_q.select.call_count == 1
 
-        # First call should be for preset (not structure)
+        # Only call should be for preset (not structure or frontend)
         first_call_prompt = mock_q.select.call_args_list[0][0][0]
         assert "preset" in first_call_prompt.lower()
 
-    def test_default_mode_defaults_to_standalone_and_albert_rag(self, mocker):
-        """Without --expert, should default to standalone + Albert RAG."""
+    def test_default_mode_defaults_to_standalone_chainlit_and_albert_rag(self, mocker):
+        """Without --expert, should default to standalone + Chainlit + Albert RAG."""
         mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.select.return_value.ask.side_effect = [
-            "balanced",  # Preset
-            "Chainlit",  # Frontend
+            "balanced",  # Only select: Preset
         ]
         mock_q.text.return_value.ask.return_value = "test-key"
         mock_q.confirm.return_value.ask.return_value = False  # Abort at confirmation
@@ -1209,6 +1212,8 @@ class TestStructureSelectionPrompt:
 
         # Summary should show Albert RAG as pipeline
         assert "Albert RAG" in result.output
+        # Summary should show Chainlit as frontend
+        assert "Chainlit" in result.output
         # Summary should show standalone structure
         # Rich adds ANSI codes around parentheses, so check substrings separately
         assert "Simple" in result.output

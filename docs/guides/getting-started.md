@@ -89,10 +89,9 @@ rag-facile setup my-rag-app
 The CLI will interactively guide you through:
 
 1. **Configuration preset** — Balanced, Fast, Accurate, Legal, or HR
-2. **Frontend** — Chainlit or Reflex
-3. **Environment** — Your Albert API key (presets handle the rest)
+2. **Environment** — Your Albert API key (presets handle the rest)
 
-By default, the CLI creates a simple standalone project using the Albert RAG pipeline. For advanced options (project structure, pipeline selection), use `--expert`:
+By default, the CLI creates a simple standalone Chainlit project using the Albert RAG pipeline. For advanced options (project structure, frontend, pipeline selection), use `--expert`:
 
 ```bash
 rag-facile setup my-rag-app --expert

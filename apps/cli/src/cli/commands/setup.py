@@ -751,7 +751,7 @@ def run(
         bool,
         typer.Option(
             "--expert",
-            help="Show advanced options (project structure, pipeline selection)",
+            help="Show advanced options (project structure, frontend, pipeline selection)",
         ),
     ] = False,
 ):
@@ -828,14 +828,17 @@ def run(
 
     preset_config = PRESET_CONFIGS[preset]
 
-    # Select frontend
-    frontend_choice = questionary.select(
-        "Select your frontend app:",
-        choices=list(FRONTENDS.keys()),
-    ).ask()
-    if not frontend_choice:
-        console.print("[red]Aborted.[/red]")
-        raise typer.Exit(1)
+    # Select frontend (only shown with --expert)
+    if expert:
+        frontend_choice = questionary.select(
+            "Select your frontend app:",
+            choices=list(FRONTENDS.keys()),
+        ).ask()
+        if not frontend_choice:
+            console.print("[red]Aborted.[/red]")
+            raise typer.Exit(1)
+    else:
+        frontend_choice = "Chainlit"
 
     # Select RAG pipeline (only shown with --expert)
     if expert:

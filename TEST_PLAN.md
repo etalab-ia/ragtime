@@ -37,11 +37,10 @@ rag-facile setup my-rag-app
 
 **Interactive Prompts** — Select:
 - **Preset**: "balanced"
-- **Frontend**: "Chainlit"
 - **API Key**: Provide your Albert API key
 - **Confirm**: "Yes"
 
-> **Note**: No structure or pipeline prompts appear — the default is standalone + Albert RAG.
+> **Note**: No structure, frontend, or pipeline prompts appear — the default is standalone + Chainlit + Albert RAG.
 
 ### Step 4: Verify Generated Files
 Navigate to `my-rag-app/` and check:
@@ -89,7 +88,7 @@ rag-facile setup my-local-app --expert
 **Interactive Prompts** — Select:
 - **Structure**: "Simple (recommended for getting started)"
 - **Preset**: "balanced"
-- **Frontend**: "Chainlit"
+- **Frontend**: "Chainlit" (only shown with `--expert`)
 - **Pipeline**: "Local - Local text extraction (offline, simple)"
 - **API Key**: Provide your Albert API key (or dummy value for testing)
 - **Confirm**: "Yes"
@@ -310,7 +309,7 @@ Keep track of your testing:
 ### Default Standalone Test — Albert RAG (Chainlit)
 - [ ] Installation successful
 - [ ] rag-facile --version works
-- [ ] Default setup (no --expert) skips structure and pipeline prompts
+- [ ] Default setup (no --expert) skips structure, frontend, and pipeline prompts
 - [ ] Setup creates correct directory structure (flat, no apps/ or .moon/)
 - [ ] All pipeline packages present (albert/, rag_core/, pipelines/, etc.)
 - [ ] ragfacile.toml has provider = "albert-collections"
@@ -319,7 +318,7 @@ Keep track of your testing:
 - [ ] Config commands work
 
 ### Expert Standalone Test — Local Pipeline (Chainlit)
-- [ ] `rag-facile setup <name> --expert` shows structure and pipeline prompts
+- [ ] `rag-facile setup <name> --expert` shows structure, frontend, and pipeline prompts
 - [ ] Selecting "Local" pipeline creates correct directory structure
 - [ ] ragfacile.toml has provider = "local-sqlite"
 - [ ] App runs: `just run` starts Chainlit server
