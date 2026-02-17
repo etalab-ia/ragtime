@@ -41,6 +41,7 @@ normalization = "L2"
 provider = "albert-collections"
 collection_naming = "workspace"
 distance_metric = "cosine"
+collections = [785]
 
 [query]
 rewrite_enabled = false

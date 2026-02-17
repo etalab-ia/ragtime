@@ -76,12 +76,12 @@ class State(rx.State):
         return [int(k) for k, v in self.active_collections.items() if v]
 
     @rx.var
-    def collection_items(self) -> list[list[str]]:
-        """Get collection items as [id, name, enabled] for rendering."""
+    def collection_items(self) -> list[dict[str, str]]:
+        """Get collection items as dicts for rendering."""
         items = []
         for col_id_str, enabled in self.active_collections.items():
             name = get_collection_name(int(col_id_str)) or f"Collection {col_id_str}"
-            items.append([col_id_str, name, str(enabled)])
+            items.append({"id": col_id_str, "name": name, "enabled": str(enabled)})
         return items
 
     async def handle_upload(self, files: list[rx.UploadFile]):

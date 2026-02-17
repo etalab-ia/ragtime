@@ -2,6 +2,7 @@
 
 from typing import Annotated
 
+import httpx
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -51,7 +52,7 @@ def list_collections(
     # Fetch collections
     try:
         result = client.list_collections(limit=limit)
-    except Exception as e:
+    except httpx.HTTPStatusError as e:
         console.print(f"[red]✗ Failed to fetch collections: {e}[/red]")
         raise typer.Exit(1)
 

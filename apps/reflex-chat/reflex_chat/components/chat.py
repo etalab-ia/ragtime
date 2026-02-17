@@ -91,15 +91,15 @@ def render_attached_file(filename: str) -> rx.Component:
     )
 
 
-def collection_badge(item: list[str]) -> rx.Component:
+def collection_badge(item: dict[str, str]) -> rx.Component:
     """Render a single collection toggle badge.
 
     Args:
-        item: [col_id, name, enabled_str] from State.collection_items.
+        item: A dictionary with collection info: {id, name, enabled}.
     """
-    col_id = item[0]
-    name = item[1]
-    is_active = item[2] == "True"
+    col_id = item["id"]
+    name = item["name"]
+    is_active = item["enabled"] == "True"
     return rx.badge(
         rx.icon("database", size=12),
         name,
