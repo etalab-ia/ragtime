@@ -149,13 +149,9 @@ members = ["apps/*", "packages/*"]
 default:
     @just --list
 
-# Run all apps or a specific app (e.g., just run or just run chainlit-chat)
-run name="":
-    @if [ -z "{{ "{{ name }}" }}" ]; then \\
-        moon run :dev; \\
-    else \\
-        moon run {{ "{{ name }}" }}:dev; \\
-    fi
+# Run a specific app (e.g., just run chainlit-chat)
+run name:
+    cd apps/{{ "{{ name }}" }} && just run
 
 # Format code (write changes)
 format:
