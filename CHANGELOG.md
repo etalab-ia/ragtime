@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0](https://github.com/etalab-ia/rag-facile/compare/v0.13.0...v0.14.0) (2026-02-17)
+
+
+### Features
+
+* add `rag-facile uninstall` and `rag-facile upgrade` commands ([6dcb688](https://github.com/etalab-ia/rag-facile/commit/6dcb688d10f35264948e9946b0f7e3103af2b6f0))
+* add `rag-facile uninstall` and `rag-facile upgrade` commands ([5c39988](https://github.com/etalab-ia/rag-facile/commit/5c3998898d247f809d229e924692875bfc6eb2e1))
+
+
+### Bug Fixes
+
+* bundle context and reranking to correct paths for standalone setup ([9f753d9](https://github.com/etalab-ia/rag-facile/commit/9f753d9eca6934eb2c1ba9ecde370614dc7ac7f3))
+* bundle context and reranking to correct paths for standalone setup ([a4bf035](https://github.com/etalab-ia/rag-facile/commit/a4bf0353508ae743b91296d3ede7af80c21f7422))
+* default uninstall removes CLI only, --all for toolchain ([3bb4d52](https://github.com/etalab-ia/rag-facile/commit/3bb4d525d893dc9ccf7d8cd24ab92aa8f3973dc8))
+* display CLI commands in alphabetical order ([37a2d57](https://github.com/etalab-ia/rag-facile/commit/37a2d570dbd3b15be99e665a4fe7ad8b9fb1c9ef))
+
 ## [0.13.0](https://github.com/etalab-ia/rag-facile/compare/v0.12.1...v0.13.0) (2026-02-17)
 
 
