@@ -44,18 +44,15 @@ rag-facile setup my-rag-app
 
 ### Step 4: Verify Generated Files
 Navigate to `my-rag-app/` and check:
-- [ ] `albert/` directory exists
-- [ ] `rag_core/` directory exists
-- [ ] `pipelines/` directory exists
-- [ ] `ingestion/` directory exists
-- [ ] `retrieval/` directory exists
-- [ ] `reranking/` directory exists
-- [ ] `context/` directory exists
-- [ ] `storage/` directory exists
-- [ ] `pyproject.toml` contains all pipeline packages in `packages = [...]`
+- [ ] `pyproject.toml` exists and contains `rag-facile-lib` as a dependency (via git URL)
+- [ ] `app.py` exists (Chainlit entry point)
+- [ ] `src/my_rag_app/__init__.py` exists (user's module directory)
 - [ ] `.env` file contains `OPENAI_API_KEY` and `OPENAI_BASE_URL`
 - [ ] `ragfacile.toml` exists with `provider = "albert-collections"` in `[storage]`
 - [ ] `.envrc` file exists (direnv configuration)
+- [ ] `justfile` exists
+
+> **Note**: Pipeline packages (`rag_facile.pipelines`, `rag_facile.retrieval`, etc.) are installed as a library dependency (`rag-facile-lib`) via `uv sync`, not copied as source directories.
 
 ### Step 5: Run the App
 ```bash
@@ -94,7 +91,7 @@ rag-facile setup my-local-app --expert
 
 ### Step 2: Verify Generated Files
 Navigate to `my-local-app/` and check:
-- [ ] Same pipeline package directories as Scenario A
+- [ ] Same structure as Scenario A (`pyproject.toml` with `rag-facile-lib`, `app.py`, `src/`)
 - [ ] `ragfacile.toml` exists with `provider = "local-sqlite"` in `[storage]`
 - [ ] `.env` file contains `OPENAI_API_KEY` and `OPENAI_BASE_URL`
 
@@ -133,13 +130,13 @@ rag-facile setup rf-monorepo --expert
 cd rf-monorepo
 ```
 
-Check that these directories exist:
-- [ ] `.moon/templates/rag-core/`
-- [ ] `.moon/templates/albert-client/`
-- [ ] `.moon/templates/retrieval/`
-- [ ] `packages/rag-core/src/rag_core/`
-- [ ] `packages/albert-client/src/albert/`
-- [ ] `packages/retrieval/src/retrieval/`
+Check that these directories/files exist:
+- [ ] `.moon/toolchain.yml` and `.moon/workspace.yml` (workspace config)
+- [ ] `.moon/templates/reflex-chat/` (frontend template only — pipeline packages come from `rag-facile-lib`)
+- [ ] `apps/reflex-chat/` (generated app)
+- [ ] `apps/reflex-chat/pyproject.toml` contains `rag-facile-lib` as a dependency
+- [ ] `pyproject.toml` at workspace root
+- [ ] `justfile` at workspace root
 
 ### Step 3: Enable direnv and Run Workspace Sync
 **Enable direnv** (optional but recommended):
@@ -216,17 +213,18 @@ ls -lh dataset.jsonl
 ## ✅ Final Quality Checklist
 
 ### Code Quality
-- [ ] No `import config` statements (except in old archive comments)
-- [ ] No `import full_context` statements
-- [ ] No `from config.` statements
-- [ ] No `from full_context.` statements
+Pipeline packages use the `rag_facile.*` namespace. Verify no old non-namespaced imports exist in apps or generated templates:
+- [ ] No `from retrieval import` statements (use `from rag_facile.retrieval import`)
+- [ ] No `from pipelines import` statements (use `from rag_facile.pipelines import`)
+- [ ] No `from ingestion import` statements (use `from rag_facile.ingestion import`)
+- [ ] No `from rag_core import` statements (use `from rag_facile.core import`)
+- [ ] No references to `context_loader.py` or `modules.yml`
 
 **Verify with:**
 ```bash
 # From repo root
-grep -r "from config import" --include="*.py" apps/ packages/ 2>/dev/null || echo "✓ No legacy config imports"
-grep -r "from full_context import" --include="*.py" apps/ packages/ 2>/dev/null || echo "✓ No legacy full_context imports"
-grep -r "import config\." --include="*.py" apps/ packages/ 2>/dev/null || echo "✓ No legacy config module imports"
+grep -r "from retrieval import\|from pipelines import\|from ingestion import\|from rag_core import" --include="*.py" apps/ packages/ 2>/dev/null || echo "✓ No legacy pre-namespace imports"
+grep -r "context_loader\|modules\.yml" --include="*.py" --include="*.yml" --include="*.toml" apps/ packages/ 2>/dev/null || echo "✓ No legacy context_loader/modules.yml references"
 ```
 
 ### Conventional Commits
@@ -238,7 +236,7 @@ git log --oneline | head -5
 ### Release-Please
 Check that the GitHub Actions workflow correctly:
 - [ ] Detects the `feat:` commit
-- [ ] Updates version for `rag-core`, `albert-client`, `retrieval-basic`, `retrieval-albert`
+- [ ] Updates version across all packages in `release-please-config.json`
 - [ ] Creates a release PR with changelog entries
 
 ---
@@ -309,9 +307,9 @@ Keep track of your testing:
 - [ ] Installation successful
 - [ ] rag-facile --version works
 - [ ] Default setup (no --expert) skips structure, frontend, and pipeline prompts
-- [ ] Setup creates correct directory structure (flat, no apps/ or .moon/)
-- [ ] All pipeline packages present (albert/, rag_core/, pipelines/, etc.)
-- [ ] ragfacile.toml has provider = "albert-collections"
+- [ ] Setup creates correct structure: `pyproject.toml` (rag-facile-lib dep), `app.py`, `src/<name>/`
+- [ ] `ragfacile.toml` has `provider = "albert-collections"`
+- [ ] `uv sync` installs `rag-facile-lib` (no pipeline source directories)
 - [ ] App runs: `just run` starts Chainlit server
 - [ ] PDF upload works (via Albert parse API)
 - [ ] Config commands work
@@ -325,11 +323,12 @@ Keep track of your testing:
 
 ### Expert Monorepo Test (Reflex)
 - [ ] `rag-facile setup <name> --expert` with monorepo selection works
-- [ ] Setup creates monorepo structure
-- [ ] Templates exist for all packages
-- [ ] `ragfacile.toml` has provider = "albert-collections"
-- [ ] just sync completes without errors
-- [ ] just type-check passes
+- [ ] Setup creates monorepo structure (`.moon/`, `apps/`, `pyproject.toml`, `justfile`)
+- [ ] Only the frontend template is in `.moon/templates/` (pipeline packages come from `rag-facile-lib`)
+- [ ] Generated app's `pyproject.toml` contains `rag-facile-lib` as a dependency
+- [ ] `ragfacile.toml` has `provider = "albert-collections"`
+- [ ] `just sync` completes without errors
+- [ ] `just type-check` passes
 - [ ] `just run reflex-chat` starts dev server
 - [ ] File upload works
 - [ ] Config commands work

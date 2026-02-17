@@ -74,9 +74,15 @@ rag-facile/
 │   ├── chainlit-chat/       # Chainlit frontend (golden master)
 │   └── reflex-chat/         # Reflex frontend (golden master)
 ├── packages/                # Shared packages
-│   ├── rag-core/            # RAG Configuration System
+│   ├── rag-core/            # Core config + schema (rag_facile.core)
 │   ├── albert-client/       # Albert API SDK
-│   └── retrieval/           # Unified retrieval package (basic + albert backends)
+│   ├── ingestion/           # Document parsing (rag_facile.ingestion)
+│   ├── pipelines/           # Pipeline orchestration (rag_facile.pipelines)
+│   ├── retrieval/           # Vector search (rag_facile.retrieval)
+│   ├── reranking/           # Cross-encoder re-scoring (rag_facile.reranking)
+│   ├── context/             # Context formatting (rag_facile.context)
+│   ├── storage/             # Collection management (rag_facile.storage)
+│   └── rag-facile-lib/      # Library bundle (all pipeline packages)
 ├── docs/                    # User and contributor documentation
 │   ├── guides/              # Getting started, setup, pipelines
 │   ├── reference/           # Components, config, ragfacile.toml
@@ -102,44 +108,52 @@ Templates live in `.moon/templates/` and are automatically bundled into the CLI 
 moon run cli:test
 ```
 
-### Understanding Retrieval System
+### Understanding the Pipeline Architecture
 
-RAG Facile uses a **unified retrieval package** (`packages/retrieval/`) with two backends that are selected at runtime via `ragfacile.toml`:
+RAG Facile uses a **phase-based pipeline** under the `rag_facile.*` namespace. Each RAG pipeline phase is its own package, and `rag_facile.pipelines` orchestrates them all.
 
-- **basic** — Local PDF extraction via pypdf (lightweight, offline)
-- **albert** — Full RAG via Albert API (ingestion, search, reranking)
+**Package → namespace mapping:**
 
-Backend selection is automatic based on `storage.provider` config:
+| Package | Import namespace | Responsibility |
+|---------|-----------------|----------------|
+| `packages/rag-core/` | `rag_facile.core` | Config schema, presets, `RAGConfig` |
+| `packages/ingestion/` | `rag_facile.ingestion` | Document parsing (local pypdf or Albert API) |
+| `packages/storage/` | `rag_facile.storage` | Collection management (Albert API) |
+| `packages/retrieval/` | `rag_facile.retrieval` | Vector search |
+| `packages/reranking/` | `rag_facile.reranking` | Cross-encoder re-scoring |
+| `packages/context/` | `rag_facile.context` | Format retrieved chunks → LLM context |
+| `packages/pipelines/` | `rag_facile.pipelines` | Orchestrates all phases |
+| `packages/rag-facile-lib/` | — | Bundles all the above for external projects |
+
+**Pipeline selection** is driven by `storage.provider` in `ragfacile.toml`:
 ```toml
 [storage]
-provider = "albert-collections"  # Uses Albert RAG
-# provider = "local-sqlite"      # Uses basic context injection
+provider = "albert-collections"  # Full Albert RAG (default)
+# provider = "local-sqlite"      # Local text extraction (offline)
 ```
 
-Both backends implement the same interface through the factory pattern:
+**Chat apps** import from the `rag_facile.pipelines` namespace:
 ```python
-from retrieval import get_provider
-provider = get_provider()  # Returns basic or albert based on config
-context = provider.process_file("document.pdf")
+from rag_facile.pipelines import get_pipeline
+
+pipeline = get_pipeline(config)
+await pipeline.process_file(file_bytes, mime_type)
+response = await pipeline.process_query(message_history)
 ```
 
-The `context_loader.py` in each app dynamically loads the retrieval package, which then internally selects the right backend based on configuration.
+There is no `context_loader.py` or `modules.yml` — the pipeline factory handles backend selection automatically based on config.
 
 **Key files:**
-- `packages/retrieval/src/retrieval/` — Unified retrieval package
-  - `__init__.py` — Factory pattern for backend selection
-  - `basic.py` — Basic context injection provider
-  - `albert.py` — Albert RAG retrieval
-  - `parser.py` — Document parsing (Albert backend)
-  - `ingestion.py` — Collection management (Albert backend)
-  - `formatter.py` — Context formatting (Albert backend)
-- `packages/rag-core/src/rag_core/pdf.py` — Shared PDF extraction utilities
+- `packages/pipelines/src/rag_facile/pipelines/` — Pipeline orchestration
+  - `__init__.py` — `get_pipeline(config)` factory
+  - `albert.py` — `AlbertPipeline`: ingestion → storage → retrieval → reranking → context
+  - `basic.py` — `BasicPipeline`: local text extraction only
+- `packages/rag-core/src/rag_facile/core/schema.py` — All config Pydantic models
 
-When modifying retrieval logic:
-- Test both backends (see `packages/retrieval/tests/`)
-- Backend switching happens at runtime - no code changes needed
-- `rag-core/pdf.py` provides shared PDF utilities used by both backends
-- The `modules.yml` file determines which module is active (auto-generated from templates)
+When modifying pipeline logic:
+- Changes to orchestration belong in `packages/pipelines/`
+- Each phase package is self-contained (no inter-phase imports)
+- Only `packages/pipelines/` depends on all phase packages
 
 ### Testing the Generate Dataset Command
 
@@ -311,9 +325,9 @@ All checks must pass before merging.
 
 ## Configuration-Driven Architecture
 
-RAG Facile uses a configuration-driven architecture. Most components (apps, packages) do not have hardcoded RAG parameters. Instead, they consume the `RAGConfig` Pydantic model from `packages/core-config`.
+RAG Facile uses a configuration-driven architecture. Most components (apps, packages) do not have hardcoded RAG parameters. Instead, they consume the `RAGConfig` Pydantic model from `packages/rag-core`.
 
 When adding new features that require configuration:
-1. Define the schema in `packages/core-config/src/config/schema.py`.
-2. Update presets in `packages/core-config/presets/` if applicable.
-3. Access the configuration in your code using `rag_config.get_config()`.
+1. Define the schema in `packages/rag-core/src/rag_facile/core/schema.py`.
+2. Update presets in `packages/rag-core/presets/` if applicable.
+3. Access the configuration in your code using `from rag_facile.core import get_config`.

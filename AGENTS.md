@@ -44,22 +44,29 @@ This document contains essential knowledge for coding agents working on RAG Faci
 rag-facile/
 ├── apps/                          # Applications
 │   ├── cli/                       # rag-facile CLI tool
-│   ├── chainlit-chat/             # Chainlit chat UI
-│   ├── reflex-chat/               # Reflex chat UI
-│   ├── admin/                     # Admin interface
-│   └── ingestion/                 # Document ingestion
-├── packages/                      # Shared packages
-│   └── pdf-context/               # PDF extraction utilities
+│   ├── chainlit-chat/             # Chainlit chat UI (golden master)
+│   └── reflex-chat/               # Reflex chat UI (golden master)
+├── packages/                      # Shared packages (rag_facile.* namespace)
+│   ├── rag-core/                  # Core config + schema (rag_facile.core)
+│   ├── albert-client/             # Albert API SDK
+│   ├── ingestion/                 # Document parsing (rag_facile.ingestion)
+│   ├── pipelines/                 # Pipeline orchestration (rag_facile.pipelines)
+│   ├── retrieval/                 # Vector search (rag_facile.retrieval)
+│   ├── reranking/                 # Cross-encoder re-scoring (rag_facile.reranking)
+│   ├── context/                   # Context formatting (rag_facile.context)
+│   ├── storage/                   # Collection management (rag_facile.storage)
+│   └── rag-facile-lib/            # Library bundle for external projects
 ├── .moon/                         # Moon workspace config
 │   ├── templates/                 # App/package templates (Tera syntax)
 │   ├── toolchain.yml              # Python/tool versions
 │   └── workspace.yml              # Workspace definition
 ├── docs/                          # User documentation
-│   ├── guides/                    # How-to guides (proxy-setup.md, etc.)
-│   ├── troubleshooting/           # Problem-solving guides
-│   └── technical/                 # Technical deep-dives
+│   ├── guides/                    # How-to guides (getting-started, proxy, etc.)
+│   ├── reference/                 # Reference docs (ragfacile.toml, components)
+│   └── troubleshooting/           # Problem-solving guides
 ├── pyproject.toml                 # Root workspace config
-├── install.sh                     # Installation script
+├── install.sh                     # Installation script (macOS/Linux)
+├── install.ps1                    # Installation script (Windows)
 └── README.md                      # Main project documentation
 ```
 
@@ -132,8 +139,8 @@ rag-facile/
 - **Framework**: Typer (FastAPI creator's CLI framework)
 - **Files**:
   - `main.py` - Root app definition
-  - `commands/` - Command implementations
-  - `providers/` - Pluggable provider implementations (Letta, Albert, etc.)
+  - `commands/` - Command implementations (`setup.py`, `generate_dataset.py`, `version.py`, `config/`, `collections/`)
+  - `commands/eval/providers/` - Pluggable dataset generation providers (Letta, Albert)
 
 ### Important Patterns
 
@@ -171,10 +178,10 @@ app = typer.Typer(
 
 ### Providers Pattern
 
-Pluggable provider architecture for data sources (Letta Cloud, Albert API, etc.):
+Pluggable provider architecture for dataset generation (Letta Cloud, Albert API, etc.):
 
-```python
-# apps/cli/src/cli/commands/eval/providers/
+```
+apps/cli/src/cli/commands/eval/providers/
 ├── __init__.py              # Factory for provider selection
 ├── letta.py                 # Letta Cloud provider
 ├── albert.py                # Albert API provider
@@ -217,13 +224,12 @@ Pluggable provider architecture for data sources (Letta Cloud, Albert API, etc.)
 
 ## 5. Project Patterns & Gotchas
 
-### Monorepo Package Setup
+### Adding a New Package to the Monorepo
 
-When adding a new app/package:
-1. Create `apps/myapp/` or `packages/mypkg/`
-2. Include `pyproject.toml` with version
-3. Add `# x-release-please-version` comment after version
-4. Add to root `pyproject.toml`:
+When adding a new package to the monorepo (`packages/mypkg/`):
+1. Create `packages/mypkg/` with `pyproject.toml` and source under `packages/mypkg/src/rag_facile/mypkg/`
+2. Add `# x-release-please-version` comment after version in pyproject.toml
+3. Add to root `pyproject.toml`:
    ```toml
    [project]
    dependencies = ["my-package"]
@@ -231,7 +237,8 @@ When adding a new app/package:
    [tool.uv.sources]
    my-package = { workspace = true }
    ```
-5. Add `pyproject.toml` path to `release-please-config.json` → `extra-files`
+4. Add `pyproject.toml` path to `release-please-config.json` → `extra-files`
+5. If the package is a pipeline phase, add it to `packages/rag-facile-lib/pyproject.toml` dependencies
 
 ### Template Generation
 
@@ -258,65 +265,30 @@ When adding a new app/package:
 
 ## 6. Recent Work & Features (Feb 2026)
 
-### Issue #46: Proxy Support (✅ Completed Feb 6, 2026)
-- **Problem**: Proto plugin installation fails on networks with proxies/VPNs
-- **Root Cause**: Proto's reqwest doesn't auto-detect HTTP_PROXY env vars
-- **Solution**: Enhanced install.sh with automatic proxy detection + .prototools generation
-- **Implementation**:
-  - `setup_proxy_config()` function detects and configures proxy
-  - Creates `~/.proto/.prototools` with proxy settings
-  - Detects corporate proxies (SSL inspection) and provides guidance
-  - Improved error messages with troubleshooting steps
-- **Documentation**: 
-  - `docs/guides/proxy-setup.md` - User guide for corporate networks
-  - `docs/troubleshooting/proxy.md` - Symptom-based troubleshooting
-  - `docs/technical/` - Research and investigation details
+### Library Package + rag_facile Namespace (✅ PR #121, Feb 17, 2026)
+- **What changed**: All 7 pipeline packages now live under `rag_facile.*` namespace
+- **Packages**: `rag_facile.core`, `rag_facile.ingestion`, `rag_facile.pipelines`, `rag_facile.retrieval`, `rag_facile.reranking`, `rag_facile.context`, `rag_facile.storage`
+- **New bundle**: `packages/rag-facile-lib/` bundles all pipeline packages for external projects
+- **Generated projects** now depend on `rag-facile-lib` via git URL (no more copying pipeline source)
+- **Standalone** structure: `pyproject.toml` + frontend app + `src/<name>/` for user code
+- **Monorepo** setup: inlines workspace config directly (no sys-config template)
+- **Import style**: `from rag_facile.pipelines import get_pipeline` (not `from pipelines import ...`)
 
-### CLI Refactoring (✅ Completed Feb 5, 2026)
-- **From**: `rag-facile eval generate`
-- **To**: `rag-facile generate-dataset` (alphabetical ordering)
-- **Also**: `generate workspace` → `setup` (simpler, clearer intent)
-- **Current order**: `generate-dataset`, `setup`, `version`
+### True RAG Pipeline (✅ PR #96, Feb 16, 2026)
+- **What changed**: Replaced context-stuffing with real RAG (auto-managed Albert collections)
+- **Flow**: `process_file()` → create collection → upload (Albert chunks + embeds) → `process_query()` → search → rerank → format context → inject into user message
+- **Key pattern**: Context injected per-turn into user message, not accumulated as system messages
+
+### Expert Flag + Default Flow (✅ PR #107/113, Feb 17, 2026)
+- **Default setup** (no `--expert`): 2 prompts only (preset + API key), defaults to standalone + Chainlit + Albert RAG
+- **Expert setup** (`--expert`): Shows all 5 prompts (structure, preset, frontend, pipeline, API key)
+- **Pipeline names**: "Albert RAG" (server-side, recommended) and "Local" (offline, simple)
 
 ### Data Foundry / Eval Features
 - **Command**: `rag-facile generate-dataset ./docs -o output.jsonl`
 - **Purpose**: Generate synthetic Q/A evaluation datasets from documents
-- **Providers**:
-  - Letta Cloud (built-in, uses pre-configured agent)
-  - Albert API (OpenGateLLM) - alternative provider
-- **Implementation**:
-  - `apps/cli/src/cli/commands/eval/providers/`
-  - Provider pattern allows easy addition of new data sources
-  - Both providers: upload documents → retrieve context → generate samples
-
-### Albert API Provider Integration
-- **Feature**: Alternative to Letta Cloud for eval data generation
-- **Configuration**: Via env vars (OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL)
-- **Implementation**: `providers/albert.py` (211 lines, fully tested)
-- **Architecture**: Implements `DataFoundryProvider` protocol (same as Letta)
-
-### PDF Extraction & Preprocessing
-- **Feature**: Auto-extract PDFs to markdown before upload
-- **Benefit**: 90% size reduction (0.39 MB → 38.28 KB real-world)
-- **Why**: Eliminates timeout issues with large files
-- **Implementation**: `DocumentPreprocessor` class in `providers/document_preprocessor.py`
-- **Used by**: Both Letta and Albert providers
-
-### Prompt Hardening
-- **Issue**: LLMs generating partial output, extraneous text
-- **Solution**: Strict, repeated prompts with visual warnings
-  - Added "⚠️ AUTOMATED CONVERSATION" warning
-  - Added "🔴 CRITICAL OUTPUT FORMAT" section
-  - Explicit "DO NOT" statements about extraneous text
-  - Final reinforcement: "NOW OUTPUT ONLY THE JSONL - NO PREAMBLE"
-- **Result**: Reliable JSONL-only output from both providers
-
-### Debug Output & Logging
-- **Flag**: `--debug` enables verbose console logging
-- **Default**: INFO-level logs only to file (clean console output)
-- **With --debug**: DEBUG-level logs to both file and console
-- **Log location**: Adjacent to output file (e.g., `output.jsonl.log`)
-- **Critical for**: Albert API debugging (no UI like Letta Cloud)
+- **Providers**: Letta Cloud (default) or Albert API
+- **Implementation**: `apps/cli/src/cli/commands/eval/providers/`
 
 ## 7. Code Quality Standards
 
@@ -356,9 +328,10 @@ python -m pytest apps/cli/tests/
 - Check for missing type hints in new code
 - May need to configure `[tool.ty.rules]` for false positives
 
-### "Import not found" (from workspace packages)
-- Ensure package listed in root `pyproject.toml` dependencies
-- Ensure mapping in `[tool.uv.sources]`
+### "Import not found" (from workspace packages or rag_facile namespace)
+- All pipeline packages use the `rag_facile.*` namespace (e.g., `from rag_facile.pipelines import get_pipeline`)
+- In the monorepo: ensure the package is listed in root `pyproject.toml` dependencies + `[tool.uv.sources]`
+- In generated projects: ensure `rag-facile-lib` is in dependencies and `uv sync` has run
 - Run `uv sync` to regenerate lockfile
 
 ### "Moon command failed"
