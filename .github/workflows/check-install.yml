@@ -57,7 +57,7 @@ jobs:
   
   linux-install:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     name: "Install on Linux (Ubuntu)"
     
     env:
@@ -124,7 +124,7 @@ jobs:
   
   macos-install-arm64:
     runs-on: macos-14
-    timeout-minutes: 15
+    timeout-minutes: 10
     name: "Install on macOS (Apple Silicon)"
     
     env:
@@ -279,7 +279,7 @@ jobs:
   
   test-summary:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 1
     name: "Installation Tests Summary"
     needs: [linux-install, macos-install-arm64, windows-install-powershell, windows-install-gitbash]
     if: always()
