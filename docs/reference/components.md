@@ -107,7 +107,7 @@ No code changes or reinstallation needed!
 | Feature | Basic (`local-sqlite`) | Albert (`albert-collections`) |
 |---------|----------------------|-------------------------------|
 | **Extraction** | Local pypdf | Albert API + fallback |
-| **Formats** | PDF only | PDF, JSON, MD, HTML |
+| **Formats** | PDF only | PDF, MD, HTML |
 | **Search** | None (context injection) | Semantic + Hybrid + Reranking |
 | **Persistence** | None (per-session) | Collections (persistent) |
 | **Network** | Offline | Requires API access |

@@ -68,7 +68,6 @@ just run
 ### Step 6: Test File Upload
 Albert RAG supports the following formats via Albert's parse API:
 - [ ] Upload a `.pdf` file — should parse via Albert API and include in chat
-- [ ] Upload a `.json` file — should parse and include in chat
 - [ ] Upload a `.md` (Markdown) file — should parse and include in chat
 - [ ] Upload an `.html` file — should parse and include in chat
 
