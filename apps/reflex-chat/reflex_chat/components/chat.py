@@ -91,10 +91,50 @@ def render_attached_file(filename: str) -> rx.Component:
     )
 
 
+def collection_badge(item: list[str]) -> rx.Component:
+    """Render a single collection toggle badge.
+
+    Args:
+        item: [col_id, name, enabled_str] from State.collection_items.
+    """
+    col_id = item[0]
+    name = item[1]
+    is_active = item[2] == "True"
+    return rx.badge(
+        rx.icon("database", size=12),
+        name,
+        variant=rx.cond(is_active, "solid", "outline"),
+        color_scheme=rx.cond(is_active, "green", "gray"),
+        cursor="pointer",
+        on_click=State.toggle_collection(col_id),
+        size="1",
+    )
+
+
+def collection_badges() -> rx.Component:
+    """Render toggle badges for configured collections."""
+    return rx.cond(
+        State.collection_items,
+        rx.flex(
+            rx.text(
+                "📚",
+                font_size="0.75em",
+                color=rx.color("mauve", 10),
+            ),
+            rx.foreach(State.collection_items, collection_badge),
+            wrap="wrap",
+            gap="2",
+            align_items="center",
+            padding="4px 12px",
+        ),
+    )
+
+
 def action_bar() -> rx.Component:
     """The action bar to send a new message."""
     return rx.center(
         rx.vstack(
+            collection_badges(),
             rx.form(
                 rx.vstack(
                     rx.cond(

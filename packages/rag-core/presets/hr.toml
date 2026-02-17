@@ -41,6 +41,7 @@ normalization = "L2"
 provider = "albert-collections"
 collection_naming = "workspace"
 distance_metric = "cosine"
+collections = [784, 785]  # travail-emploi, service-public (discover more with: rag-facile collections list)
 
 [query]
 rewrite_enabled = true  # HR queries often informal

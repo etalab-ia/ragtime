@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 from albert import AsyncAlbertClient
 from rag_core import get_config
+from rag_core.mediatech import get_collection_name
 
 
 # Increase the number of packets allowed in a single payload to prevent "Too
@@ -70,13 +71,67 @@ tools = [
 ]
 
 
+async def send_collection_badges() -> None:
+    """Send collection toggle badges as action buttons."""
+    configured = rag_config.storage.collections
+    if not configured:
+        return
+
+    active: list[int] = cl.user_session.get("active_collections") or []
+
+    actions = []
+    for col_id in configured:
+        name = get_collection_name(col_id) or f"Collection {col_id}"
+        is_active = col_id in active
+        label = f"{'✓' if is_active else '✗'} {name}"
+        actions.append(
+            cl.Action(
+                name="toggle_collection",
+                payload={"id": col_id},
+                label=label,
+                description=f"Click to {'disable' if is_active else 'enable'} {name}",
+            )
+        )
+
+    await cl.Message(
+        content="📚 **Active collections** — click to toggle:",
+        actions=actions,
+    ).send()
+
+
+@cl.action_callback("toggle_collection")
+async def on_toggle_collection(action: cl.Action) -> None:
+    """Toggle a collection on or off for RAG retrieval."""
+    col_id = action.payload["id"]
+    active: list[int] = cl.user_session.get("active_collections") or []
+
+    if col_id in active:
+        active.remove(col_id)
+    else:
+        active.append(col_id)
+
+    cl.user_session.set("active_collections", active)
+
+    name = get_collection_name(col_id) or f"Collection {col_id}"
+    state = "enabled" if col_id in active else "disabled"
+    await cl.Message(content=f"📚 **{name}** {state}").send()
+    await send_collection_badges()
+
+
 @cl.on_chat_start
-def start_chat():
+async def start_chat():
     # Use system prompt from config
     cl.user_session.set(
         "message_history",
         [{"role": "system", "content": rag_config.generation.system_prompt}],
     )
+
+    # Initialize active collections from config
+    active_collections = list(rag_config.storage.collections)
+    cl.user_session.set("active_collections", active_collections)
+
+    # Show collection badges if any configured
+    await send_collection_badges()
 
 
 @cl.step(type="tool")
@@ -120,8 +175,12 @@ async def main(message: cl.Message):
                         content=f"Error indexing '{element.name}': {e!s}"
                     ).send()
 
-    # Retrieve relevant context for the user's query
-    retrieved_context = process_query(message.content)
+    # Retrieve relevant context using active collections
+    active_collections: list[int] = cl.user_session.get("active_collections") or []
+    query_kwargs: dict[str, object] = {}
+    if active_collections:
+        query_kwargs["collection_ids"] = active_collections
+    retrieved_context = process_query(message.content, **query_kwargs)
 
     user_content = message.content
     if retrieved_context:

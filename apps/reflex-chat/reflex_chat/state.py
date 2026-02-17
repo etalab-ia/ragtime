@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 from albert import AlbertClient, ChatCompletionMessageParam
 from rag_core import get_config
+from rag_core.mediatech import get_collection_name
 
 
 # Load .env file
@@ -56,6 +57,32 @@ class State(rx.State):
 
     # whether filtering is happening
     is_uploading: bool = False
+
+    # Collection toggles: maps str(collection_id) → enabled status
+    active_collections: dict[str, bool] = {
+        str(col_id): True for col_id in rag_config.storage.collections
+    }
+
+    @rx.event
+    def toggle_collection(self, col_id: str):
+        """Toggle a collection on/off for RAG retrieval."""
+        self.active_collections[col_id] = not self.active_collections.get(col_id, True)
+        # Force state refresh
+        self.active_collections = self.active_collections
+
+    @rx.var
+    def enabled_collection_ids(self) -> list[int]:
+        """Get list of enabled collection IDs for RAG queries."""
+        return [int(k) for k, v in self.active_collections.items() if v]
+
+    @rx.var
+    def collection_items(self) -> list[list[str]]:
+        """Get collection items as [id, name, enabled] for rendering."""
+        items = []
+        for col_id_str, enabled in self.active_collections.items():
+            name = get_collection_name(int(col_id_str)) or f"Collection {col_id_str}"
+            items.append([col_id_str, name, str(enabled)])
+        return items
 
     async def handle_upload(self, files: list[rx.UploadFile]):
         """Upload files to Albert collection for RAG retrieval."""
@@ -192,7 +219,10 @@ class State(rx.State):
         # Retrieve relevant context via RAG pipeline (search -> rerank -> format)
         # Combine context with the current question to avoid accumulating
         # system messages in the conversation history.
-        retrieved_context = process_query(question)
+        query_kwargs: dict[str, object] = {}
+        if self.enabled_collection_ids:
+            query_kwargs["collection_ids"] = self.enabled_collection_ids
+        retrieved_context = process_query(question, **query_kwargs)
         if retrieved_context:
             messages[-1]["content"] = (
                 "Use the following context to answer the user's question:\n\n"

@@ -324,6 +324,129 @@ class TestAlbertPipeline:
 
     @patch("storage.get_provider")
     @patch("ingestion.get_provider")
+    def test_process_query_uses_config_collections(
+        self, mock_get_ingestion, mock_get_storage
+    ):
+        """process_query should search config collections when no session collection exists."""
+        mock_get_ingestion.return_value = MagicMock()
+        mock_get_storage.return_value = MagicMock()
+        pipeline = AlbertPipeline()
+
+        mock_chunks = [{"content": "chunk1", "score": 0.9}]
+
+        with (
+            patch("retrieval.search_chunks", return_value=mock_chunks) as mock_search,
+            patch("context.format_context", return_value="context"),
+            patch("rag_core.get_config") as mock_get_config,
+        ):
+            mock_config = MagicMock()
+            mock_config.storage.collections = [42, 87]
+            mock_config.retrieval.top_k = 10
+            mock_config.retrieval.strategy = "hybrid"
+            mock_config.retrieval.score_threshold = 0.0
+            mock_config.reranking.enabled = False
+            mock_get_config.return_value = mock_config
+
+            mock_client = MagicMock()
+            pipeline._client = mock_client
+            result = pipeline.process_query("what is RAG?")
+
+        assert result == "context"
+        # Should search the configured collections
+        call_args = mock_search.call_args
+        assert call_args[0][2] == [42, 87]  # collection_ids
+
+    @patch("storage.get_provider")
+    @patch("ingestion.get_provider")
+    def test_process_query_merges_config_and_session_collections(
+        self, mock_get_ingestion, mock_get_storage
+    ):
+        """process_query should merge config collections with session collection."""
+        mock_get_ingestion.return_value = MagicMock()
+        mock_get_storage.return_value = MagicMock()
+        pipeline = AlbertPipeline()
+        pipeline._collection_id = 999  # Simulate a session collection
+
+        mock_chunks = [{"content": "chunk1", "score": 0.9}]
+
+        with (
+            patch("retrieval.search_chunks", return_value=mock_chunks) as mock_search,
+            patch("context.format_context", return_value="context"),
+            patch("rag_core.get_config") as mock_get_config,
+        ):
+            mock_config = MagicMock()
+            mock_config.storage.collections = [42, 87]
+            mock_config.retrieval.top_k = 10
+            mock_config.retrieval.strategy = "hybrid"
+            mock_config.retrieval.score_threshold = 0.0
+            mock_config.reranking.enabled = False
+            mock_get_config.return_value = mock_config
+
+            mock_client = MagicMock()
+            pipeline._client = mock_client
+            pipeline.process_query("test query")
+
+        # Should include both config collections AND session collection
+        call_args = mock_search.call_args
+        assert call_args[0][2] == [42, 87, 999]
+
+    @patch("storage.get_provider")
+    @patch("ingestion.get_provider")
+    def test_process_query_returns_empty_when_no_collections(
+        self, mock_get_ingestion, mock_get_storage
+    ):
+        """process_query should return empty when no config or session collections."""
+        mock_get_ingestion.return_value = MagicMock()
+        mock_get_storage.return_value = MagicMock()
+        pipeline = AlbertPipeline()
+
+        with patch("rag_core.get_config") as mock_get_config:
+            mock_config = MagicMock()
+            mock_config.storage.collections = []
+            mock_get_config.return_value = mock_config
+
+            mock_client = MagicMock()
+            pipeline._client = mock_client
+            result = pipeline.process_query("test query")
+
+        assert result == ""
+
+    @patch("storage.get_provider")
+    @patch("ingestion.get_provider")
+    def test_process_query_session_only_when_no_config_collections(
+        self, mock_get_ingestion, mock_get_storage
+    ):
+        """process_query should use only session collection when config has no collections."""
+        mock_get_ingestion.return_value = MagicMock()
+        mock_get_storage.return_value = MagicMock()
+        pipeline = AlbertPipeline()
+        pipeline._collection_id = 555
+
+        mock_chunks = [{"content": "chunk1", "score": 0.9}]
+
+        with (
+            patch("retrieval.search_chunks", return_value=mock_chunks) as mock_search,
+            patch("context.format_context", return_value="context"),
+            patch("rag_core.get_config") as mock_get_config,
+        ):
+            mock_config = MagicMock()
+            mock_config.storage.collections = []
+            mock_config.retrieval.top_k = 10
+            mock_config.retrieval.strategy = "hybrid"
+            mock_config.retrieval.score_threshold = 0.0
+            mock_config.reranking.enabled = False
+            mock_get_config.return_value = mock_config
+
+            mock_client = MagicMock()
+            pipeline._client = mock_client
+            pipeline.process_query("test query")
+
+        # Should use only the session collection
+        call_args = mock_search.call_args
+        assert call_args[0][2] == [555]
+
+    @patch("storage.get_provider")
+    @patch("ingestion.get_provider")
     def test_create_collection_delegates_to_storage(
         self, mock_get_ingestion, mock_get_storage
     ):
