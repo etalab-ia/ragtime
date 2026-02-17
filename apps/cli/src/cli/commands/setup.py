@@ -421,6 +421,13 @@ def render_template_file(template_path: Path, variables: dict[str, str | bool]) 
     return content
 
 
+def _print_no_serve_message(target_display: str) -> None:
+    """Print app location and skip dev server message."""
+    console.print()
+    console.print(f"[dim]Your app is at: {target_display}[/dim]")
+    console.print("[dim]Run the dev server manually when ready.[/dim]")
+
+
 def generate_config_file(
     workspace_root: Path,
     preset: str,
@@ -493,7 +500,7 @@ def generate_standalone(
     env_config: dict[str, str],
     preset: str,
     preset_config: PresetConfig,
-    force: bool,
+    no_serve: bool = False,
 ) -> None:
     """Generate a standalone (non-monorepo) project structure."""
     templates_dir = get_templates_dir()
@@ -703,7 +710,11 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
     if not run_command(["uv", "sync"], "install dependencies", cwd=target_path):
         console.print("[yellow]Warning: uv sync failed. Run it manually.[/yellow]")
 
-    # Step 7: Start the dev server
+    # Step 7: Start the dev server (unless --no-serve)
+    if no_serve:
+        _print_no_serve_message(target_display)
+        return
+
     step_num += 1
     console.print()
     console.print(
@@ -739,19 +750,34 @@ def run(
         str,
         typer.Argument(help="Target directory for the new workspace"),
     ] = "",
-    preset: Annotated[
-        str | None,
-        typer.Option(help="Configuration preset (fast, balanced, accurate, legal, hr)"),
-    ] = None,
-    force: Annotated[
-        bool,
-        typer.Option("--force", "-f", help="Overwrite existing files"),
-    ] = False,
     expert: Annotated[
         bool,
         typer.Option(
             "--expert",
             help="Show advanced options (project structure, frontend, pipeline selection)",
+        ),
+    ] = False,
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Overwrite existing files"),
+    ] = False,
+    no_serve: Annotated[
+        bool,
+        typer.Option(
+            "--no-serve",
+            help="Skip launching the dev server after setup",
+        ),
+    ] = False,
+    preset: Annotated[
+        str | None,
+        typer.Option(help="Configuration preset (fast, balanced, accurate, legal, hr)"),
+    ] = None,
+    yes: Annotated[
+        bool,
+        typer.Option(
+            "--yes",
+            "-y",
+            help="Skip all prompts (use defaults and env vars for API key)",
         ),
     ] = False,
 ):
@@ -766,8 +792,11 @@ def run(
     if not ensure_toolchain():
         raise typer.Exit(1)
 
-    # 1. Gather inputs interactively
+    # 1. Gather inputs interactively (or use defaults with --yes)
     if not target:
+        if yes:
+            console.print("[red]Error: target directory is required with --yes[/red]")
+            raise typer.Exit(1)
         target = questionary.text(
             "Target directory:",
             default="./my-rag-app",
@@ -781,7 +810,7 @@ def run(
     target_display = str(target_path).replace("/private/tmp/", "/tmp/")
 
     # Check if target exists and has content
-    if target_path.exists() and any(target_path.iterdir()) and not force:
+    if target_path.exists() and any(target_path.iterdir()) and not force and not yes:
         overwrite = questionary.confirm(
             f"Directory {target_path} is not empty. Continue anyway?",
             default=False,
@@ -805,20 +834,23 @@ def run(
 
     # Select preset
     if not preset:
-        preset = questionary.select(
-            "Choose a configuration preset:",
-            choices=[
-                questionary.Choice(
-                    f"{name} - {config['description']}",
-                    value=name,
-                )
-                for name, config in PRESET_CONFIGS.items()
-            ],
-            default="balanced",
-        ).ask()
-        if not preset:
-            console.print("[red]Aborted.[/red]")
-            raise typer.Exit(1)
+        if yes:
+            preset = "balanced"
+        else:
+            preset = questionary.select(
+                "Choose a configuration preset:",
+                choices=[
+                    questionary.Choice(
+                        f"{name} - {config['description']}",
+                        value=name,
+                    )
+                    for name, config in PRESET_CONFIGS.items()
+                ],
+                default="balanced",
+            ).ask()
+            if not preset:
+                console.print("[red]Aborted.[/red]")
+                raise typer.Exit(1)
 
     # Validate preset if provided via flag
     if preset not in PRESET_CONFIGS:
@@ -864,25 +896,29 @@ def run(
     selected_modules = [module_choice]
 
     # Prompt for environment configuration (use current env as defaults)
-    console.print()
-    console.print("[bold blue]Environment Configuration[/bold blue]")
-    console.print(
-        "[dim]These values will be saved to .env in your app directory.[/dim]"
-    )
-    console.print(
-        "[dim]Get an API key at https://albert.sites.beta.gouv.fr/access/[/dim]"
-    )
-    console.print()
-
     env_config = {}
 
-    env_config["openai_api_key"] = questionary.text(
-        "OpenAI/Albert API Key:",
-        default=os.getenv("OPENAI_API_KEY", ""),
-    ).ask()
-    if env_config["openai_api_key"] is None:
-        console.print("[red]Aborted.[/red]")
-        raise typer.Exit(1)
+    if yes:
+        # Non-interactive: use env var or empty string
+        env_config["openai_api_key"] = os.getenv("OPENAI_API_KEY", "")
+    else:
+        console.print()
+        console.print("[bold blue]Environment Configuration[/bold blue]")
+        console.print(
+            "[dim]These values will be saved to .env in your app directory.[/dim]"
+        )
+        console.print(
+            "[dim]Get an API key at https://albert.sites.beta.gouv.fr/access/[/dim]"
+        )
+        console.print()
+
+        env_config["openai_api_key"] = questionary.text(
+            "OpenAI/Albert API Key:",
+            default=os.getenv("OPENAI_API_KEY", ""),
+        ).ask()
+        if env_config["openai_api_key"] is None:
+            console.print("[red]Aborted.[/red]")
+            raise typer.Exit(1)
 
     # Use base URL from preset
     env_config["openai_base_url"] = preset_config["openai_base_url"]
@@ -900,10 +936,11 @@ def run(
     console.print(f"  API: {env_config['openai_base_url']}")
     console.print()
 
-    # Confirm
-    if not questionary.confirm("Proceed with generation?", default=True).ask():
-        console.print("[yellow]Aborted.[/yellow]")
-        raise typer.Exit(0)
+    # Confirm (skip with --yes)
+    if not yes:
+        if not questionary.confirm("Proceed with generation?", default=True).ask():
+            console.print("[yellow]Aborted.[/yellow]")
+            raise typer.Exit(0)
 
     # Branch based on project structure choice
     if is_standalone:
@@ -915,7 +952,7 @@ def run(
             env_config=env_config,
             preset=preset,
             preset_config=preset_config,
-            force=force,
+            no_serve=no_serve,
         )
         return  # Exit after standalone generation
 
@@ -1154,7 +1191,11 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
     if not run_command(["uv", "sync"], "install dependencies", cwd=target_path):
         console.print("[yellow]Warning: uv sync failed. Run it manually.[/yellow]")
 
-    # Start the dev server
+    # Start the dev server (unless --no-serve)
+    if no_serve:
+        _print_no_serve_message(target_display)
+        return
+
     console.print()
     console.print(
         f"[bold green]Step 10:[/bold green] Starting {frontend_choice} dev server..."

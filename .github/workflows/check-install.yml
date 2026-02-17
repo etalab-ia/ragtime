@@ -57,6 +57,7 @@ jobs:
   
   linux-install:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     name: "Install on Linux (Ubuntu)"
     
     env:
@@ -86,9 +87,44 @@ jobs:
         run: |
           echo "=== Testing just recipes ==="
           just --list
+      
+      - name: Smoke test — setup, build and launch app
+        shell: bash
+        env:
+          OPENAI_API_KEY: "test-key-for-ci"
+          OPENAI_BASE_URL: "https://albert.api.etalab.gouv.fr/v1"
+        run: |
+          echo "=== Smoke test: scaffold → build → launch → health check ==="
+          
+          # 1. Scaffold a standalone Chainlit app (non-interactive)
+          rag-facile setup /tmp/test-app --preset balanced --yes --no-serve --force
+          
+          # 2. Start Chainlit server in background
+          cd /tmp/test-app
+          uv run chainlit run app.py --host 0.0.0.0 --port 8000 &
+          SERVER_PID=$!
+          
+          # 3. Wait for server to respond (max 60s, poll every 2s)
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Server responded with HTTP 200 after ~$((i * 2)) seconds"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "❌ Server did not respond within 60 seconds (last status: $STATUS)"
+              kill $SERVER_PID 2>/dev/null || true
+              exit 1
+            fi
+            sleep 2
+          done
+          
+          # 4. Cleanup
+          kill $SERVER_PID 2>/dev/null || true
   
   macos-install-arm64:
     runs-on: macos-14
+    timeout-minutes: 10
     name: "Install on macOS (Apple Silicon)"
     
     env:
@@ -124,9 +160,45 @@ jobs:
         run: |
           echo "=== Testing just recipes ==="
           just --list
+      
+      - name: Smoke test — setup, build and launch app
+        shell: bash
+        env:
+          OPENAI_API_KEY: "test-key-for-ci"
+          OPENAI_BASE_URL: "https://albert.api.etalab.gouv.fr/v1"
+          PYTHONUTF8: "1"
+        run: |
+          echo "=== Smoke test: scaffold → build → launch → health check ==="
+          
+          # 1. Scaffold a standalone Chainlit app (non-interactive)
+          rag-facile setup /tmp/test-app --preset balanced --yes --no-serve --force
+          
+          # 2. Start Chainlit server in background
+          cd /tmp/test-app
+          uv run chainlit run app.py --host 0.0.0.0 --port 8000 &
+          SERVER_PID=$!
+          
+          # 3. Wait for server to respond (max 60s, poll every 2s)
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Server responded with HTTP 200 after ~$((i * 2)) seconds"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "❌ Server did not respond within 60 seconds (last status: $STATUS)"
+              kill $SERVER_PID 2>/dev/null || true
+              exit 1
+            fi
+            sleep 2
+          done
+          
+          # 4. Cleanup
+          kill $SERVER_PID 2>/dev/null || true
   
   windows-install-powershell:
     runs-on: windows-latest
+    timeout-minutes: 10
     name: "Install on Windows (PowerShell)"
     
     env:
@@ -170,6 +242,7 @@ jobs:
   
   windows-install-gitbash:
     runs-on: windows-latest
+    timeout-minutes: 10
     name: "Install on Windows (Git Bash)"
     
     env:
@@ -206,6 +279,7 @@ jobs:
   
   test-summary:
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     name: "Installation Tests Summary"
     needs: [linux-install, macos-install-arm64, windows-install-powershell, windows-install-gitbash]
     if: always()

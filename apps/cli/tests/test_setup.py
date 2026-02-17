@@ -411,7 +411,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         assert standalone_target.exists()
@@ -433,7 +432,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         pyproject = standalone_target / "pyproject.toml"
@@ -460,7 +458,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         assert (standalone_target / "app.py").exists()
@@ -484,7 +481,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         env_file = standalone_target / ".env"
@@ -512,7 +508,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         pipelines = standalone_target / "pipelines"
@@ -537,7 +532,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         python_version = standalone_target / ".python-version"
@@ -561,7 +555,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         retrieval = standalone_target / "retrieval"
@@ -586,7 +579,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         pyproject = standalone_target / "pyproject.toml"
@@ -613,7 +605,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         ingestion = standalone_target / "ingestion"
@@ -638,7 +629,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         storage = standalone_target / "storage"
@@ -664,7 +654,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         context = standalone_target / "context"
@@ -689,7 +678,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         reranking = standalone_target / "reranking"
@@ -714,7 +702,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         assert (standalone_target / "chainlit.md").exists()
@@ -736,7 +723,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         # Check run_command was called with uv sync
@@ -761,7 +747,6 @@ class TestGenerateStandalone:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         # Check subprocess.run was called with chainlit command
@@ -804,7 +789,6 @@ class TestGenerateStandaloneReflex:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         pyproject = standalone_target / "pyproject.toml"
@@ -830,7 +814,6 @@ class TestGenerateStandaloneReflex:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         assert (standalone_target / "rxconfig.py").exists()
@@ -852,7 +835,6 @@ class TestGenerateStandaloneReflex:
             },
             preset="balanced",
             preset_config=preset_config,
-            force=False,
         )
 
         calls = mock_standalone_deps["subprocess"].call_args_list

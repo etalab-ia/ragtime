@@ -35,30 +35,6 @@ def run(
             resolve_path=True,
         ),
     ],
-    output: Annotated[
-        Path,
-        typer.Option(
-            "--output",
-            "-o",
-            help="Output JSONL file path",
-        ),
-    ] = Path("golden_dataset.jsonl"),
-    samples: Annotated[
-        int | None,
-        typer.Option(
-            "--samples",
-            "-n",
-            help="Target number of Q/A pairs to generate (default: from config)",
-        ),
-    ] = None,
-    provider: Annotated[
-        str,
-        typer.Option(
-            "--provider",
-            "-p",
-            help="Data Foundry provider to use (letta or albert, default: from config)",
-        ),
-    ] = "",
     agent_id: Annotated[
         str,
         typer.Option(
@@ -74,6 +50,30 @@ def run(
             help="Enable debug logging (verbose output to file and console)",
         ),
     ] = False,
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Output JSONL file path",
+        ),
+    ] = Path("golden_dataset.jsonl"),
+    provider: Annotated[
+        str,
+        typer.Option(
+            "--provider",
+            "-p",
+            help="Data Foundry provider to use (letta or albert, default: from config)",
+        ),
+    ] = "",
+    samples: Annotated[
+        int | None,
+        typer.Option(
+            "--samples",
+            "-n",
+            help="Target number of Q/A pairs to generate (default: from config)",
+        ),
+    ] = None,
 ) -> None:
     """Generate synthetic Q/A evaluation dataset from documents.
 
