@@ -191,8 +191,10 @@ class AlbertPipeline(RAGPipeline):
             ids.add(self._collection_id)
 
         if not ids:
+            logger.info("No collection IDs to search — skipping retrieval")
             return ""
         collection_ids = list(ids)
+        logger.info("Searching collections: %s", collection_ids)
 
         # Step 1: Search
         chunks = search_chunks(
