@@ -6,7 +6,7 @@ import chainlit as cl
 import engineio
 import engineio.payload
 from chainlit.input_widget import Switch
-from pipelines import process_file, process_query
+from pipelines import get_accepted_mime_types, process_file, process_query
 from dotenv import load_dotenv
 
 from albert import AsyncAlbertClient
@@ -135,8 +135,18 @@ async def main(message: cl.Message):
 
     # Handle attachments — ingest into Albert collection for RAG retrieval
     if message.elements:
+        allowed_extensions = {
+            ext for exts in get_accepted_mime_types().values() for ext in exts
+        }
         for element in message.elements:
             if element.path:
+                suffix = os.path.splitext(element.name)[1].lower()
+                if suffix not in allowed_extensions:
+                    await cl.Message(
+                        content=f"Unsupported file type '{suffix}'. "
+                        f"Accepted formats: {', '.join(sorted(allowed_extensions))}"
+                    ).send()
+                    continue
                 try:
                     status = process_file(element.path, element.name)
                     await cl.Message(content=status).send()

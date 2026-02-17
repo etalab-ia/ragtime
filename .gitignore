@@ -209,7 +209,8 @@ marimo/_static/
 marimo/_lsp/
 
 # Chainlit
-.chainlit/
+.chainlit/*
+!.chainlit/config.toml
 .files/
 
 # Templates (generated dynamically)
