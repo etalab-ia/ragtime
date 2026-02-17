@@ -54,11 +54,11 @@ packages = ["src/cli"]
 [tool.hatch.build.targets.wheel.force-include]
 "../../.moon/templates" = "cli/templates"
 "../../packages/albert-client/src/albert" = "cli/albert_src"
-"../../packages/context/src/context" = "cli/templates/context"
+"../../packages/context/src/context" = "cli/context_src"
 "../../packages/ingestion/src/ingestion" = "cli/ingestion_src"
 "../../packages/pipelines/src/pipelines" = "cli/pipelines_src"
 "../../packages/rag-core/src/rag_core" = "cli/rag_core_src"
-"../../packages/reranking/src/reranking" = "cli/templates/reranking"
+"../../packages/reranking/src/reranking" = "cli/reranking_src"
 "../../packages/retrieval/src/retrieval" = "cli/retrieval_src"
 "../../packages/storage/src/storage" = "cli/storage_src"
 "src/cli/templates/ragfacile.toml" = "cli/templates/ragfacile.toml"
