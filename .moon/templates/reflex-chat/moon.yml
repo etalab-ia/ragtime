@@ -3,5 +3,5 @@ language: python
 
 tasks:
   dev:
-    command: uv run reflex run
+    command: sh -c 'uv run python scripts/open_browser.py & uv run reflex run'
     local: true
