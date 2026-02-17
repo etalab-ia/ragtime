@@ -296,13 +296,14 @@ class TestAlbertPipeline:
         self, mock_get_ingestion, mock_get_storage
     ):
         """supported_extensions should come from the Albert ingestion provider."""
+        expected_extensions = [".pdf", ".md", ".html"]
         mock_provider = MagicMock()
-        mock_provider.supported_extensions = [".pdf", ".json", ".md", ".html"]
+        mock_provider.supported_extensions = expected_extensions
         mock_get_ingestion.return_value = mock_provider
         mock_get_storage.return_value = MagicMock()
 
         pipeline = AlbertPipeline()
-        assert pipeline.supported_extensions == [".pdf", ".json", ".md", ".html"]
+        assert pipeline.supported_extensions == expected_extensions
 
     @patch("storage.get_provider")
     @patch("ingestion.get_provider")

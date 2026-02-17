@@ -1,7 +1,7 @@
 """Albert API document ingestion provider.
 
 Uses Albert's server-side parse API for high-quality document parsing
-with OCR support. Supports PDF, Markdown, HTML, and JSON files.
+with OCR support. Supports PDF, Markdown, and HTML files.
 Falls back to local pypdf for PDF files when the API returns a server error.
 """
 
@@ -40,13 +40,12 @@ class AlbertProvider(IngestionProvider):
 
     @property
     def supported_extensions(self) -> list[str]:
-        return [".pdf", ".json", ".md", ".html"]
+        return [".pdf", ".md", ".html"]
 
     @property
     def accepted_mime_types(self) -> dict[str, list[str]]:
         return {
             "application/pdf": [".pdf"],
-            "application/json": [".json"],
             "text/markdown": [".md"],
             "text/html": [".html", ".htm"],
         }
