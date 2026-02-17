@@ -1210,4 +1210,6 @@ class TestStructureSelectionPrompt:
         # Summary should show Albert RAG as pipeline
         assert "Albert RAG" in result.output
         # Summary should show standalone structure
-        assert "Simple (standalone)" in result.output
+        # Rich adds ANSI codes around parentheses, so check substrings separately
+        assert "Simple" in result.output
+        assert "standalone" in result.output

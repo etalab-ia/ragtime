@@ -329,9 +329,12 @@ Keep track of your testing:
 - [ ] `rag-facile setup <name> --expert` with monorepo selection works
 - [ ] Setup creates monorepo structure
 - [ ] Templates exist for all packages
+- [ ] `ragfacile.toml` has provider = "albert-collections"
 - [ ] just sync completes without errors
 - [ ] just type-check passes
-- [ ] just run reflex-chat starts dev server
+- [ ] `just run reflex-chat` starts dev server
+- [ ] File upload works
+- [ ] Config commands work
 
 ### Quality Checks
 - [ ] No legacy imports found
