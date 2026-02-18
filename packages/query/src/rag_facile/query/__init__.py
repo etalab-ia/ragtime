@@ -14,7 +14,7 @@ Selected strategy is configured via ``ragfacile.toml``::
 Example usage::
 
     from albert import AlbertClient
-    from rag_facile.query_expansion import get_expander
+    from rag_facile.query import get_expander
 
     client = AlbertClient()
     expander = get_expander(client)
@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from rag_facile.query_expansion._base import QueryExpander
+from rag_facile.query._base import QueryExpander
 
 
 if TYPE_CHECKING:
@@ -69,11 +69,11 @@ def get_expander(
 
     match strategy:
         case "multi_query":
-            from rag_facile.query_expansion.multi_query import MultiQueryExpander
+            from rag_facile.query.multi_query import MultiQueryExpander
 
             return MultiQueryExpander(client, config)
         case "hyde":
-            from rag_facile.query_expansion.hyde import HyDEExpander
+            from rag_facile.query.hyde import HyDEExpander
 
             return HyDEExpander(client, config)
         case _:

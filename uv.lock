@@ -14,7 +14,7 @@ members = [
     "context",
     "ingestion",
     "pipelines",
-    "query-expansion",
+    "query",
     "rag-core",
     "rag-facile",
     "rag-facile-cli",
@@ -2009,7 +2009,7 @@ source = { editable = "packages/pipelines" }
 dependencies = [
     { name = "context" },
     { name = "ingestion" },
-    { name = "query-expansion" },
+    { name = "query" },
     { name = "rag-core" },
     { name = "reranking" },
     { name = "retrieval" },
@@ -2020,7 +2020,7 @@ dependencies = [
 requires-dist = [
     { name = "context", editable = "packages/context" },
     { name = "ingestion", editable = "packages/ingestion" },
-    { name = "query-expansion", editable = "packages/query-expansion" },
+    { name = "query", editable = "packages/query" },
     { name = "rag-core", editable = "packages/rag-core" },
     { name = "reranking", editable = "packages/reranking" },
     { name = "retrieval", editable = "packages/retrieval" },
@@ -2404,9 +2404,9 @@ wheels = [
 ]
 
 [[package]]
-name = "query-expansion"
+name = "query"
 version = "0.15.0"
-source = { editable = "packages/query-expansion" }
+source = { editable = "packages/query" }
 dependencies = [
     { name = "albert-client" },
     { name = "rag-core" },
@@ -2457,7 +2457,7 @@ dependencies = [
     { name = "context" },
     { name = "ingestion" },
     { name = "pipelines" },
-    { name = "query-expansion" },
+    { name = "query" },
     { name = "rag-core" },
     { name = "rag-facile-cli" },
     { name = "rag-facile-lib" },
@@ -2486,7 +2486,7 @@ requires-dist = [
     { name = "context", editable = "packages/context" },
     { name = "ingestion", editable = "packages/ingestion" },
     { name = "pipelines", editable = "packages/pipelines" },
-    { name = "query-expansion", editable = "packages/query-expansion" },
+    { name = "query", editable = "packages/query" },
     { name = "rag-core", editable = "packages/rag-core" },
     { name = "rag-facile-cli", editable = "apps/cli" },
     { name = "rag-facile-lib", editable = "packages/rag-facile-lib" },

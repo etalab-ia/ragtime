@@ -14,8 +14,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from rag_facile.query_expansion._base import QueryExpander
-from rag_facile.query_expansion._models import HypotheticalDocument
+from rag_facile.query._base import QueryExpander
+from rag_facile.query._models import HypotheticalDocument
 
 
 if TYPE_CHECKING:

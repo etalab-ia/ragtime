@@ -24,7 +24,7 @@ Example usage::
     For formatting chunks as LLM context, use the ``context`` package.
     For collection management (create, delete, list), use the ``storage`` package.
     For pipeline orchestration, use the ``pipelines`` package.
-    For query expansion before retrieval, use the ``query_expansion`` package.
+    For query expansion before retrieval, use the ``query`` package.
 """
 
 from rag_facile.retrieval.albert import search_chunks

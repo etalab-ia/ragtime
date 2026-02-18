@@ -7,7 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "context",
     "ingestion",
-    "query-expansion",
+    "query",
     "rag-core",
     "reranking",
     "retrieval",
@@ -17,7 +17,7 @@ dependencies = [
 [tool.uv.sources]
 context = { workspace = true }
 ingestion = { workspace = true }
-query-expansion = { workspace = true }
+query = { workspace = true }
 rag-core = { workspace = true }
 reranking = { workspace = true }
 retrieval = { workspace = true }

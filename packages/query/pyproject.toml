@@ -1,5 +1,5 @@
 [project]
-name = "query-expansion"
+name = "query"
 version = "0.15.0" # x-release-please-version
 description = "Query expansion for RAG - multi-query and HyDE strategies for the Albert API"
 readme = "README.md"

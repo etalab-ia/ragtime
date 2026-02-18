@@ -203,7 +203,7 @@ class AlbertPipeline(RAGPipeline):
         # When enabled, generates N query variants in formal French administrative
         # language. Results are merged via RRF before reranking.
         if config.query.strategy != "none":
-            from rag_facile.query_expansion import get_expander
+            from rag_facile.query import get_expander
 
             expander = get_expander(client, config)
             queries = expander.expand(query)

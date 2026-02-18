@@ -10,7 +10,7 @@ dependencies = [
     "context",
     "ingestion",
     "pipelines",
-    "query-expansion",
+    "query",
     "rag-core",
     "rag-facile-cli",
     "rag-facile-lib",
@@ -26,7 +26,7 @@ chainlit-chat = { workspace = true }
 context = { workspace = true }
 ingestion = { workspace = true }
 pipelines = { workspace = true }
-query-expansion = { workspace = true }
+query = { workspace = true }
 rag-core = { workspace = true }
 rag-facile-cli = { workspace = true }
 rag-facile-lib = { workspace = true }

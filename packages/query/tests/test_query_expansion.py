@@ -9,9 +9,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from rag_facile.query_expansion._models import ExpandedQueries, HypotheticalDocument
-from rag_facile.query_expansion.hyde import HyDEExpander
-from rag_facile.query_expansion.multi_query import MultiQueryExpander
+from rag_facile.query._models import ExpandedQueries, HypotheticalDocument
+from rag_facile.query.hyde import HyDEExpander
+from rag_facile.query.multi_query import MultiQueryExpander
 
 
 # ---------------------------------------------------------------------------
@@ -182,8 +182,8 @@ class TestHyDEExpander:
 
 class TestGetExpander:
     def test_get_expander_multi_query(self):
-        from rag_facile.query_expansion import get_expander
-        from rag_facile.query_expansion.multi_query import MultiQueryExpander
+        from rag_facile.query import get_expander
+        from rag_facile.query.multi_query import MultiQueryExpander
 
         client = MagicMock()
         config = _make_config(strategy="multi_query")
@@ -191,8 +191,8 @@ class TestGetExpander:
         assert isinstance(expander, MultiQueryExpander)
 
     def test_get_expander_hyde(self):
-        from rag_facile.query_expansion import get_expander
-        from rag_facile.query_expansion.hyde import HyDEExpander
+        from rag_facile.query import get_expander
+        from rag_facile.query.hyde import HyDEExpander
 
         client = MagicMock()
         config = _make_config(strategy="hyde")
@@ -200,7 +200,7 @@ class TestGetExpander:
         assert isinstance(expander, HyDEExpander)
 
     def test_get_expander_unknown_raises(self):
-        from rag_facile.query_expansion import get_expander
+        from rag_facile.query import get_expander
 
         client = MagicMock()
         config = _make_config(strategy="unknown_strategy")
