@@ -31,6 +31,77 @@ class PresetConfig(TypedDict):
 # GitHub repository URL for installing the library from source
 _GITHUB_REPO = "https://github.com/etalab-ia/rag-facile.git"
 
+# Default .gitignore for generated projects
+_GITIGNORE_CONTENT = """\
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Python
+__pycache__/
+*.py[codz]
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Testing
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
+.pyre/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Moon build system
+.moon/cache
+private/
+
+# Chainlit
+.chainlit/*
+!.chainlit/config.toml
+.files/
+
+# Reflex
+.web/
+.states/
+assets/external/
+backend.zip
+frontend.zip
+
+# Databases
+*.db
+*.sqlite3
+
+# Logs
+*.log
+"""
+
 
 def _get_library_git_ref() -> dict[str, str]:
     """Determine the git ref for rag-facile-lib and albert-client sources.
@@ -406,12 +477,14 @@ def generate_standalone(
     git_ref = _get_library_git_ref()
     ref_key, ref_value = next(iter(git_ref.items()))
 
-    # Step 1: Create target directory
+    # Step 1: Create target directory and initialize git repo
     console.print()
     console.print("[bold green]Step 1:[/bold green] Creating project directory...")
     if not target_path.exists():
         target_path.mkdir(parents=True)
     console.print("[green]✓[/green] Directory created")
+
+    _init_git_repo(target_path)
 
     # Step 2: Generate standalone pyproject.toml
     console.print()
@@ -463,6 +536,9 @@ package = true
 
     (target_path / "pyproject.toml").write_text(pyproject_content)
     console.print("[dim]  ✓ pyproject.toml[/dim]")
+
+    (target_path / ".gitignore").write_text(_GITIGNORE_CONTENT)
+    console.print("[dim]  ✓ .gitignore[/dim]")
 
     # Copy and render app files from template
     files_to_copy = [
@@ -566,6 +642,14 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
         dev_cmd = ["uv", "run", "reflex", "run"]
 
     subprocess.run(dev_cmd, cwd=target_path)
+
+
+def _init_git_repo(target_path: Path) -> None:
+    """Initialize a git repository at target_path, printing status."""
+    if not run_command(["git", "init"], "initialize git repository", cwd=target_path):
+        console.print("[yellow]  ⚠ git init failed — run manually: git init[/yellow]")
+    else:
+        console.print("[dim]  ✓ git repository initialized[/dim]")
 
 
 def run_command(cmd: list[str], description: str, cwd: Path | None = None) -> bool:
@@ -801,6 +885,8 @@ def run(
     if not target_path.exists():
         target_path.mkdir(parents=True)
 
+    _init_git_repo(target_path)
+
     if not run_command(["moon", "init", "--yes"], "moon init", cwd=target_path):
         raise typer.Exit(1)
     console.print("[green]✓[/green] Moon workspace initialized")
@@ -928,6 +1014,10 @@ def run(
         "    moon generate {{{{template}}}}\n"
     )
     console.print("[dim]  ✓ justfile[/dim]")
+
+    (target_path / ".gitignore").write_text(_GITIGNORE_CONTENT)
+    console.print("[dim]  ✓ .gitignore[/dim]")
+
     console.print("[green]✓[/green] Workspace configuration written")
 
     # 3. Copy app template and run moon generate for the frontend

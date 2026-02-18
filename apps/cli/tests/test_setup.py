@@ -466,6 +466,49 @@ class TestGenerateStandalone:
         cmd = calls[0][0][0]
         assert cmd == ["uv", "run", "chainlit", "run", "app.py", "-w"]
 
+    def _run_generate_standalone(self, standalone_target, preset_config):
+        """Helper: invoke generate_standalone with default Chainlit/balanced args."""
+        from cli.commands.setup import generate_standalone
+
+        generate_standalone(
+            target_path=standalone_target,
+            target_display=str(standalone_target),
+            frontend_choice="Chainlit",
+            selected_modules=[],
+            env_config={
+                "openai_api_key": "test-key",
+                "openai_base_url": "https://api.test.com",
+            },
+            preset="balanced",
+            preset_config=preset_config,
+        )
+
+    def test_creates_gitignore(
+        self, standalone_target, mock_standalone_deps, preset_config
+    ):
+        """Should create a .gitignore file."""
+        self._run_generate_standalone(standalone_target, preset_config)
+        assert (standalone_target / ".gitignore").exists()
+
+    def test_gitignore_protects_env_file(
+        self, standalone_target, mock_standalone_deps, preset_config
+    ):
+        """Should include .env in .gitignore to prevent secret leaks."""
+        self._run_generate_standalone(standalone_target, preset_config)
+        gitignore = (standalone_target / ".gitignore").read_text()
+        assert ".env" in gitignore
+        assert ".venv/" in gitignore
+        assert "__pycache__/" in gitignore
+
+    def test_runs_git_init(
+        self, standalone_target, mock_standalone_deps, preset_config
+    ):
+        """Should call git init to initialize a repository."""
+        self._run_generate_standalone(standalone_target, preset_config)
+        calls = mock_standalone_deps["run_command"].call_args_list
+        git_init_calls = [c for c in calls if c.args[0] == ["git", "init"]]
+        assert len(git_init_calls) == 1
+
 
 class TestGenerateStandaloneReflex:
     """Tests for standalone Reflex project generation."""
@@ -705,6 +748,35 @@ class TestWorkspaceCommand:
 
         # copytree should be called for each template
         assert mock_generation["copytree"].call_count >= 1
+
+    def test_workspace_creates_gitignore(self, mock_generation, tmp_path):
+        """Should create a .gitignore at the workspace root."""
+        target = tmp_path / "test-app"
+
+        runner.invoke(main_app, ["setup", str(target), "--expert"])
+
+        assert (target / ".gitignore").exists()
+
+    def test_workspace_gitignore_protects_env_file(self, mock_generation, tmp_path):
+        """Should include .env in the workspace .gitignore."""
+        target = tmp_path / "test-app"
+
+        runner.invoke(main_app, ["setup", str(target), "--expert"])
+
+        gitignore = (target / ".gitignore").read_text()
+        assert ".env" in gitignore
+        assert ".venv/" in gitignore
+        assert "__pycache__/" in gitignore
+
+    def test_workspace_runs_git_init(self, mock_generation, tmp_path):
+        """Should run git init before moon init."""
+        target = tmp_path / "test-app"
+
+        runner.invoke(main_app, ["setup", str(target), "--expert"])
+
+        calls = mock_generation["subprocess_run"].call_args_list
+        git_init_calls = [c for c in calls if c.args[0] == ["git", "init"]]
+        assert len(git_init_calls) == 1
 
 
 class TestStandaloneWorkspaceCommand:
