@@ -137,7 +137,7 @@ class AlbertPipeline(RAGPipeline):
         logger.info("Ingested '%s' into collection %s", filename, collection_id)
         return f"[Document indexed: {filename}]"
 
-    # ── Query-time: search -> rerank -> format ──
+    # ── Query-time: [expand ->] search -> [fuse ->] rerank -> format ──
 
     def process_query(
         self,
@@ -147,9 +147,12 @@ class AlbertPipeline(RAGPipeline):
         """Retrieve relevant context from Albert collections.
 
         Orchestrates the full retrieval pipeline:
-        1. Search for relevant chunks (retrieval package)
-        2. Optionally rerank results (reranking package)
-        3. Format chunks as LLM context (context package)
+
+        0. Query expansion (optional — only when ``query.strategy != "none"``)
+        1. Search for relevant chunks — one call per expanded query (retrieval)
+        2. Fuse multi-query results via RRF (retrieval) — only when expanded
+        3. Rerank results using the original query (reranking)
+        4. Format chunks as LLM context (context)
 
         All parameters default to ragfacile.toml config values.
 
@@ -167,7 +170,7 @@ class AlbertPipeline(RAGPipeline):
         from rag_facile.context import format_context
         from rag_facile.core import get_config
         from rag_facile.reranking import rerank_chunks
-        from rag_facile.retrieval import search_chunks
+        from rag_facile.retrieval import fuse_results, search_chunks
 
         config = get_config()
 
@@ -196,20 +199,47 @@ class AlbertPipeline(RAGPipeline):
         collection_ids = list(ids)
         logger.info("Searching collections: %s", collection_ids)
 
-        # Step 1: Search
-        chunks = search_chunks(
-            client,
-            query,
-            collection_ids,
-            limit=config.retrieval.top_k,
-            method=config.retrieval.strategy,
-            score_threshold=config.retrieval.score_threshold,
-        )
+        # Step 0: Query expansion (optional)
+        # When enabled, generates N query variants in formal French administrative
+        # language. Results are merged via RRF before reranking.
+        if config.query.strategy != "none":
+            from rag_facile.query_expansion import get_expander
+
+            expander = get_expander(client, config)
+            queries = expander.expand(query)
+            logger.info(
+                "Query expansion (%s): %d → %d queries",
+                config.query.strategy,
+                1,
+                len(queries),
+            )
+            all_results = [
+                search_chunks(
+                    client,
+                    q,
+                    collection_ids,
+                    limit=config.retrieval.top_k,
+                    method=config.retrieval.strategy,
+                    score_threshold=config.retrieval.score_threshold,
+                )
+                for q in queries
+            ]
+            chunks = fuse_results(all_results, limit=config.retrieval.top_k)
+        else:
+            # Step 1: Single search (default path — no expansion overhead)
+            chunks = search_chunks(
+                client,
+                query,
+                collection_ids,
+                limit=config.retrieval.top_k,
+                method=config.retrieval.strategy,
+                score_threshold=config.retrieval.score_threshold,
+            )
 
         if not chunks:
             return ""
 
-        # Step 2: Rerank (optional)
+        # Step 2 (was Step 2): Rerank — always uses the ORIGINAL query for precision
         if config.reranking.enabled:
             chunks = rerank_chunks(
                 client,
@@ -219,7 +249,7 @@ class AlbertPipeline(RAGPipeline):
                 top_n=config.reranking.top_n,
             )
 
-        # Step 3: Format as LLM context
+        # Step 3 (was Step 3): Format as LLM context
         return format_context(chunks)
 
     # ── Collection management (delegated to storage) ──

@@ -224,13 +224,28 @@ class StorageConfig(BaseModel):
 
 
 # ==============================================================================
-# QUERY ENHANCEMENT
+# QUERY EXPANSION
 # ==============================================================================
 
 
-class QueryConfig(BaseModel):
-    """Configuration for query enhancement."""
+class QueryExpansionConfig(BaseModel):
+    """Configuration for query expansion before retrieval.
 
+    Query expansion bridges the vocabulary gap between colloquial user queries
+    (acronyms, slang) and the formal language of indexed official documents.
+
+    The default strategy is ``"none"`` — expansion is opt-in.
+
+    Enable in ``ragfacile.toml``::
+
+        [query]
+        strategy = "multi_query"
+        num_variations = 3
+        include_original = true
+        model = "openweight-medium"
+    """
+
+    # ── Legacy flags (kept for backward compatibility) ──
     rewrite_enabled: bool = Field(
         default=False,
         description="Enable query rewriting for poorly phrased queries",
@@ -243,6 +258,37 @@ class QueryConfig(BaseModel):
         default=False,
         description="Enable spell checking and correction",
     )
+
+    # ── Strategy-based expansion ──
+    strategy: Literal["multi_query", "hyde", "none"] = Field(
+        default="none",
+        description=(
+            'Expansion strategy: "multi_query" generates N formal French variations, '
+            '"hyde" generates a hypothetical administrative document for embedding, '
+            '"none" disables expansion (default).'
+        ),
+    )
+    num_variations: int = Field(
+        default=3,
+        ge=1,
+        le=5,
+        description="Number of query variations to generate (multi_query only)",
+    )
+    model: str = Field(
+        default="openweight-medium",
+        description="LLM model alias used for query expansion",
+    )
+    include_original: bool = Field(
+        default=True,
+        description=(
+            "Always include the original query alongside generated expansions. "
+            "Recommended: keeps single-query recall as a safety net."
+        ),
+    )
+
+
+# Backward-compatible alias
+QueryConfig = QueryExpansionConfig
 
 
 # ==============================================================================
@@ -492,9 +538,9 @@ class RAGConfig(BaseModel):
         default_factory=StorageConfig,
         description="Vector storage",
     )
-    query: QueryConfig = Field(
-        default_factory=QueryConfig,
-        description="Query enhancement",
+    query: QueryExpansionConfig = Field(
+        default_factory=QueryExpansionConfig,
+        description="Query expansion",
     )
     retrieval: RetrievalConfig = Field(
         default_factory=RetrievalConfig,
@@ -603,10 +649,13 @@ PIPELINE_STAGES: list[PipelineStage] = [
     ),
     PipelineStage(
         key="query",
-        title="Query Enhancement",
-        description="Rewrite, expand, or correct user queries before retrieval.",
+        title="Query Expansion",
+        description=(
+            "Expand user queries into formal French administrative vocabulary "
+            "before retrieval (multi-query or HyDE strategies)."
+        ),
         emoji="\U0001f50d",
-        model=QueryConfig,
+        model=QueryExpansionConfig,
     ),
     PipelineStage(
         key="retrieval",

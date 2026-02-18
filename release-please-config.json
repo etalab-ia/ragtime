@@ -14,6 +14,7 @@
 				"packages/context/pyproject.toml",
 				"packages/ingestion/pyproject.toml",
 				"packages/pipelines/pyproject.toml",
+				"packages/query-expansion/pyproject.toml",
 				"packages/rag-core/pyproject.toml",
 				"packages/reranking/pyproject.toml",
 				"packages/retrieval/pyproject.toml",

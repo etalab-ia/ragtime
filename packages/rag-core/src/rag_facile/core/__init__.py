@@ -44,6 +44,7 @@ from .schema import (
     MetaConfig,
     PipelineStage,
     QueryConfig,
+    QueryExpansionConfig,
     RAGConfig,
     RerankingConfig,
     RetrievalConfig,
@@ -64,7 +65,8 @@ __all__ = [
     "ChunkingConfig",
     "EmbeddingConfig",
     "StorageConfig",
-    "QueryConfig",
+    "QueryConfig",  # backward-compat alias for QueryExpansionConfig
+    "QueryExpansionConfig",
     "RetrievalConfig",
     "RerankingConfig",
     "ContextConfig",

@@ -214,6 +214,7 @@ class TestAlbertPipeline:
             patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
+            mock_config.query.strategy = "none"
             mock_config.retrieval.top_k = 10
             mock_config.retrieval.strategy = "hybrid"
             mock_config.retrieval.score_threshold = 0.0
@@ -253,6 +254,7 @@ class TestAlbertPipeline:
             patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
+            mock_config.query.strategy = "none"
             mock_config.retrieval.top_k = 10
             mock_config.retrieval.strategy = "hybrid"
             mock_config.retrieval.score_threshold = 0.0
@@ -282,6 +284,7 @@ class TestAlbertPipeline:
             patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
+            mock_config.query.strategy = "none"
             mock_config.retrieval.top_k = 10
             mock_config.retrieval.strategy = "hybrid"
             mock_config.retrieval.score_threshold = 0.0
@@ -349,6 +352,7 @@ class TestAlbertPipeline:
             patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
+            mock_config.query.strategy = "none"
             mock_config.storage.collections = [42, 87]
             mock_config.retrieval.top_k = 10
             mock_config.retrieval.strategy = "hybrid"
@@ -386,6 +390,7 @@ class TestAlbertPipeline:
             patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
+            mock_config.query.strategy = "none"
             mock_config.storage.collections = [42, 87]
             mock_config.retrieval.top_k = 10
             mock_config.retrieval.strategy = "hybrid"
@@ -443,6 +448,7 @@ class TestAlbertPipeline:
             patch("rag_facile.core.get_config") as mock_get_config,
         ):
             mock_config = MagicMock()
+            mock_config.query.strategy = "none"
             mock_config.storage.collections = []
             mock_config.retrieval.top_k = 10
             mock_config.retrieval.strategy = "hybrid"
