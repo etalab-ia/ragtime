@@ -162,7 +162,7 @@ Hybrid search is the production standard. BM25 + dense + RRF consistently outper
 
 ## Phase 7 — Reranking
 
-**Current implementation**: `openweight-rerank` + `Alibaba-NLP/gte-multilingual-reranker-base` ✅
+**Current implementation**: `BAAI/bge-reranker-v2-m3` via Albert API alias `openweight-rerank` ✅
 
 **Reranking is the highest-ROI single optimisation in a RAG pipeline: +30–40% precision at ~150 ms P50.**
 
@@ -170,8 +170,8 @@ Hybrid search is the production standard. BM25 + dense + RRF consistently outper
 
 | Reranker | Accuracy gain vs retrieval-only | Context length | Licence |
 |----------|--------------------------------|---------------|---------|
-| **[Alibaba GTE-multilingual](https://huggingface.co/Alibaba-NLP/gte-multilingual-reranker-base)** (current) | +35–45% | 8 192 | Apache 2.0 |
-| [BGE-reranker-v2-m3](https://huggingface.co/BAAI/bge-reranker-v2-m3) | +32–42% | 8 192 | Apache 2.0 |
+| **[BGE-reranker-v2-m3](https://huggingface.co/BAAI/bge-reranker-v2-m3)** (current — `openweight-rerank`) | +32–42% | 8 192 | MIT |
+| [Alibaba GTE-multilingual](https://huggingface.co/Alibaba-NLP/gte-multilingual-reranker-base) | +35–45% | 8 192 | Apache 2.0 |
 | RankGPT (LLM-based listwise) | +45–55% | 32 000+ | Proprietary API |
 
 **Optimal funnel**: Retrieve 100 → rerank 50 → return top 5–7 to the LLM. French text is 15–20% longer than English, making the 8 192-token context window of GTE-multilingual important for administrative documents.

@@ -27,7 +27,7 @@ rag-facile does exactly this, in two steps:
 1. **Retrieval** (`top_k`): A fast model fetches a broad set of candidate passages (typically 20–100).
 2. **Reranking** (`top_n`): A more powerful cross-encoder model re-reads each passage *jointly with your question* and re-scores them to surface the truly relevant ones.
 
-This two-stage funnel matters because the first-stage model is optimised for speed, not precision. The reranker takes its time and dramatically improves accuracy: **+30–40% over retrieval alone**, at the cost of only about 150 milliseconds. The reranker used by rag-facile — [`Alibaba-NLP/gte-multilingual-reranker-base`](https://huggingface.co/Alibaba-NLP/gte-multilingual-reranker-base) — is specifically trained on 75+ languages and handles the longer sentence structures typical of French administrative text.
+This two-stage funnel matters because the first-stage model is optimised for speed, not precision. The reranker takes its time and dramatically improves accuracy: **+30–40% over retrieval alone**, at the cost of only about 150 milliseconds. The reranker used by rag-facile — [`BAAI/bge-reranker-v2-m3`](https://huggingface.co/BAAI/bge-reranker-v2-m3), available via the Albert API as `openweight-rerank` — supports multiple languages including French and handles the longer sentence structures typical of French administrative text.
 
 ---
 
