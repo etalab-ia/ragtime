@@ -217,6 +217,30 @@ class AlbertClient:
         self.audio = self._client.audio
         self.models = self._client.models
 
+    def as_instructor(self):
+        """Return an instructor-patched version of the internal OpenAI client.
+
+        Enables structured Pydantic output via the ``instructor`` library, using
+        the same API key, base URL, and connection pool as the rest of the client.
+
+        Example::
+
+            from my_package._models import ExpandedQueries
+
+            ic = client.as_instructor()
+            result = ic.chat.completions.create(
+                model="openweight-medium",
+                response_model=ExpandedQueries,
+                messages=[{"role": "user", "content": "..."}],
+            )
+
+        Returns:
+            Instructor-patched :class:`openai.OpenAI` client.
+        """
+        import instructor
+
+        return instructor.from_openai(self._client)
+
     def close(self) -> None:
         """Close the underlying client."""
         self._client.close()

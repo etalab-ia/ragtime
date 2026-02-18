@@ -53,7 +53,7 @@ def test_load_accurate_preset():
     assert config.meta.preset == "accurate"
     assert config.generation.model == "openweight-large"
     assert config.hallucination.enabled is True
-    assert config.retrieval.top_k == 20
+    assert config.retrieval.top_k == 10
 
 
 def test_load_legal_preset():
@@ -62,7 +62,7 @@ def test_load_legal_preset():
 
     assert config.meta.preset == "legal"
     assert config.generation.model == "openweight-large"
-    assert config.generation.temperature == 0.3  # Low for legal
+    assert config.generation.temperature == 0.1  # Very low for legal consistency
     assert config.hallucination.enabled is True
     assert config.hallucination.threshold == 0.95  # Very strict
     assert config.hallucination.fallback == "reject"

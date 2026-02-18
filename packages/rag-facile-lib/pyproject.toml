@@ -40,6 +40,7 @@ packages = []
 "../context/src/rag_facile/context" = "rag_facile/context"
 "../ingestion/src/rag_facile/ingestion" = "rag_facile/ingestion"
 "../pipelines/src/rag_facile/pipelines" = "rag_facile/pipelines"
+"../query/src/rag_facile/query" = "rag_facile/query"
 "../rag-core/src/rag_facile/core" = "rag_facile/core"
 "../rag-core/presets" = "rag_facile/core/presets"
 "../reranking/src/rag_facile/reranking" = "rag_facile/reranking"

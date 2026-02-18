@@ -265,6 +265,20 @@ When adding a new package to the monorepo (`packages/mypkg/`):
 
 ## 6. Recent Work & Features (Feb 2026)
 
+### Query Expansion System (✅ Completed Feb 18, 2026)
+
+- **Problem**: Vocabulary mismatch — users write colloquial queries ("APL", "CNI") that don't match the formal French of indexed documents.
+- **Package**: `packages/query/` → `rag_facile.query` namespace
+- **Architecture**: Strategy Pattern (`QueryExpander` ABC, `get_expander(client, config)` factory)
+- **Strategies**:
+  - `multi_query`: generates 3–5 formal French administrative query variants via LLM (instructor + Pydantic structured output); results merged with Reciprocal Rank Fusion (RRF)
+  - `hyde`: generates a hypothetical ideal administrative document to embed instead of the raw query
+- **Key design**: `AlbertClient.as_instructor()` added to both sync/async clients — single choke point for structured LLM output, reusable by any package
+- **Aggregation**: `fuse_results()` in `packages/retrieval/` implements RRF (k=60), de-duplicating chunks by `(chunk_id, collection_id)` and boosting chunks confirmed by multiple query angles
+- **Integration**: `AlbertPipeline.process_query()` Step 0; default `strategy = "none"` → zero impact for existing deployments
+- **Preset activation**: `accurate` and `hr` presets set `strategy = "multi_query"`; `legal` keeps `strategy = "none"` to preserve exact terminology
+- **Config**: `[query] strategy = "multi_query"` in `ragfacile.toml`
+
 ### Library Package + rag_facile Namespace (✅ PR #121, Feb 17, 2026)
 - **What changed**: All 7 pipeline packages now live under `rag_facile.*` namespace
 - **Packages**: `rag_facile.core`, `rag_facile.ingestion`, `rag_facile.pipelines`, `rag_facile.retrieval`, `rag_facile.reranking`, `rag_facile.context`, `rag_facile.storage`
@@ -273,6 +287,20 @@ When adding a new package to the monorepo (`packages/mypkg/`):
 - **Standalone** structure: `pyproject.toml` + frontend app + `src/<name>/` for user code
 - **Monorepo** setup: inlines workspace config directly (no sys-config template)
 - **Import style**: `from rag_facile.pipelines import get_pipeline` (not `from pipelines import ...`)
+
+### Issue #46: Proxy Support (✅ Completed Feb 6, 2026)
+- **Problem**: Proto plugin installation fails on networks with proxies/VPNs
+- **Root Cause**: Proto's reqwest doesn't auto-detect HTTP_PROXY env vars
+- **Solution**: Enhanced install.sh with automatic proxy detection + .prototools generation
+- **Implementation**:
+  - `setup_proxy_config()` function detects and configures proxy
+  - Creates `~/.proto/.prototools` with proxy settings
+  - Detects corporate proxies (SSL inspection) and provides guidance
+  - Improved error messages with troubleshooting steps
+- **Documentation**: 
+  - `docs/guides/proxy-setup.md` - User guide for corporate networks
+  - `docs/troubleshooting/proxy.md` - Symptom-based troubleshooting
+  - `docs/technical/` - Research and investigation details
 
 ### True RAG Pipeline (✅ PR #96, Feb 16, 2026)
 - **What changed**: Replaced context-stuffing with real RAG (auto-managed Albert collections)

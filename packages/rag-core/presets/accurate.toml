@@ -44,9 +44,14 @@ distance_metric = "cosine"
 collections = [785, 1094]  # service-public, data-gouv-datasets-catalog (discover more with: rag-facile collections list)
 
 [query]
-rewrite_enabled = true  # Improve query quality
-expand_enabled = true  # Find more relevant results
-spell_check = true  # Fix typos
+strategy = "multi_query"             # expand acronyms + formal French administrative variants
+num_variations = 3                   # 3 variations balances coverage vs. latency
+model = "openweight-medium"
+include_original = true
+# Legacy flags (kept for backward compatibility)
+rewrite_enabled = true
+expand_enabled = true
+spell_check = true
 
 [retrieval]
 strategy = "hybrid"  # Best of both worlds

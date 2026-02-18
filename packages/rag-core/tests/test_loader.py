@@ -139,7 +139,7 @@ def test_env_var_does_not_affect_unset_values(tmp_path: Path, monkeypatch):
     # Overridden value
     assert loaded_config.generation.model == "openweight-large"
     # Other values remain default
-    assert loaded_config.generation.temperature == 0.7
+    assert loaded_config.generation.temperature == 0.2
     assert loaded_config.retrieval.top_k == 10
 
 

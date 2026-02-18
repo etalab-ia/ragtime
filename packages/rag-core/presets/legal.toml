@@ -44,9 +44,14 @@ distance_metric = "cosine"
 collections = [785]  # service-public (discover more with: rag-facile collections list)
 
 [query]
-rewrite_enabled = false  # Preserve exact legal terminology
-expand_enabled = false  # Legal terms are precise
-spell_check = true  # Catch typos but preserve legal terms
+strategy = "none"                    # preserve exact legal terminology — no expansion
+num_variations = 3
+model = "openweight-medium"
+include_original = true
+# Legacy flags (kept for backward compatibility)
+rewrite_enabled = false
+expand_enabled = false
+spell_check = true
 
 [retrieval]
 strategy = "hybrid"  # Lexical important for exact legal terms

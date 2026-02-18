@@ -44,9 +44,14 @@ distance_metric = "cosine"
 collections = [784, 785]  # travail-emploi, service-public (discover more with: rag-facile collections list)
 
 [query]
-rewrite_enabled = true  # HR queries often informal
-expand_enabled = true  # Find related policies
-spell_check = true  # Friendly to typos
+strategy = "multi_query"             # HR queries are often informal — expand to formal terms
+num_variations = 3
+model = "openweight-medium"
+include_original = true
+# Legacy flags (kept for backward compatibility)
+rewrite_enabled = true
+expand_enabled = true
+spell_check = true
 
 [retrieval]
 strategy = "hybrid"  # Balance semantic understanding with keyword matching

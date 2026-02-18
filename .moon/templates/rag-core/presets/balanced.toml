@@ -59,9 +59,14 @@ distance_metric = "cosine"
 collections = [785]  # service-public (discover more with: rag-facile collections list)
 
 # ==============================================================================
-# QUERY ENHANCEMENT
+# QUERY EXPANSION
 # ==============================================================================
 [query]
+strategy = "none"                    # "multi_query", "hyde", or "none" (default: off)
+num_variations = 3                   # query variations to generate (multi_query only)
+model = "openweight-medium"          # LLM model for expansion
+include_original = true              # always include the original query alongside variants
+# Legacy flags (kept for backward compatibility)
 rewrite_enabled = false
 expand_enabled = false
 spell_check = false

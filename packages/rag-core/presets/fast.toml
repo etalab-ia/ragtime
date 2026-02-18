@@ -44,6 +44,11 @@ distance_metric = "cosine"
 collections = [785]  # service-public (discover more with: rag-facile collections list)
 
 [query]
+strategy = "none"                    # skip expansion for speed
+num_variations = 3
+model = "openweight-medium"
+include_original = true
+# Legacy flags (kept for backward compatibility)
 rewrite_enabled = false
 expand_enabled = false
 spell_check = false

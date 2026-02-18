@@ -20,18 +20,32 @@ from .schema import RAGConfig
 def _get_preset_dir() -> Path:
     """Get the presets directory path.
 
+    Presets live at ``packages/rag-core/presets/`` in the monorepo but are
+    *copied* (not symlinked) into the wheel/editable install because they sit
+    outside ``src/``.  To avoid silently serving stale preset files during
+    development, we search the CWD ancestor tree for the workspace source
+    first, and only fall back to the bundled copy for installed deployments.
+
     Returns:
-        Path to presets directory (bundled or development)
+        Path to presets directory (source tree or bundled)
     """
-    # Try bundled location (installed package)
+    # Dev / workspace mode: walk up from CWD to find the monorepo source.
+    # Takes priority so edits to preset TOML files are picked up immediately
+    # without needing `uv sync --reinstall-package rag-core`.
+    current = Path.cwd().resolve()
+    while True:
+        candidate = current / "packages" / "rag-core" / "presets"
+        if candidate.is_dir():
+            return candidate
+        parent = current.parent
+        if parent == current:
+            break
+        current = parent
+
+    # Installed package (end-user deployment): use the copy bundled in the wheel.
     bundled = Path(__file__).parent / "presets"
     if bundled.exists():
         return bundled
-
-    # Try development location (repo structure: core/ → rag_facile/ → src/ → rag-core/ → presets/)
-    dev = Path(__file__).parent.parent.parent.parent / "presets"
-    if dev.exists():
-        return dev
 
     raise FileNotFoundError("Presets directory not found")
 
