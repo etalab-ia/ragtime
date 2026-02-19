@@ -1,5 +1,6 @@
+from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_version
-from typing import Optional
+from typing import Any, Optional
 
 import click
 import typer
@@ -33,18 +34,33 @@ class AlphabeticalGroup(typer.core.TyperGroup):
     def list_commands(self, ctx: click.Context) -> list[str]:
         return sorted(super().list_commands(ctx))
 
+    def main(self, *args: Any, **kwargs: Any) -> Any:
+        # Print banner and version before any argument parsing or error handling,
+        # so they always appear regardless of subcommand validity.
+        try:
+            console.print(BANNER)
+            try:
+                cli_version = get_version("rag-facile-cli")
+                console.print(f"[cyan]rag-facile v{cli_version}[/cyan]\n")
+            except PackageNotFoundError:
+                pass
+        except Exception:
+            # Skip if terminal doesn't support Unicode (e.g., Git Bash on Windows with cp1252)
+            pass
+        return super().main(*args, **kwargs)
+
 
 app = typer.Typer(
     cls=AlphabeticalGroup,
     add_completion=False,
     invoke_without_command=True,
-    no_args_is_help=True,
     help="RAG Facile CLI - Build RAG applications for the French government",
 )
 
 
 @app.callback()
 def main_callback(
+    ctx: typer.Context,
     version: Optional[bool] = typer.Option(
         None,
         "--version",
@@ -53,16 +69,12 @@ def main_callback(
     ),
 ) -> None:
     """RAG Facile CLI - Build RAG applications for the French government."""
-    try:
-        console.print(BANNER)
-    except Exception:
-        # Skip banner if terminal doesn't support Unicode (e.g., Git Bash on Windows with cp1252)
-        # Catching all exceptions since rich may wrap UnicodeEncodeError
-        pass
-
     if version:
-        cli_version = get_version("rag-facile-cli")
-        console.print(f"[cyan]rag-facile v{cli_version}[/cyan]")
+        raise typer.Exit()
+
+    # Show help when no subcommand is given (banner + version already printed above).
+    if ctx.invoked_subcommand is None:
+        console.print(ctx.get_help())
         raise typer.Exit()
 
 
