@@ -27,9 +27,16 @@ BANNER = """[magenta]
 [/magenta]"""
 
 
-# Commands in the Getting Started panel sort before Advanced Tools commands,
-# then alphabetically within each panel.
-_GETTING_STARTED_COMMANDS = {"setup", "uninstall", "upgrade"}
+# Getting Started command definitions — single source of truth for both
+# panel registration and sort-key logic in PanelAlphabeticalGroup.
+_GETTING_STARTED_DEFS: dict[str, tuple] = {
+    "setup": (setup.run, "Setup a new workspace"),
+    "uninstall": (uninstall.run, "Remove the RAG Facile CLI (--all for toolchain too)"),
+    "upgrade": (upgrade.run, "Upgrade to the latest version"),
+}
+
+_PANEL_GETTING_STARTED = "🚀 Getting Started"
+_PANEL_ADVANCED_TOOLS = "🔧 Advanced Tools"
 
 
 class PanelAlphabeticalGroup(typer.core.TyperGroup):
@@ -39,7 +46,7 @@ class PanelAlphabeticalGroup(typer.core.TyperGroup):
         all_names = list(super().list_commands(ctx))
         return sorted(
             all_names,
-            key=lambda n: (0 if n in _GETTING_STARTED_COMMANDS else 1, n),
+            key=lambda n: (0 if n in _GETTING_STARTED_DEFS else 1, n),
         )
 
 
@@ -76,21 +83,8 @@ def main_callback(
 
 
 # Register Getting Started commands first so their panel renders at the top
-app.command(
-    name="setup", help="Setup a new workspace", rich_help_panel="🚀 Getting Started"
-)(setup.run)
-
-app.command(
-    name="uninstall",
-    help="Remove the RAG Facile CLI (--all for toolchain too)",
-    rich_help_panel="🚀 Getting Started",
-)(uninstall.run)
-
-app.command(
-    name="upgrade",
-    help="Upgrade to the latest version",
-    rich_help_panel="🚀 Getting Started",
-)(upgrade.run)
+for _name, (_func, _help) in _GETTING_STARTED_DEFS.items():
+    app.command(name=_name, help=_help, rich_help_panel=_PANEL_GETTING_STARTED)(_func)
 
 # Advanced Tools — registered after Getting Started so their panel renders below
 
@@ -103,7 +97,9 @@ collections_app = typer.Typer(
 collections_app.command("list", help="List accessible collections")(
     collections.list_collections
 )
-app.add_typer(collections_app, name="collections", rich_help_panel="🔧 Advanced Tools")
+app.add_typer(
+    collections_app, name="collections", rich_help_panel=_PANEL_ADVANCED_TOOLS
+)
 
 # Config command group
 config_app = typer.Typer(
@@ -117,12 +113,12 @@ config_app.command("set", help="Set configuration value")(config.set_value)
 config_app.add_typer(
     config.preset(), name="preset", help="Manage configuration presets"
 )
-app.add_typer(config_app, name="config", rich_help_panel="🔧 Advanced Tools")
+app.add_typer(config_app, name="config", rich_help_panel=_PANEL_ADVANCED_TOOLS)
 
 app.command(
     name="generate-dataset",
     help="Generate synthetic Q/A evaluation dataset from documents",
-    rich_help_panel="🔧 Advanced Tools",
+    rich_help_panel=_PANEL_ADVANCED_TOOLS,
 )(generate_dataset.run)
 
 
