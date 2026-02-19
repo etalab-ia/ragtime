@@ -38,13 +38,13 @@ app = typer.Typer(
     cls=AlphabeticalGroup,
     add_completion=False,
     invoke_without_command=True,
-    no_args_is_help=True,
     help="RAG Facile CLI - Build RAG applications for the French government",
 )
 
 
 @app.callback()
 def main_callback(
+    ctx: typer.Context,
     version: Optional[bool] = typer.Option(
         None,
         "--version",
@@ -63,6 +63,12 @@ def main_callback(
     if version:
         cli_version = get_version("rag-facile-cli")
         console.print(f"[cyan]rag-facile v{cli_version}[/cyan]")
+        raise typer.Exit()
+
+    # Show help when no subcommand is given (replaces no_args_is_help=True so the
+    # banner is printed first before the help text).
+    if ctx.invoked_subcommand is None:
+        console.print(ctx.get_help())
         raise typer.Exit()
 
 
