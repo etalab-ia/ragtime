@@ -71,8 +71,7 @@ _UI: dict[str, dict[str, str]] = {
             "J'ai eu besoin de trop d'étapes pour répondre. "
             "Pouvez-vous reformuler ou poser une question plus simple\u00a0?"
         ),
-        "rate_limited": "Limite de requêtes atteinte — nouvelle tentative dans {n}s\u00a0...",
-        "rate_limited_failed": "Limite de requêtes toujours atteinte. Attendez quelques secondes et réessayez.",
+        "rate_limited": "Limite de requêtes atteinte — nouvelle tentative dans {n}s (Ctrl+C pour annuler)\u00a0...",
     },
     "en": {
         "greeting": "Bonjour! I'm your RAG assistant.",
@@ -93,8 +92,7 @@ _UI: dict[str, dict[str, str]] = {
             "I needed too many steps to answer that. "
             "Could you rephrase or break it into smaller questions?"
         ),
-        "rate_limited": "Rate limit reached — retrying in {n}s...",
-        "rate_limited_failed": "Still rate limited. Wait a few seconds and try again.",
+        "rate_limited": "Rate limit reached — retrying in {n}s (Ctrl+C to cancel)...",
     },
 }
 
@@ -202,37 +200,38 @@ def start_chat() -> None:
             console.print(f"[dim]{ui['goodbye']}[/dim]")
             break
 
+        # Retry loop — keeps retrying on 429 until success or Ctrl+C
         response = None
-        with console.status(f"[dim]{ui['thinking']}[/dim]", spinner="dots"):
-            for _attempt in range(2):  # one automatic retry on 429
+        while True:
+            _rate_limited = False
+            with console.status(f"[dim]{ui['thinking']}[/dim]", spinner="dots"):
                 try:
                     response = agent.run(user_input, reset=False)
-                    break
                 except KeyboardInterrupt:
                     console.print(f"\n[yellow]{ui['interrupted']}[/yellow]")
-                    response = None
-                    break
                 except openai.APIError as exc:
                     console.print(f"[red]API error: {exc}[/red]")
                     console.print(f"[dim]{ui['api_error_hint']}[/dim]")
-                    response = None
-                    break
                 except AgentMaxStepsError:
                     console.print(f"[yellow]{ui['too_many_steps']}[/yellow]")
-                    response = None
-                    break
                 except AgentError as exc:
-                    if "429" in str(exc) and _attempt == 0:
-                        msg = ui["rate_limited"].format(n=_RATE_LIMIT_WAIT)
-                        console.print(f"\n[yellow]{msg}[/yellow]")
-                        time.sleep(_RATE_LIMIT_WAIT)
-                        continue  # retry
                     if "429" in str(exc):
-                        console.print(f"[yellow]{ui['rate_limited_failed']}[/yellow]")
+                        _rate_limited = True
                     else:
                         console.print(f"[red]Agent error: {exc}[/red]")
-                    response = None
-                    break
+
+            if not _rate_limited:
+                break  # success or non-retryable error — exit retry loop
+
+            # Rate limited: show message, sleep (interruptible by Ctrl+C), then retry
+            console.print(
+                f"[yellow]{ui['rate_limited'].format(n=_RATE_LIMIT_WAIT)}[/yellow]"
+            )
+            try:
+                time.sleep(_RATE_LIMIT_WAIT)
+            except KeyboardInterrupt:
+                console.print(f"\n[yellow]{ui['interrupted']}[/yellow]")
+                break
 
         if response is None:
             continue
