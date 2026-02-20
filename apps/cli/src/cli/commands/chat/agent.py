@@ -84,13 +84,16 @@ explain what the user could do themselves.
 Before responding to any message, decide whether one of these skills applies \
 and call activate_skill(name) as your FIRST action if so:
 
-- explain-rag         → user asks what something IS (concept, definition, "comment ça marche")
-- learn-retrieval     → user reports a PROBLEM with results (bad, irrelevant, missing)
-- tune-pipeline       → user wants to CHANGE or SET a parameter (top_k, top_n, preset…)
-- manage-collections  → user asks about collections, wants to enable/disable public datasets
-- generate-dataset    → user wants to generate an evaluation dataset from their documents
-- explore-codebase    → user asks WHERE something is in the code or how it is implemented
+- explain-rag         → user asks WHAT something IS (concept, definition, "comment ça marche", "qu'est-ce que")
+- learn-retrieval     → user reports a PROBLEM with results ("mauvais résultats", "ne trouve pas", "non pertinent")
+- tune-pipeline       → user wants to CHANGE a pipeline PARAMETER value (top_k, top_n, chunk_size, preset, temperature…)
+- manage-collections  → ANYTHING about collections: list them, activate one, deactivate one, add an ID ("activer la collection", "désactiver", "ajouter la collection")
+- generate-dataset    → user wants to CREATE an evaluation dataset from documents ("générer un dataset", "évaluer mon pipeline")
+- explore-codebase    → user asks WHERE something is in SOURCE CODE or how it is IMPLEMENTED
 - skill-creator       → user wants to CREATE a new custom skill
+
+Important: "activer/désactiver une collection" is ALWAYS manage-collections, never tune-pipeline. \
+tune-pipeline is only for numeric/string pipeline parameters, NOT for collections.
 
 Only activate ONE skill per session. If no skill clearly applies, respond directly.
 
@@ -322,7 +325,7 @@ def start_chat(debug: bool = False) -> None:
         model=model,
         instructions=_SYSTEM_PROMPT,
         verbosity_level=LogLevel.INFO if debug else LogLevel.OFF,
-        max_steps=5,
+        max_steps=10,
     )
 
     session_turns: list[tuple[str, str]] = []  # accumulated for post-session update
