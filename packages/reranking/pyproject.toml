@@ -1,6 +1,6 @@
 [project]
 name = "reranking"
-version = "0.16.0" # x-release-please-version
+version = "0.17.0" # x-release-please-version
 description = "Reranking - re-score retrieved chunks with a cross-encoder for higher precision"
 readme = "README.md"
 requires-python = ">=3.13"

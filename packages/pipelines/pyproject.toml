@@ -1,6 +1,6 @@
 [project]
 name = "pipelines"
-version = "0.16.0" # x-release-please-version
+version = "0.17.0" # x-release-please-version
 description = "RAG pipeline orchestration - coordinate ingestion, retrieval, and context assembly"
 readme = "README.md"
 requires-python = ">=3.13"

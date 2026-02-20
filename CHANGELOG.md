@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0](https://github.com/etalab-ia/rag-facile/compare/v0.16.0...v0.17.0) (2026-02-20)
+
+
+### Features
+
+* add --debug flag to show agent tool calls ([54a9a4a](https://github.com/etalab-ia/rag-facile/commit/54a9a4a4cb1e70b76a9bf60bbab86fcdfae5ba05))
+* add get_docs tool with bundled documentation ([b315d6f](https://github.com/etalab-ia/rag-facile/commit/b315d6fca7b9262267235c6d8bd609c31ef40a6c))
+* auto initial commit after rag-facile setup ([4d83f3e](https://github.com/etalab-ia/rag-facile/commit/4d83f3ef6c74083119a40aaee05aa85152a78150))
+* chat workspace init — first-run wizard ([465094c](https://github.com/etalab-ia/rag-facile/commit/465094c2be08792b23da414b644535ccf732e99e))
+* chat workspace init — first-run wizard ([051301c](https://github.com/etalab-ia/rag-facile/commit/051301c999bb5a8ada2332ef816c5c32ead8be27))
+* codebase awareness tools (get_agents_md, get_recent_git_activity) ([4f845e6](https://github.com/etalab-ia/rag-facile/commit/4f845e6200beb330ab04d2d5302989c1cc8507da))
+* codebase awareness tools (get_agents_md, get_recent_git_activity) ([771ab25](https://github.com/etalab-ia/rag-facile/commit/771ab25de3cdbbb96ff38ee07e002a0740bb0d8e))
+* git-backed session memory with post-session summarisation ([18502bc](https://github.com/etalab-ia/rag-facile/commit/18502bc879489c052ef29975fda8cead6701c4ef))
+* git-backed session memory with post-session summarisation ([46e3928](https://github.com/etalab-ia/rag-facile/commit/46e3928432a02fe65b805353d32654dc3bb9f3eb))
+* rag-facile chat — smolagents harness spike ([e912a0e](https://github.com/etalab-ia/rag-facile/commit/e912a0e7bd40e56064a89763dc6073fc9c30713c))
+* rag-facile chat — smolagents harness spike ([4764f55](https://github.com/etalab-ia/rag-facile/commit/4764f55892749871f0a89dbeaf77a00e0ce63817))
+* rationalise CLI UX — grouped help panels, simpler setup, smarter just run ([f846b93](https://github.com/etalab-ia/rag-facile/commit/f846b933d4bf182b3f70adbd8b925f09ea9e2959))
+* rationalise CLI UX — grouped help panels, simpler setup, smarter just run ([03a0f7f](https://github.com/etalab-ia/rag-facile/commit/03a0f7f548a99947cf163b9f286baea039668ed4))
+* skills system with 5 built-in skills + npx skills integration ([aefe01a](https://github.com/etalab-ia/rag-facile/commit/aefe01a22870685d11d7048fcf00a2ed55574d15))
+* skills system with 5 built-in skills + npx skills integration ([72b1f3d](https://github.com/etalab-ia/rag-facile/commit/72b1f3d61fc322cfce56bcf98b600f5a986b4dbf))
+* tool call notifications + skill bootstrap on explicit load ([6c019cd](https://github.com/etalab-ia/rag-facile/commit/6c019cd3f5f01c56efc74da9ff43d5b0b4a914c3))
+
+
+### Bug Fixes
+
+* address PR [#132](https://github.com/etalab-ia/rag-facile/issues/132) review comments ([c684454](https://github.com/etalab-ia/rag-facile/commit/c684454c4b7bd63f484543513830ae8b68be77d4))
+* address PR [#133](https://github.com/etalab-ia/rag-facile/issues/133) review comments ([79dd1dc](https://github.com/etalab-ia/rag-facile/commit/79dd1dc68946d5c0a3a0cef64f06bd71abdf96a5))
+* address PR [#134](https://github.com/etalab-ia/rag-facile/issues/134) review comments ([fc4ba80](https://github.com/etalab-ia/rag-facile/commit/fc4ba803f68c5be48e5cad93e686125ca93e6e22))
+* address PR [#135](https://github.com/etalab-ia/rag-facile/issues/135) review comments ([67665fe](https://github.com/etalab-ia/rag-facile/commit/67665fef517807845b7e5c5c8767b7bbfb23dccc))
+* address PR [#136](https://github.com/etalab-ia/rag-facile/issues/136) review comments ([625edbb](https://github.com/etalab-ia/rag-facile/commit/625edbba77da23451d1d38069e9d90d849b8c0cb))
+* always show banner and version before any output or error ([e4047f7](https://github.com/etalab-ia/rag-facile/commit/e4047f77e93a45321e21acd0faeba413e8fbf063))
+* always show banner before help text or error messages ([77ea4ae](https://github.com/etalab-ia/rag-facile/commit/77ea4ae943deeb9cbbc286b1615fc3168bbaa1c8))
+* always show banner before help text or error messages ([199de21](https://github.com/etalab-ia/rag-facile/commit/199de217886e5cc0d4f782be155db847f6333be4))
+* handle Albert API 429 rate limit with auto-retry in chat loop ([c315710](https://github.com/etalab-ia/rag-facile/commit/c315710a3405769024b6ed4e9d0e20f105db9e32))
+* include preset public collections in generated standalone config ([6d6d73b](https://github.com/etalab-ia/rag-facile/commit/6d6d73b102bfded860964af004655119a3107754))
+* include preset public collections in generated standalone config ([83d2c45](https://github.com/etalab-ia/rag-facile/commit/83d2c45ab2e7691d48988d25a55e81c491ee667d))
+* inject memory into first user turn instead of system prompt ([13699ec](https://github.com/etalab-ia/rag-facile/commit/13699ec67ab815702d364619429fb7deea3ab327))
+* language-first wizard order and localised chat UI ([fc332c5](https://github.com/etalab-ia/rag-facile/commit/fc332c56e3cd6b1692df841da7af1d8ff839d779))
+* localise no-workspace hint in welcome panel ([4d3658d](https://github.com/etalab-ia/rag-facile/commit/4d3658daede61a7804e0b83e108bf896298d9a5e))
+* rate limit retry loops indefinitely until Ctrl+C ([baa82b3](https://github.com/etalab-ia/rag-facile/commit/baa82b35afbda10210a84b1a675a7756016c44b5))
+* setup closing message shows both just run and rag-facile with real path ([6a619f6](https://github.com/etalab-ia/rag-facile/commit/6a619f6f655d3229f8e8558a514fba21465836d9))
+* skip session commit silently when .rag-facile/ is gitignored ([4969317](https://github.com/etalab-ia/rag-facile/commit/4969317f19e92fabd8247b146d1327b2cd24c2ea))
+* stop wizard falling through to second question on Ctrl+C ([0777307](https://github.com/etalab-ia/rag-facile/commit/0777307205b90937311207a413dcfe1716eb6deb))
+* suppress smolagents error output and clean up workspace display ([e4f0fbb](https://github.com/etalab-ia/rag-facile/commit/e4f0fbba2c2d848790adb0493eed4aea48f2a61a))
+
 ## [0.16.0](https://github.com/etalab-ia/rag-facile/compare/v0.15.0...v0.16.0) (2026-02-18)
 
 

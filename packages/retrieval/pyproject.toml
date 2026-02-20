@@ -1,6 +1,6 @@
 [project]
 name = "retrieval"
-version = "0.16.0" # x-release-please-version
+version = "0.17.0" # x-release-please-version
 description = "Unified retrieval package - basic context injection and Albert RAG"
 readme = "README.md"
 requires-python = ">=3.13"

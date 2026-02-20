@@ -1,6 +1,6 @@
 [project]
 name = "storage"
-version = "0.16.0" # x-release-please-version
+version = "0.17.0" # x-release-please-version
 description = "Vector storage and collection management for the RAG pipeline"
 readme = "README.md"
 requires-python = ">=3.13"
