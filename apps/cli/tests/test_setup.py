@@ -460,11 +460,10 @@ class TestGenerateStandalone:
             preset_config=preset_config,
         )
 
-        # Check subprocess.run was called with chainlit command
+        # Check subprocess.run was called: git add + git commit + chainlit server
         calls = mock_standalone_deps["subprocess"].call_args_list
-        assert len(calls) == 1
-        cmd = calls[0][0][0]
-        assert cmd == ["uv", "run", "chainlit", "run", "app.py", "-w"]
+        cmds = [c[0][0] for c in calls]
+        assert ["uv", "run", "chainlit", "run", "app.py", "-w"] in cmds
 
     def _run_generate_standalone(self, standalone_target, preset_config):
         """Helper: invoke generate_standalone with default Chainlit/balanced args."""
@@ -592,8 +591,8 @@ class TestGenerateStandaloneReflex:
         )
 
         calls = mock_standalone_deps["subprocess"].call_args_list
-        assert len(calls) == 1
-        cmd = calls[0][0][0]
+        cmds = [c[0][0] for c in calls]
+        cmd = cmds[-1]  # last call is the dev server
         assert cmd == ["uv", "run", "reflex", "run"]
 
 

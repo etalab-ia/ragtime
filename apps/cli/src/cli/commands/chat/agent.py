@@ -5,6 +5,7 @@ or explicitly via `rag-facile chat`.
 """
 
 import os
+import time
 from pathlib import Path
 
 import openai
@@ -18,6 +19,13 @@ from smolagents.monitoring import LogLevel
 from smolagents.utils import AgentError, AgentMaxStepsError
 
 from cli.commands.chat.init import needs_init, read_language, run_init_wizard
+from cli.commands.chat.memory import (
+    append_turn,
+    git_commit_session,
+    increment_session_count,
+    load_context,
+    update_memory,
+)
 from cli.commands.chat.tools import get_ragfacile_config, set_workspace_root
 
 
@@ -63,6 +71,7 @@ _UI: dict[str, dict[str, str]] = {
             "J'ai eu besoin de trop d'étapes pour répondre. "
             "Pouvez-vous reformuler ou poser une question plus simple\u00a0?"
         ),
+        "rate_limited": "Limite de requêtes atteinte — nouvelle tentative dans {n}s (Ctrl+C pour annuler)\u00a0...",
     },
     "en": {
         "greeting": "Bonjour! I'm your RAG assistant.",
@@ -83,8 +92,13 @@ _UI: dict[str, dict[str, str]] = {
             "I needed too many steps to answer that. "
             "Could you rephrase or break it into smaller questions?"
         ),
+        "rate_limited": "Rate limit reached — retrying in {n}s (Ctrl+C to cancel)...",
     },
 }
+
+# Albert API allows 10 req/min; smolagents may use several calls per turn.
+# Wait 15s on 429 before one automatic retry.
+_RATE_LIMIT_WAIT = 15
 
 
 def _detect_workspace() -> Path | None:
@@ -132,6 +146,15 @@ def start_chat() -> None:
 
     ui = _UI.get(language, _UI["fr"])
 
+    # Load persistent memory — injected into the first user turn (not system prompt)
+    # so the model pays full attention to it rather than losing it at the end of
+    # smolagents' long built-in system prompt.
+    memory_context = load_context(workspace) if workspace else ""
+
+    # Increment session count (best-effort — workspace may be None)
+    if workspace:
+        increment_session_count(workspace)
+
     # Build model + agent — typer.Exit propagates naturally on missing API key
     model = _build_model()
 
@@ -142,6 +165,8 @@ def start_chat() -> None:
         verbosity_level=LogLevel.OFF,  # -1: suppress all smolagents output incl. errors
         max_steps=5,
     )
+
+    session_turns: list[tuple[str, str]] = []  # accumulated for post-session update
 
     # Welcome
     workspace_line = (
@@ -172,23 +197,67 @@ def start_chat() -> None:
             console.print(f"[dim]{ui['goodbye']}[/dim]")
             break
 
-        with console.status(f"[dim]{ui['thinking']}[/dim]", spinner="dots"):
+        # On the first turn: prepend memory context so the model sees it
+        # right before the question (much better attention than end-of-system-prompt)
+        if memory_context and not session_turns:
+            effective_input = (
+                f"[Mémoire des sessions précédentes]\n{memory_context}\n\n---\n\n"
+                f"{user_input}"
+            )
+        else:
+            effective_input = user_input
+
+        # Retry loop — keeps retrying on 429 until success or Ctrl+C
+        response = None
+        while True:
+            _rate_limited = False
+            with console.status(f"[dim]{ui['thinking']}[/dim]", spinner="dots"):
+                try:
+                    response = agent.run(effective_input, reset=False)
+                except KeyboardInterrupt:
+                    console.print(f"\n[yellow]{ui['interrupted']}[/yellow]")
+                except openai.APIError as exc:
+                    console.print(f"[red]API error: {exc}[/red]")
+                    console.print(f"[dim]{ui['api_error_hint']}[/dim]")
+                except AgentMaxStepsError:
+                    console.print(f"[yellow]{ui['too_many_steps']}[/yellow]")
+                except AgentError as exc:
+                    if "429" in str(exc):
+                        _rate_limited = True
+                    else:
+                        console.print(f"[red]Agent error: {exc}[/red]")
+
+            if not _rate_limited:
+                break  # success or non-retryable error — exit retry loop
+
+            # Rate limited: show message, sleep (interruptible by Ctrl+C), then retry
+            console.print(
+                f"[yellow]{ui['rate_limited'].format(n=_RATE_LIMIT_WAIT)}[/yellow]"
+            )
             try:
-                response = agent.run(user_input, reset=False)
+                time.sleep(_RATE_LIMIT_WAIT)
             except KeyboardInterrupt:
                 console.print(f"\n[yellow]{ui['interrupted']}[/yellow]")
-                continue
-            except openai.APIError as exc:
-                console.print(f"[red]API error: {exc}[/red]")
-                console.print(f"[dim]{ui['api_error_hint']}[/dim]")
-                continue
-            except AgentMaxStepsError:
-                console.print(f"[yellow]{ui['too_many_steps']}[/yellow]")
-                continue
-            except AgentError as exc:
-                console.print(f"[red]Agent error: {exc}[/red]")
-                continue
+                break
+
+        if response is None:
+            continue
 
         console.print("[bold green]Assistant[/bold green]:")
         console.print(Markdown(str(response)))
         console.print()
+
+        # Log turn to today's conversation file
+        if workspace:
+            append_turn(workspace, "user", user_input)
+            append_turn(workspace, "assistant", str(response))
+            session_turns.append((user_input, str(response)))
+
+    # ── Post-session: update memory + git commit ──────────────────────────────
+    if workspace and session_turns:
+        session_log = "\n\n".join(
+            f"Vous: {u}\nAssistant: {a}" for u, a in session_turns
+        )
+        with console.status("[dim]Mise à jour de la mémoire...[/dim]", spinner="dots"):
+            update_memory(workspace, session_log)
+            git_commit_session(workspace)

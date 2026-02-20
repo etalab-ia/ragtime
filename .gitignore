@@ -222,3 +222,6 @@ marimo/_lsp/
 # Moon local files
 .moon/cache
 private/
+
+# rag-facile chat assistant workspace state (belongs in user projects, not source repo)
+.rag-facile/

@@ -637,6 +637,8 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
     if not run_command(["uv", "sync"], "install dependencies", cwd=target_path):
         console.print("[yellow]Warning: uv sync failed. Run it manually.[/yellow]")
 
+    _initial_git_commit(target_path)
+
     # Step 5: Start the dev server (unless --no-serve)
     if no_serve:
         _print_no_serve_message(target_display)
@@ -665,6 +667,28 @@ def _init_git_repo(target_path: Path) -> None:
         console.print("[yellow]  ⚠ git init failed — run manually: git init[/yellow]")
     else:
         console.print("[dim]  ✓ git repository initialized[/dim]")
+
+
+def _initial_git_commit(target_path: Path) -> None:
+    """Stage all generated files and create the initial commit (best-effort)."""
+    try:
+        subprocess.run(
+            ["git", "add", "."],
+            cwd=target_path,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-m", "chore: initial workspace setup by rag-facile"],
+            cwd=target_path,
+            check=True,
+            capture_output=True,
+        )
+        console.print("[dim]  ✓ initial commit created[/dim]")
+    except FileNotFoundError:
+        pass  # git not installed
+    except subprocess.CalledProcessError:
+        pass  # no git user config, or nothing to commit — skip silently
 
 
 def run_command(cmd: list[str], description: str, cwd: Path | None = None) -> bool:
@@ -1124,6 +1148,8 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
     console.print("[bold green]Step 5:[/bold green] Installing dependencies...")
     if not run_command(["uv", "sync"], "install dependencies", cwd=target_path):
         console.print("[yellow]Warning: uv sync failed. Run it manually.[/yellow]")
+
+    _initial_git_commit(target_path)
 
     # Start the dev server (unless --no-serve)
     if no_serve:
