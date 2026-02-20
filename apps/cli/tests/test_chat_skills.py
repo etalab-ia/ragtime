@@ -125,21 +125,11 @@ class TestFormatSkillsList:
 
 
 # ── auto_detect_skill ─────────────────────────────────────────────────────────
+# Built-in skills are routed by the LLM via activate_skill().
+# auto_detect_skill() is a keyword fallback for external/npx skills only.
 
 
 class TestAutoDetectSkill:
-    def test_detects_builtin_by_keyword(self, workspace, builtin_dir):
-        with patch(
-            "cli.commands.chat.skills._builtin_skills_dir", return_value=builtin_dir
-        ):
-            skills = discover_skills(workspace)
-        # Force explain-rag into available skills with a fake path
-        skills["explain-rag"] = (
-            workspace / ".agents" / "skills" / "my-skill" / "SKILL.md"
-        )
-        result = auto_detect_skill("what is chunking?", skills)
-        assert result == "explain-rag"
-
     def test_detects_external_skill_by_frontmatter_trigger(self, workspace):
         skills = {
             "my-skill": workspace / ".agents" / "skills" / "my-skill" / "SKILL.md"

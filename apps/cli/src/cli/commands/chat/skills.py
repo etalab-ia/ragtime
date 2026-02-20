@@ -18,77 +18,6 @@ from pathlib import Path
 
 import yaml
 
-# ── Keyword triggers for auto-detection ──────────────────────────────────────
-
-_SKILL_KEYWORDS: dict[str, list[str]] = {
-    "explain-rag": [
-        "what is",
-        "explain",
-        "how does",
-        "comment fonctionne",
-        "c'est quoi",
-        "understand",
-        "comprendre",
-        "définition",
-    ],
-    "learn-retrieval": [
-        # Symptom-based triggers only — the user has a PROBLEM, not a change in mind
-        "results bad",
-        "mauvais résultats",
-        "not finding",
-        "ne trouve pas",
-        "wrong results",
-        "mauvaise qualité",
-        "irrelevant",
-        "non pertinent",
-        "retrieval problem",
-        "problème de recherche",
-    ],
-    "tune-pipeline": [
-        # Intent-to-change triggers — the user wants to SET or ADJUST something
-        "tune",
-        "optimize",
-        "améliorer",
-        "improve",
-        "preset",
-        "slower",
-        "faster",
-        "plus rapide",
-        "plus lent",
-        "performance",
-        "top_k",
-        "top_n",
-        "chunk",
-        "mets",
-        "set",
-        "change",
-        "modifier",
-        "augmenter",
-        "diminuer",
-        "increase",
-        "decrease",
-    ],
-    "explore-codebase": [
-        "source",
-        "code",
-        "where is",
-        "où est",
-        "how is implemented",
-        "comment est implémenté",
-        "package",
-        "module",
-    ],
-    "skill-creator": [
-        "create skill",
-        "new skill",
-        "créer une compétence",
-        "add skill",
-        "custom skill",
-        "write skill",
-    ],
-}
-
-
 # ── Discovery ─────────────────────────────────────────────────────────────────
 
 
@@ -208,7 +137,13 @@ def _extract_description(skill_path: Path) -> str:
     return str(_parse_frontmatter(skill_path).get("description", ""))
 
 
-# ── Auto-detection ────────────────────────────────────────────────────────────
+def _extract_triggers(skill_path: Path) -> list[str]:
+    """Pull the triggers list from SKILL.md YAML frontmatter."""
+    raw = _parse_frontmatter(skill_path).get("triggers", [])
+    return [str(t) for t in raw] if isinstance(raw, list) else []
+
+
+# ── Keyword-based detection (external/npx skills only) ────────────────────────
 
 
 def auto_detect_skill(
@@ -217,32 +152,17 @@ def auto_detect_skill(
 ) -> str | None:
     """Return the best matching skill name for a user message, or None.
 
-    Uses keyword heuristics — no LLM call needed.
-    Checks built-in keyword map first, then falls back to description matching
-    for project / npx skills that have their own triggers list.
+    Matches against the ``triggers`` list in each skill's YAML frontmatter.
+    Built-in skills are routed semantically by the LLM via ``activate_skill``;
+    this function is a keyword fallback for external / npx skills that define
+    their own triggers.
     """
     msg_lower = message.lower()
-
-    # Check built-in keyword map
-    for skill_name, keywords in _SKILL_KEYWORDS.items():
-        if skill_name in available and any(kw in msg_lower for kw in keywords):
-            return skill_name
-
-    # For external skills: match against their frontmatter triggers list
     for skill_name, skill_path in available.items():
-        if skill_name in _SKILL_KEYWORDS:
-            continue  # already checked above
         triggers = _extract_triggers(skill_path)
         if any(t.lower() in msg_lower for t in triggers):
             return skill_name
-
     return None
-
-
-def _extract_triggers(skill_path: Path) -> list[str]:
-    """Pull the triggers list from SKILL.md YAML frontmatter."""
-    raw = _parse_frontmatter(skill_path).get("triggers", [])
-    return [str(t) for t in raw] if isinstance(raw, list) else []
 
 
 # ── npx skills integration ────────────────────────────────────────────────────

@@ -202,16 +202,35 @@ def get_docs(topic: str) -> str:
 def activate_skill(name: str) -> str:
     """Load a skill to guide your behaviour for this session.
 
-    Call this as your FIRST action whenever you recognise the user's intent as
-    matching one of the available skills. Returns the skill's full instructions —
-    read them carefully and follow them for the rest of the session.
+    Call this as your FIRST action ONLY WHEN you are confident the user's intent
+    clearly matches one of the available skills. Do NOT force a skill if unsure —
+    responding directly in natural language is always valid.
+    Returns the skill's full instructions; read them carefully and follow them.
 
-    Available skills and when to use them:
-    - explain-rag      → user asks what something IS (concept, definition, how it works)
-    - learn-retrieval  → user reports a PROBLEM (bad results, not finding docs, irrelevant)
-    - tune-pipeline    → user wants to CHANGE or SET a parameter (top_k, top_n, preset…)
-    - explore-codebase → user asks WHERE something is in the code or how it is implemented
-    - skill-creator    → user wants to CREATE a new custom skill
+    Available skills — use ONLY when the description strictly applies:
+
+    - explain-rag      → user asks WHAT something IS or HOW it works, specifically about
+                         RAG or rag-facile concepts (chunking, embeddings, retrieval…).
+                         DO NOT use for general questions unrelated to RAG.
+
+    - learn-retrieval  → user reports a QUALITY PROBLEM with results (bad, irrelevant,
+                         not finding the right documents).
+                         DO NOT use if the user wants a specific parameter change — use
+                         tune-pipeline instead.
+
+    - tune-pipeline    → user wants to CHANGE or SET a specific config parameter
+                         (top_k, top_n, chunk_size, preset, model…).
+                         DO NOT use for questions about what a parameter means — use
+                         explain-rag for that. If user both reports a problem AND requests
+                         a value change, prefer tune-pipeline.
+
+    - explore-codebase → user asks WHERE something is implemented in the rag-facile source,
+                         or wants to navigate a specific package or file.
+                         DO NOT use for conceptual questions about how RAG works.
+
+    - skill-creator    → user explicitly wants to CREATE a new custom skill file and has
+                         stated a skill topic or purpose.
+                         DO NOT use if the user is merely asking about skills.
 
     Args:
         name: Skill name, e.g. 'tune-pipeline'.
