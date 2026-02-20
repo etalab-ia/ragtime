@@ -8,10 +8,12 @@ import os
 from pathlib import Path
 
 import openai
+import typer
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
-from smolagents import ToolCallingAgent, OpenAIServerModel
+from smolagents import OpenAIServerModel, ToolCallingAgent
 from smolagents.monitoring import LogLevel
 from smolagents.utils import AgentError, AgentMaxStepsError
 
@@ -58,7 +60,7 @@ def _build_model() -> OpenAIServerModel:
             "[red]✗ No API key found.[/red]\n"
             "[dim]Set OPENAI_API_KEY or ALBERT_API_KEY in your .env file.[/dim]"
         )
-        raise SystemExit(1)
+        raise typer.Exit(code=1)
 
     return OpenAIServerModel(
         model_id=model_id,
@@ -73,6 +75,7 @@ def start_chat() -> None:
     workspace = _detect_workspace()
     no_workspace_hint = ""
     if workspace:
+        load_dotenv(workspace / ".env")  # load API key + config from project .env
         set_workspace_root(workspace)
     else:
         no_workspace_hint = (
@@ -80,11 +83,8 @@ def start_chat() -> None:
             "to create a workspace.[/dim]"
         )
 
-    # Build model + agent
-    try:
-        model = _build_model()
-    except SystemExit:
-        return
+    # Build model + agent — typer.Exit propagates naturally on missing API key
+    model = _build_model()
 
     agent = ToolCallingAgent(
         tools=[get_ragfacile_config],
@@ -127,6 +127,9 @@ def start_chat() -> None:
         with console.status("[dim]Thinking...[/dim]", spinner="dots"):
             try:
                 response = agent.run(user_input, reset=False)
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Interrupted.[/yellow]")
+                continue
             except openai.APIError as exc:
                 console.print(f"[red]API error: {exc}[/red]")
                 console.print(

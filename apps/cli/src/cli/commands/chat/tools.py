@@ -19,13 +19,6 @@ def set_workspace_root(root: Path) -> None:
     _workspace_root = root
 
 
-def _workspace() -> Path:
-    """Return the workspace root, raising clearly if not configured."""
-    if _workspace_root is None:
-        raise RuntimeError("Workspace root not set. Call set_workspace_root() first.")
-    return _workspace_root
-
-
 @tool
 def get_ragfacile_config() -> str:
     """Read the current ragfacile.toml configuration.
@@ -33,7 +26,13 @@ def get_ragfacile_config() -> str:
     Use this to answer questions about the RAG pipeline settings such as
     which preset is active, retrieval parameters, collection IDs, etc.
     """
-    config_file = _workspace() / "ragfacile.toml"
+    if _workspace_root is None:
+        return (
+            "No workspace detected — ragfacile.toml was not found in the current "
+            "directory or any parent directory. "
+            "Run 'rag-facile setup' to create a workspace."
+        )
+    config_file = _workspace_root / "ragfacile.toml"
     if not config_file.exists():
         return (
             "No ragfacile.toml found in this workspace. "

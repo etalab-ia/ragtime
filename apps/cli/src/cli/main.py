@@ -95,9 +95,7 @@ def main_callback(
 
     # No subcommand → drop directly into the RAG assistant (like `letta`).
     if ctx.invoked_subcommand is None:
-        from cli.commands.chat import start_chat
-
-        start_chat()
+        chat.start_chat()
         raise typer.Exit()
 
 
