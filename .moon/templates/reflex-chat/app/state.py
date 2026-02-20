@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime, timezone
 from typing import Any, TypedDict
@@ -229,8 +230,6 @@ class State(rx.State):
                 self._chats = self._chats
                 yield
         except Exception as exc:  # noqa: BLE001 — broad catch to avoid breaking chat
-            import logging
-
             logging.getLogger(__name__).error("stream_answer error: %s", exc)
 
         self.processing = False
@@ -283,8 +282,6 @@ class State(rx.State):
         try:
             get_store().record_feedback(fb)
         except (OSError, RuntimeError) as exc:
-            import logging
-
             logging.getLogger(__name__).warning("Failed to record feedback: %s", exc)
 
         self.feedback_submitted = True

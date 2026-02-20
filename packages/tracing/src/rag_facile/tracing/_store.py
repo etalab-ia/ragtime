@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS traces (
 
 CREATE TABLE IF NOT EXISTS feedback (
     feedback_id TEXT PRIMARY KEY,
-    trace_id    TEXT NOT NULL REFERENCES traces(trace_id),
+    trace_id    TEXT NOT NULL REFERENCES traces(trace_id) ON DELETE CASCADE,
     created_at  TEXT NOT NULL,
     star_rating INTEGER,
     sentiment   TEXT,
@@ -279,26 +279,10 @@ class TraceStore:
             datetime.now(timezone.utc) - timedelta(days=older_than_days)
         ).isoformat()
         with self._connect() as conn:
-            # feedback rows are deleted via ON DELETE CASCADE logic
-            # (SQLite doesn't cascade by default — delete in order)
-            old_ids = [
-                r[0]
-                for r in conn.execute(
-                    "SELECT trace_id FROM traces WHERE created_at < ?", (cutoff,)
-                ).fetchall()
-            ]
-            if old_ids:
-                placeholders = ",".join("?" * len(old_ids))
-                conn.execute(
-                    f"DELETE FROM feedback WHERE trace_id IN ({placeholders})",
-                    old_ids,  # noqa: S608
-                )
-                conn.execute(
-                    f"DELETE FROM traces WHERE trace_id IN ({placeholders})",
-                    old_ids,  # noqa: S608
-                )
-        if old_ids:
-            logger.info(
-                "Pruned %d traces older than %d days", len(old_ids), older_than_days
-            )
-        return len(old_ids)
+            # ON DELETE CASCADE on the feedback FK ensures feedback rows are
+            # removed automatically when their parent trace is deleted.
+            cursor = conn.execute("DELETE FROM traces WHERE created_at < ?", (cutoff,))
+            deleted = cursor.rowcount
+        if deleted:
+            logger.info("Pruned %d traces older than %d days", deleted, older_than_days)
+        return deleted

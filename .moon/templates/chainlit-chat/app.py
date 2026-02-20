@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -216,41 +217,44 @@ def _persist_feedback(
     try:
         get_store().record_feedback(fb)
     except (OSError, RuntimeError) as exc:
-        import logging
-
         logging.getLogger(__name__).warning("Failed to record feedback: %s", exc)
 
 
 # ---------------------------------------------------------------------------
 # Star rating callbacks (one per rating level)
+#
+# Chainlit's @cl.action_callback only accepts a plain string name — no regex
+# support.  We register 5 thin callbacks that all delegate to one helper,
+# keeping the logic in a single place.
 # ---------------------------------------------------------------------------
+
+
+async def _on_star(action: cl.Action, rating: int) -> None:
+    """Shared handler for all star rating actions."""
+    cl.user_session.set("pending_star", rating)
+    await _ask_sentiment(action.payload["trace_id"], rating)
 
 
 @cl.action_callback("star_1")
 async def on_star_1(action: cl.Action):
-    cl.user_session.set("pending_star", 1)
-    await _ask_sentiment(action.payload["trace_id"], 1)
+    await _on_star(action, 1)
 
 
 @cl.action_callback("star_2")
 async def on_star_2(action: cl.Action):
-    cl.user_session.set("pending_star", 2)
-    await _ask_sentiment(action.payload["trace_id"], 2)
+    await _on_star(action, 2)
 
 
 @cl.action_callback("star_3")
 async def on_star_3(action: cl.Action):
-    cl.user_session.set("pending_star", 3)
-    await _ask_sentiment(action.payload["trace_id"], 3)
+    await _on_star(action, 3)
 
 
 @cl.action_callback("star_4")
 async def on_star_4(action: cl.Action):
-    cl.user_session.set("pending_star", 4)
-    await _ask_sentiment(action.payload["trace_id"], 4)
+    await _on_star(action, 4)
 
 
 @cl.action_callback("star_5")
 async def on_star_5(action: cl.Action):
-    cl.user_session.set("pending_star", 5)
-    await _ask_sentiment(action.payload["trace_id"], 5)
+    await _on_star(action, 5)
