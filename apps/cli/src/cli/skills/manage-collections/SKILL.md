@@ -26,15 +26,23 @@ Ask: "Quelles collections souhaitez-vous activer dans votre pipeline RAG ?"
 Show the current active collections from `get_ragfacile_config()`.
 Suggest relevant public ones based on their use case if known.
 
-## Step 4 — Update the configuration
-Once the user picks collection IDs, follow the update_config confirmation flow:
-- Explain the change: "Je vais activer les collections X, Y, Z."
-- Ask explicitly: "Puis-je mettre à jour storage.collections ? Le changement
-  sera enregistré dans ragfacile.toml et committé dans git."
-- On yes: call `update_config("storage.collections", "[id1, id2, ...]")`
+## Step 4 — Update the configuration with update_config
+
+CRITICAL: When the user asks to activate or deactivate a collection, you MUST
+call `update_config` — do NOT explain how to manually edit ragfacile.toml.
+The agent can write the file directly. Manual editing instructions are never helpful here.
+
+Flow:
+1. Read the current list from `get_ragfacile_config()` (e.g. `[783, 784, 785]`)
+2. Compute the new list (add or remove the requested ID)
+3. Say: "Je vais mettre à jour storage.collections : [783, 784, 785] → [783, 784, 785, 79783].
+   Puis-je effectuer ce changement ? Il sera enregistré dans ragfacile.toml et committé dans git."
+4. Wait for explicit "oui" / "yes"
+5. Call: `update_config("storage.collections", "[783, 784, 785, 79783]")`
 
 ## Rules
+- ALWAYS use update_config — never tell the user to edit the file manually
 - Never modify collections without explicit user confirmation
-- Always show current config before proposing changes
-- Remind the user that session collections (uploaded files) are separate from
-  public collections — both can be active at the same time
+- Always compute the complete new list (not just the delta) before calling update_config
+- Remind the user to restart their app after the change takes effect
+- Session collections (uploaded files) are separate from public collections — both can be active
