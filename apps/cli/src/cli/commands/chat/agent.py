@@ -11,12 +11,13 @@ from pathlib import Path
 import openai
 import typer
 from dotenv import load_dotenv
-from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from smolagents import OpenAIServerModel, ToolCallingAgent
 from smolagents.monitoring import LogLevel
 from smolagents.utils import AgentError, AgentMaxStepsError
+
+from cli.commands.chat._console import console
 
 from cli.commands.chat.init import needs_init, read_language, run_init_wizard
 from cli.commands.chat.skills import (
@@ -39,10 +40,9 @@ from cli.commands.chat.tools import (
     get_ragfacile_config,
     get_recent_git_activity,
     set_workspace_root,
+    update_config,
 )
 
-
-console = Console()
 
 _SYSTEM_PROMPT = """\
 You are the rag-facile AI assistant — a friendly expert who helps developers \
@@ -127,10 +127,11 @@ _TOOL_ICONS: dict[str, str] = {
     "get_agents_md": "📋",
     "get_recent_git_activity": "📜",
     "get_docs": "📖",
+    "update_config": "✏️",
 }
 
 
-def _with_notification(tool):  # type: ignore[no-untyped-def]
+def _with_notification(tool):
     """Wrap a smolagents tool's forward() to print a dim notification before calling.
 
     Shown unconditionally (not gated behind --debug) so users always see
@@ -166,7 +167,10 @@ def _build_model() -> OpenAIServerModel:
     """Construct the OpenAIServerModel pointed at Albert API."""
     api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("ALBERT_API_KEY", "")
     api_base = os.environ.get("OPENAI_BASE_URL", "https://albert.api.etalab.gouv.fr/v1")
-    model_id = os.environ.get("OPENAI_MODEL", "meta-llama/Llama-3.1-70B-Instruct")
+    # Use Albert model aliases (resolved server-side) rather than raw model IDs.
+    # openweight-large = the largest available generation model (best quality).
+    # Override with OPENAI_MODEL in .env for a different size or provider.
+    model_id = os.environ.get("OPENAI_MODEL", "openweight-large")
 
     if not api_key:
         console.print(
@@ -223,6 +227,7 @@ def start_chat(debug: bool = False) -> None:
             get_agents_md,
             get_recent_git_activity,
             get_docs,
+            update_config,
         ]
     ]
 

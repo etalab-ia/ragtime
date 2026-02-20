@@ -5,9 +5,14 @@ The workspace root is set once at session start by the agent harness.
 """
 
 import subprocess
+import tomllib
 from pathlib import Path
+from typing import Any
 
+import tomli_w
 from smolagents import tool
+
+from cli.commands.chat._console import console
 
 # ── Docs index ────────────────────────────────────────────────────────────────
 # Maps topic keywords to doc paths relative to the docs root.
@@ -181,3 +186,126 @@ def get_docs(topic: str) -> str:
         return f"Documentation file '{matched_path}' is missing from this installation."
 
     return doc_file.read_text(encoding="utf-8")
+
+
+# ── Config editing ────────────────────────────────────────────────────────────
+
+
+def _coerce_value(raw: str) -> Any:
+    """Parse a string value into the most appropriate Python type.
+
+    Tries int → float → bool → str in order so that e.g. "10" becomes int(10),
+    "true"/"false" becomes bool, and arbitrary strings stay as str.
+    """
+    # Boolean (must check before int — int("true") raises, but we want bool first)
+    if raw.lower() in ("true", "false"):
+        return raw.lower() == "true"
+    try:
+        return int(raw)
+    except ValueError:
+        pass
+    try:
+        return float(raw)
+    except ValueError:
+        pass
+    return raw
+
+
+def _get_nested(data: dict, keys: list[str]) -> Any:
+    """Return the value at a dotted key path, or None if not found."""
+    current: Any = data
+    for key in keys:
+        if not isinstance(current, dict) or key not in current:
+            return None
+        current = current[key]
+    return current
+
+
+def _set_nested(data: dict, keys: list[str], value: Any) -> None:
+    """Set the value at a dotted key path, creating intermediate dicts as needed."""
+    for key in keys[:-1]:
+        data = data.setdefault(key, {})
+    data[keys[-1]] = value
+
+
+@tool
+def update_config(key: str, value: str) -> str:
+    """Update a parameter in ragfacile.toml after explicit user confirmation.
+
+    IMPORTANT: Always explain the impact of the change to the user BEFORE
+    calling this tool, and only call it once the user has agreed.
+
+    Args:
+        key: Dotted config path, e.g. 'retrieval.top_k' or 'generation.model'.
+        value: New value as a string. Automatically coerced to int, float,
+               bool, or str based on content (e.g. '10' → int, 'true' → bool).
+    """
+    if _workspace_root is None:
+        return "No workspace detected. Run 'rag-facile setup' to create a workspace."
+
+    config_file = _workspace_root / "ragfacile.toml"
+    if not config_file.exists():
+        return "No ragfacile.toml found. Run 'rag-facile setup' to create one."
+
+    keys = key.split(".")
+    if not all(k.isidentifier() for k in keys):
+        return f"Invalid config key '{key}'. Keys must be valid TOML identifiers."
+
+    # Read current config
+    try:
+        current = tomllib.loads(config_file.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError as exc:
+        return f"Could not read ragfacile.toml: {exc}"
+
+    old_value = _get_nested(current, keys)
+    new_value = _coerce_value(value)
+
+    # Confirmation prompt — shown inline, spinner pauses for input
+    old_display = repr(old_value) if old_value is not None else "(not set)"
+    console.print(
+        f"\n[bold]Modifier la configuration[/bold] : "
+        f"[cyan]{key}[/cyan] {old_display} → [green]{new_value!r}[/green]"
+    )
+    try:
+        answer = console.input("[dim]Confirmer ? [o/N] [/dim]").strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        return "Annulé."
+
+    if answer not in ("o", "oui", "y", "yes"):
+        return "Modification annulée — aucun fichier n'a été modifié."
+
+    # Write updated config
+    _set_nested(current, keys, new_value)
+    try:
+        config_file.write_bytes(tomli_w.dumps(current).encode())
+    except OSError as exc:
+        return f"Could not write ragfacile.toml: {exc}"
+
+    # Git commit (best-effort — silently skipped if not a git repo)
+    try:
+        subprocess.run(
+            ["git", "add", "ragfacile.toml"],
+            cwd=_workspace_root,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            [
+                "git",
+                "commit",
+                "-m",
+                f"config: set {key}={new_value!r} (via rag-facile chat)",
+            ],
+            cwd=_workspace_root,
+            capture_output=True,
+            check=True,
+        )
+        committed = True
+    except subprocess.CalledProcessError:
+        committed = False
+
+    commit_note = " et committé dans git." if committed else "."
+    return (
+        f"✓ {key} mis à jour : {old_display} → {new_value!r}{commit_note}\n"
+        "Relancez votre application pour que le changement prenne effet."
+    )
