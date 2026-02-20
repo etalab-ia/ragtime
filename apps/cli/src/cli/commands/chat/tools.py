@@ -9,6 +9,39 @@ from pathlib import Path
 
 from smolagents import tool
 
+# ── Docs index ────────────────────────────────────────────────────────────────
+# Maps topic keywords to doc paths relative to the docs root.
+# Keys are lowercase — matched against lowercased user query.
+
+_DOCS_INDEX: dict[str, str] = {
+    # Guides
+    "getting started": "guides/getting-started.md",
+    "setup": "guides/getting-started.md",
+    "install": "guides/getting-started.md",
+    "rag": "guides/how-rag-works.md",
+    "how rag works": "guides/how-rag-works.md",
+    "pipeline": "guides/rag-pipeline.md",
+    "evaluation": "guides/evaluation.md",
+    "eval": "guides/evaluation.md",
+    "proxy": "guides/proxy-setup.md",
+    "uninstall": "guides/uninstalling.md",
+    "windows": "guides/windows-setup.md",
+    # Reference
+    "config": "reference/ragfacile-toml.md",
+    "configuration": "reference/ragfacile-toml.md",
+    "ragfacile.toml": "reference/ragfacile-toml.md",
+    "toml": "reference/ragfacile-toml.md",
+    "preset": "reference/ragfacile-toml.md",
+    "components": "reference/components.md",
+    "packages": "reference/components.md",
+    "science": "reference/rag-science.md",
+    "research": "reference/rag-science.md",
+    "chunking": "reference/rag-science.md",
+    "embedding": "reference/rag-science.md",
+    "reranking": "reference/rag-science.md",
+    "retrieval": "reference/rag-science.md",
+}
+
 
 # Module-level workspace reference — set by the agent harness at session start.
 _workspace_root: Path | None = None
@@ -91,3 +124,60 @@ def get_recent_git_activity() -> str:
         return "git is not installed or not available on PATH."
     except subprocess.CalledProcessError as exc:
         return f"git log failed: {exc.stderr.strip()}"
+
+
+def _get_docs_dir() -> Path | None:
+    """Return the bundled docs directory, or None if not found."""
+    # Installed package: docs bundled at cli/docs/
+    bundled = Path(__file__).resolve().parent.parent / "docs"
+    if bundled.exists():
+        return bundled
+    # Development: docs live at repo root docs/
+    repo_root = Path(__file__).resolve().parents[5]
+    local = repo_root / "docs"
+    if local.exists():
+        return local
+    return None
+
+
+@tool
+def get_docs(topic: str) -> str:
+    """Read rag-facile documentation on a given topic.
+
+    Use this when the user asks about RAG concepts, configuration, setup,
+    evaluation, or any rag-facile feature. Pass an empty string to list
+    all available documents.
+
+    Args:
+        topic: Keyword to look up, e.g. 'rag', 'preset', 'evaluation',
+               'chunking', 'getting started', 'pipeline'. Empty string
+               returns the full index of available docs.
+    """
+    docs_dir = _get_docs_dir()
+    if docs_dir is None:
+        return "Documentation not found. This may be a packaging issue."
+
+    # Empty topic → return index of available docs
+    if not topic.strip():
+        lines = ["Available rag-facile documentation:\n"]
+        for key, path in sorted(_DOCS_INDEX.items()):
+            lines.append(f"  - {key!r} → {path}")
+        return "\n".join(lines)
+
+    # Find best match by checking each keyword against the topic
+    topic_lower = topic.lower()
+    matched_path: str | None = None
+    for keyword, path in _DOCS_INDEX.items():
+        if keyword in topic_lower or topic_lower in keyword:
+            matched_path = path
+            break
+
+    if matched_path is None:
+        available = ", ".join(f"'{k}'" for k in sorted(_DOCS_INDEX))
+        return f"No documentation found for '{topic}'. Available topics: {available}."
+
+    doc_file = docs_dir / matched_path
+    if not doc_file.exists():
+        return f"Documentation file '{matched_path}' is missing from this installation."
+
+    return doc_file.read_text(encoding="utf-8")

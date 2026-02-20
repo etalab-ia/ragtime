@@ -7,6 +7,7 @@ import pytest
 
 from cli.commands.chat.tools import (
     get_agents_md,
+    get_docs,
     get_ragfacile_config,
     get_recent_git_activity,
     set_workspace_root,
@@ -110,3 +111,53 @@ class TestGetRecentGitActivity:
         ):
             result = get_recent_git_activity()
         assert "git log failed" in result
+
+
+# ── get_docs ──────────────────────────────────────────────────────────────────
+
+
+class TestGetDocs:
+    def _make_docs_dir(self, tmp_path):
+        """Create a minimal docs structure mirroring the real docs/."""
+        guides = tmp_path / "docs" / "guides"
+        reference = tmp_path / "docs" / "reference"
+        guides.mkdir(parents=True)
+        reference.mkdir(parents=True)
+        (guides / "how-rag-works.md").write_text(
+            "# How RAG Works\nContent here.", encoding="utf-8"
+        )
+        (reference / "ragfacile-toml.md").write_text(
+            "# Configuration\nPreset options.", encoding="utf-8"
+        )
+        return tmp_path / "docs"
+
+    def test_returns_index_on_empty_topic(self, tmp_path):
+        docs_dir = self._make_docs_dir(tmp_path)
+        with patch("cli.commands.chat.tools._get_docs_dir", return_value=docs_dir):
+            result = get_docs("")
+        assert "Available rag-facile documentation" in result
+        assert "rag" in result
+
+    def test_returns_doc_content_on_match(self, tmp_path):
+        docs_dir = self._make_docs_dir(tmp_path)
+        with patch("cli.commands.chat.tools._get_docs_dir", return_value=docs_dir):
+            result = get_docs("rag")
+        assert "How RAG Works" in result
+
+    def test_partial_topic_match(self, tmp_path):
+        docs_dir = self._make_docs_dir(tmp_path)
+        with patch("cli.commands.chat.tools._get_docs_dir", return_value=docs_dir):
+            result = get_docs("preset configuration")
+        assert "Configuration" in result
+
+    def test_returns_hint_on_unknown_topic(self, tmp_path):
+        docs_dir = self._make_docs_dir(tmp_path)
+        with patch("cli.commands.chat.tools._get_docs_dir", return_value=docs_dir):
+            result = get_docs("foobar")
+        assert "No documentation found" in result
+        assert "Available topics" in result
+
+    def test_returns_hint_when_docs_not_found(self):
+        with patch("cli.commands.chat.tools._get_docs_dir", return_value=None):
+            result = get_docs("rag")
+        assert "not found" in result.lower()

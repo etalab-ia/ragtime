@@ -63,3 +63,4 @@ packages = ["src/cli"]
 "../../packages/retrieval/src/rag_facile/retrieval" = "cli/retrieval_src"
 "../../packages/storage/src/rag_facile/storage" = "cli/storage_src"
 "src/cli/templates/ragfacile.toml" = "cli/templates/ragfacile.toml"
+"../../docs" = "cli/docs"

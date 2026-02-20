@@ -28,6 +28,7 @@ from cli.commands.chat.memory import (
 )
 from cli.commands.chat.tools import (
     get_agents_md,
+    get_docs,
     get_ragfacile_config,
     get_recent_git_activity,
     set_workspace_root,
@@ -164,7 +165,7 @@ def start_chat() -> None:
     model = _build_model()
 
     agent = ToolCallingAgent(
-        tools=[get_ragfacile_config, get_agents_md, get_recent_git_activity],
+        tools=[get_ragfacile_config, get_agents_md, get_recent_git_activity, get_docs],
         model=model,
         instructions=_SYSTEM_PROMPT,
         verbosity_level=LogLevel.OFF,  # -1: suppress all smolagents output incl. errors
