@@ -18,6 +18,13 @@ from smolagents.monitoring import LogLevel
 from smolagents.utils import AgentError, AgentMaxStepsError
 
 from cli.commands.chat.init import needs_init, read_language, run_init_wizard
+from cli.commands.chat.memory import (
+    append_turn,
+    git_commit_session,
+    increment_session_count,
+    load_context,
+    update_memory,
+)
 from cli.commands.chat.tools import get_ragfacile_config, set_workspace_root
 
 
@@ -132,16 +139,30 @@ def start_chat() -> None:
 
     ui = _UI.get(language, _UI["fr"])
 
+    # Load persistent memory into agent instructions
+    memory_context = load_context(workspace) if workspace else ""
+    instructions = (
+        f"{_SYSTEM_PROMPT}\n\n# Contexte mémorisé\n\n{memory_context}"
+        if memory_context
+        else _SYSTEM_PROMPT
+    )
+
+    # Increment session count (best-effort — workspace may be None)
+    if workspace:
+        increment_session_count(workspace)
+
     # Build model + agent — typer.Exit propagates naturally on missing API key
     model = _build_model()
 
     agent = ToolCallingAgent(
         tools=[get_ragfacile_config],
         model=model,
-        instructions=_SYSTEM_PROMPT,
+        instructions=instructions,
         verbosity_level=LogLevel.OFF,  # -1: suppress all smolagents output incl. errors
         max_steps=5,
     )
+
+    session_turns: list[tuple[str, str]] = []  # accumulated for post-session update
 
     # Welcome
     workspace_line = (
@@ -192,3 +213,18 @@ def start_chat() -> None:
         console.print("[bold green]Assistant[/bold green]:")
         console.print(Markdown(str(response)))
         console.print()
+
+        # Log turn to today's conversation file
+        if workspace:
+            append_turn(workspace, "user", user_input)
+            append_turn(workspace, "assistant", str(response))
+            session_turns.append((user_input, str(response)))
+
+    # ── Post-session: update memory + git commit ──────────────────────────────
+    if workspace and session_turns:
+        session_log = "\n\n".join(
+            f"Vous: {u}\nAssistant: {a}" for u, a in session_turns
+        )
+        with console.status("[dim]Mise à jour de la mémoire...[/dim]", spinner="dots"):
+            update_memory(workspace, session_log)
+            git_commit_session(workspace)
