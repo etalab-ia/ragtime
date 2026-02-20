@@ -17,7 +17,7 @@ from smolagents import OpenAIServerModel, ToolCallingAgent
 from smolagents.monitoring import LogLevel
 from smolagents.utils import AgentError, AgentMaxStepsError
 
-from cli.commands.chat.init import needs_init, run_init_wizard
+from cli.commands.chat.init import needs_init, read_language, run_init_wizard
 from cli.commands.chat.tools import get_ragfacile_config, set_workspace_root
 
 
@@ -39,6 +39,44 @@ You can:
 Always be encouraging and educational. When you suggest a change, explain the tradeoff \
 in terms of speed vs. quality vs. cost so the user can make an informed decision.
 """
+
+# ── Per-language UI strings ───────────────────────────────────────────────────
+
+_UI: dict[str, dict[str, str]] = {
+    "fr": {
+        "greeting": "Bonjour\u00a0! Je suis votre assistant RAG.",
+        "subtitle": (
+            "Posez-moi vos questions sur RAG, votre configuration "
+            "ou comment améliorer vos résultats.\n"
+            "Tapez [bold]q[/bold] ou Ctrl+C pour quitter."
+        ),
+        "thinking": "Réflexion en cours...",
+        "you": "Vous",
+        "goodbye": "À bientôt\u00a0!",
+        "interrupted": "Interrompu.",
+        "api_error_hint": "Vérifiez vos variables OPENAI_API_KEY et OPENAI_BASE_URL.",
+        "too_many_steps": (
+            "J'ai eu besoin de trop d'étapes pour répondre. "
+            "Pouvez-vous reformuler ou poser une question plus simple\u00a0?"
+        ),
+    },
+    "en": {
+        "greeting": "Bonjour! I'm your RAG assistant.",
+        "subtitle": (
+            "Ask me anything about RAG, your pipeline config, or how to improve your results.\n"
+            "Type [bold]q[/bold] or press Ctrl+C to quit."
+        ),
+        "thinking": "Thinking...",
+        "you": "You",
+        "goodbye": "À bientôt!",
+        "interrupted": "Interrupted.",
+        "api_error_hint": "Check your OPENAI_API_KEY and OPENAI_BASE_URL.",
+        "too_many_steps": (
+            "I needed too many steps to answer that. "
+            "Could you rephrase or break it into smaller questions?"
+        ),
+    },
+}
 
 
 def _detect_workspace() -> Path | None:
@@ -74,18 +112,23 @@ def start_chat() -> None:
     """Launch the interactive RAG assistant chat loop."""
     # Detect workspace — walk up from cwd for ragfacile.toml
     workspace = _detect_workspace()
+    language = "fr"  # default — overridden once we have a workspace
     no_workspace_hint = ""
     if workspace:
         load_dotenv(workspace / ".env")  # load API key + config from project .env
         set_workspace_root(workspace)
-        # First-run: initialise .rag-facile/ if absent
+        # First-run: initialise .rag-facile/ and capture chosen language
         if needs_init(workspace):
-            run_init_wizard(workspace)
+            language = run_init_wizard(workspace)
+        else:
+            language = read_language(workspace)
     else:
         no_workspace_hint = (
             "\n[dim]💡 No ragfacile.toml found — run [bold]rag-facile setup[/bold] "
             "to create a workspace.[/dim]"
         )
+
+    ui = _UI.get(language, _UI["fr"])
 
     # Build model + agent — typer.Exit propagates naturally on missing API key
     model = _build_model()
@@ -104,9 +147,8 @@ def start_chat() -> None:
     )
     console.print(
         Panel(
-            "[bold]Bonjour! I'm your RAG assistant.[/bold]\n"
-            "[dim]Ask me anything about RAG, your pipeline config, or how to improve your results.\n"
-            "Type [bold]q[/bold] or press Ctrl+C to quit.[/dim]" + workspace_line,
+            f"[bold]{ui['greeting']}[/bold]\n"
+            f"[dim]{ui['subtitle']}[/dim]" + workspace_line,
             border_style="magenta",
             padding=(0, 1),
         )
@@ -116,35 +158,30 @@ def start_chat() -> None:
     # Chat loop
     while True:
         try:
-            user_input = console.input("[bold cyan]You[/bold cyan]: ").strip()
+            user_input = console.input(f"[bold cyan]{ui['you']}[/bold cyan]: ").strip()
         except (KeyboardInterrupt, EOFError):
-            console.print("\n[dim]À bientôt![/dim]")
+            console.print(f"\n[dim]{ui['goodbye']}[/dim]")
             break
 
         if not user_input:
             continue
 
-        if user_input.lower() in ("q", "quit", "exit", "bye", "au revoir"):
-            console.print("[dim]À bientôt![/dim]")
+        if user_input.lower() in ("q", "quit", "exit", "bye", "au revoir", "quitter"):
+            console.print(f"[dim]{ui['goodbye']}[/dim]")
             break
 
-        with console.status("[dim]Thinking...[/dim]", spinner="dots"):
+        with console.status(f"[dim]{ui['thinking']}[/dim]", spinner="dots"):
             try:
                 response = agent.run(user_input, reset=False)
             except KeyboardInterrupt:
-                console.print("\n[yellow]Interrupted.[/yellow]")
+                console.print(f"\n[yellow]{ui['interrupted']}[/yellow]")
                 continue
             except openai.APIError as exc:
                 console.print(f"[red]API error: {exc}[/red]")
-                console.print(
-                    "[dim]Check your OPENAI_API_KEY and OPENAI_BASE_URL.[/dim]"
-                )
+                console.print(f"[dim]{ui['api_error_hint']}[/dim]")
                 continue
             except AgentMaxStepsError:
-                console.print(
-                    "[yellow]I needed too many steps to answer that. "
-                    "Could you rephrase or break it into smaller questions?[/yellow]"
-                )
+                console.print(f"[yellow]{ui['too_many_steps']}[/yellow]")
                 continue
             except AgentError as exc:
                 console.print(f"[red]Agent error: {exc}[/red]")

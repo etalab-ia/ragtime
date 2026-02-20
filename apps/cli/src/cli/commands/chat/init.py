@@ -138,12 +138,27 @@ def needs_init(workspace: Path) -> bool:
     return not (workspace / _AGENT_DIR).exists()
 
 
-def run_init_wizard(workspace: Path) -> None:
+def read_language(workspace: Path) -> str:
+    """Read the preferred language from profile.md. Defaults to 'fr'."""
+    profile = workspace / _PROFILE_FILE
+    if not profile.exists():
+        return "fr"
+    for line in profile.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- Language:"):
+            return stripped.split(":", 1)[1].strip()
+    return "fr"
+
+
+def run_init_wizard(workspace: Path) -> str:
     """Run the first-time setup wizard and create .rag-facile/ in the workspace.
 
     Idempotent if the directory already exists (guarded by needs_init()).
     Uses questionary for interactive prompts; falls back to defaults in
     non-interactive environments (CI, pipe).
+
+    Returns:
+        The selected language code ('fr' or 'en').
     """
     console.print(
         Panel(
@@ -156,27 +171,27 @@ def run_init_wizard(workspace: Path) -> None:
     )
     console.print()
 
-    # ── Ask 2 questions ───────────────────────────────────────────────────────
+    # ── Ask 2 questions (language first so the rest adapts) ──────────────────
     try:
-        experience = questionary.select(
-            "Your experience with RAG?",
-            choices=_EXPERIENCE_CHOICES,
-            style=_STYLE,
-        ).ask()
-
         language = questionary.select(
             "Preferred language for our conversations?",
             choices=_LANGUAGE_CHOICES,
             style=_STYLE,
         ).ask()
+
+        experience = questionary.select(
+            "Your experience with RAG?",
+            choices=_EXPERIENCE_CHOICES,
+            style=_STYLE,
+        ).ask()
     except Exception:  # noqa: BLE001 — non-interactive / unexpected env
-        experience, language = "new", "fr"
+        language, experience = "fr", "new"
 
     # questionary returns None on Ctrl+C — fall back to defaults
-    if experience is None:
-        experience = "new"
     if language is None:
         language = "fr"
+    if experience is None:
+        experience = "new"
 
     # ── Create directory structure ────────────────────────────────────────────
     agent_dir = workspace / _AGENT_DIR
@@ -208,3 +223,5 @@ def run_init_wizard(workspace: Path) -> None:
     console.print(f"[dim]  Memory: {workspace / _MEMORY_FILE}[/dim]")
     console.print(f"[dim]  Profile: {workspace / _PROFILE_FILE}[/dim]")
     console.print()
+
+    return language

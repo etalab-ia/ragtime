@@ -8,6 +8,7 @@ from cli.commands.chat.init import (
     _profile_template,
     _read_preset,
     needs_init,
+    read_language,
     run_init_wizard,
 )
 from cli.main import app as main_app
@@ -51,16 +52,47 @@ class TestProfileTemplate:
         assert "0" in result
 
 
+class TestReadLanguage:
+    def test_returns_fr_when_no_profile(self, tmp_path):
+        assert read_language(tmp_path) == "fr"
+
+    def test_reads_language_from_profile(self, tmp_path):
+        (tmp_path / ".rag-facile" / "agent").mkdir(parents=True)
+        (tmp_path / ".rag-facile" / "agent" / "profile.md").write_text(
+            "## Preferences\n- Language: en\n", encoding="utf-8"
+        )
+        assert read_language(tmp_path) == "en"
+
+    def test_returns_fr_as_default_when_language_line_absent(self, tmp_path):
+        (tmp_path / ".rag-facile" / "agent").mkdir(parents=True)
+        (tmp_path / ".rag-facile" / "agent" / "profile.md").write_text(
+            "## Preferences\n", encoding="utf-8"
+        )
+        assert read_language(tmp_path) == "fr"
+
+
+# questionary.select mock helpers (language first, then experience)
+def _lang_fr_exp_new():
+    return [
+        type("Q", (), {"ask": lambda self: "fr"})(),
+        type("Q", (), {"ask": lambda self: "new"})(),
+    ]
+
+
+def _lang_en_exp_intermediate():
+    return [
+        type("Q", (), {"ask": lambda self: "en"})(),
+        type("Q", (), {"ask": lambda self: "intermediate"})(),
+    ]
+
+
 class TestRunInitWizard:
     def test_creates_memory_and_profile_files(self, tmp_path):
         """Wizard creates MEMORY.md and profile.md in the workspace."""
         with (
             patch(
                 "cli.commands.chat.init.questionary.select",
-                side_effect=[
-                    type("Q", (), {"ask": lambda self: "new"})(),
-                    type("Q", (), {"ask": lambda self: "fr"})(),
-                ],
+                side_effect=_lang_fr_exp_new(),
             ),
             patch("cli.commands.chat.init._git_add"),
         ):
@@ -69,14 +101,22 @@ class TestRunInitWizard:
         assert (tmp_path / ".rag-facile" / "agent" / "MEMORY.md").exists()
         assert (tmp_path / ".rag-facile" / "agent" / "profile.md").exists()
 
+    def test_returns_selected_language(self, tmp_path):
+        with (
+            patch(
+                "cli.commands.chat.init.questionary.select",
+                side_effect=_lang_en_exp_intermediate(),
+            ),
+            patch("cli.commands.chat.init._git_add"),
+        ):
+            lang = run_init_wizard(tmp_path)
+        assert lang == "en"
+
     def test_creates_skills_directory(self, tmp_path):
         with (
             patch(
                 "cli.commands.chat.init.questionary.select",
-                side_effect=[
-                    type("Q", (), {"ask": lambda self: "intermediate"})(),
-                    type("Q", (), {"ask": lambda self: "en"})(),
-                ],
+                side_effect=_lang_en_exp_intermediate(),
             ),
             patch("cli.commands.chat.init._git_add"),
         ):
@@ -89,8 +129,8 @@ class TestRunInitWizard:
             patch(
                 "cli.commands.chat.init.questionary.select",
                 side_effect=[
-                    type("Q", (), {"ask": lambda self: "expert"})(),
                     type("Q", (), {"ask": lambda self: "en"})(),
+                    type("Q", (), {"ask": lambda self: "expert"})(),
                 ],
             ),
             patch("cli.commands.chat.init._git_add"),
@@ -117,10 +157,7 @@ class TestRunInitWizard:
         with (
             patch(
                 "cli.commands.chat.init.questionary.select",
-                side_effect=[
-                    type("Q", (), {"ask": lambda self: "new"})(),
-                    type("Q", (), {"ask": lambda self: "fr"})(),
-                ],
+                side_effect=_lang_fr_exp_new(),
             ),
             patch("cli.commands.chat.init._git_add") as mock_git,
         ):
@@ -134,10 +171,7 @@ class TestRunInitWizard:
             with (
                 patch(
                     "cli.commands.chat.init.questionary.select",
-                    side_effect=[
-                        type("Q", (), {"ask": lambda self: "new"})(),
-                        type("Q", (), {"ask": lambda self: "fr"})(),
-                    ],
+                    side_effect=_lang_fr_exp_new(),
                 ),
                 patch("cli.commands.chat.init._git_add"),
             ):
