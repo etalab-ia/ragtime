@@ -50,6 +50,10 @@ _UI: dict[str, dict[str, str]] = {
             "ou comment améliorer vos résultats.\n"
             "Tapez [bold]q[/bold] ou Ctrl+C pour quitter."
         ),
+        "no_workspace_hint": (
+            "\n[dim]💡 Aucun ragfacile.toml trouvé — lancez "
+            "[bold]rag-facile setup[/bold] pour créer un espace de travail.[/dim]"
+        ),
         "thinking": "Réflexion en cours...",
         "you": "Vous",
         "goodbye": "À bientôt\u00a0!",
@@ -65,6 +69,10 @@ _UI: dict[str, dict[str, str]] = {
         "subtitle": (
             "Ask me anything about RAG, your pipeline config, or how to improve your results.\n"
             "Type [bold]q[/bold] or press Ctrl+C to quit."
+        ),
+        "no_workspace_hint": (
+            "\n[dim]💡 No ragfacile.toml found — run "
+            "[bold]rag-facile setup[/bold] to create a workspace.[/dim]"
         ),
         "thinking": "Thinking...",
         "you": "You",
@@ -113,7 +121,6 @@ def start_chat() -> None:
     # Detect workspace — walk up from cwd for ragfacile.toml
     workspace = _detect_workspace()
     language = "fr"  # default — overridden once we have a workspace
-    no_workspace_hint = ""
     if workspace:
         load_dotenv(workspace / ".env")  # load API key + config from project .env
         set_workspace_root(workspace)
@@ -122,11 +129,6 @@ def start_chat() -> None:
             language = run_init_wizard(workspace)
         else:
             language = read_language(workspace)
-    else:
-        no_workspace_hint = (
-            "\n[dim]💡 No ragfacile.toml found — run [bold]rag-facile setup[/bold] "
-            "to create a workspace.[/dim]"
-        )
 
     ui = _UI.get(language, _UI["fr"])
 
@@ -143,7 +145,7 @@ def start_chat() -> None:
 
     # Welcome
     workspace_line = (
-        f"\n[dim]Workspace: {workspace}[/dim]" if workspace else no_workspace_hint
+        f"\n[dim]Workspace: {workspace}[/dim]" if workspace else ui["no_workspace_hint"]
     )
     console.print(
         Panel(
