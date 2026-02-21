@@ -42,7 +42,6 @@ from cli.commands.chat.tools import (
     run_rag_facile,
     set_available_skills,
     set_workspace_root,
-    update_config,
 )
 
 
@@ -84,7 +83,7 @@ If the user BOTH reports a problem AND asks to change a value, prefer tune-pipel
 or wants to navigate a specific package or file. \
 DO NOT use for conceptual questions about how RAG works — use explain-rag for that.
 
-- rag-cli          → user wants to run a CLI operation: list collections, generate an evaluation dataset, inspect config output, or any other rag-facile command. Use run_rag_facile() for read operations; use update_config() for config writes.
+- rag-cli          → user wants to run a CLI operation: list collections, generate an evaluation dataset, inspect or change config, or any other rag-facile command. Use run_rag_facile() for all operations — including config set.
 
 - skill-creator    → user explicitly wants to CREATE a new custom skill file. \
 Requires the user to have stated a skill topic or purpose. \
@@ -93,22 +92,21 @@ DO NOT use if the user is merely asking about skills or how they work.
 Only activate ONE skill per session. If no skill clearly fits, respond directly in \
 natural language — this is always a valid choice.
 
-## STRICT RULE — Configuration changes (update_config)
+## STRICT RULE — Configuration changes
 
-NEVER call update_config immediately when a user asks you to change a setting.
+NEVER change a config setting immediately when a user asks. \
 You MUST follow this exact two-step flow every time, with no exceptions:
 
 Step 1 — Explain and ask. In a single reply:
   - State what you are about to change and the old → new value
   - Explain the concrete impact (speed, quality, cost)
   - End with an EXPLICIT question such as:
-    "Puis-je effectuer ce changement ? Il sera enregistré dans ragfacile.toml \
-et committé dans git."
+    "Puis-je effectuer ce changement ?"
 
-Step 2 — Wait. Do NOT call update_config yet. Stop and wait for the user's reply.
+Step 2 — Wait. Do NOT call run_rag_facile yet. Stop and wait for the user's reply.
 
 Step 3 — Only if the user replies with a clear yes ("oui", "yes", "ok", "vas-y", \
-"go ahead", etc.) in a NEW message, call update_config.
+"go ahead", etc.) in a NEW message, call run_rag_facile("config set <key> <value>").
 
 If the user's original message already sounds like a confirmation ("mets top_k à 15"), \
 treat it as a REQUEST, not a confirmation — still ask the explicit question in Step 1.
@@ -182,7 +180,6 @@ _TOOL_ICONS: dict[str, str] = {
     "get_recent_git_activity": "📜",
     "get_docs": "📖",
     "run_rag_facile": "🖥️",
-    "update_config": "✏️",
 }
 
 
@@ -310,7 +307,6 @@ def start_chat(debug: bool = False) -> None:
             get_recent_git_activity,
             get_docs,
             run_rag_facile,
-            update_config,
         ]
     ] + [_wrap_activate_skill(activate_skill)]
 

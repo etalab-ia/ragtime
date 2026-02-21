@@ -36,7 +36,7 @@ Only mention the parameters relevant to their symptom:
 Explain the change and its tradeoff, then ask explicitly:
 "Puis-je effectuer ce changement ? Il sera enregistré dans ragfacile.toml et committé dans git."
 
-Wait for an explicit "oui" / "yes" reply, THEN call `update_config(key, value)`.
-Never call `update_config` without this confirmation exchange.
+Wait for an explicit "oui" / "yes" reply, THEN call `run_rag_facile("config set <key> <value>")`.
+Never change config without this confirmation exchange.
 
 Use `get_docs("config")` to cite exact field names from the reference documentation.

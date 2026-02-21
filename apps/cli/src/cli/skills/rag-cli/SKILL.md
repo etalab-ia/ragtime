@@ -39,12 +39,17 @@ run_rag_facile("generate-dataset ./docs -o golden.jsonl -n 20 --provider albert"
 
 ## Updating config values
 
-Do NOT use `run_rag_facile` for config changes. Use `update_config(key, value)` instead —
-it shows the old → new value, asks for confirmation, and commits the change to git.
+Use `run_rag_facile("config set <key> <value>")` for config changes. The CLI validates
+the key against the Pydantic schema, shows old → new value, and saves the file.
 
 Examples:
-- Enable a collection: `update_config("storage.collections", "[783, 785, 79783]")`
-- Change top_k: `update_config("retrieval.top_k", "15")`
+```
+run_rag_facile("config set storage.collections [783, 785, 79783]")
+run_rag_facile("config set retrieval.top_k 15")
+run_rag_facile("config set generation.model openweight-large")
+```
+
+ALWAYS confirm with the user before running config set — explain the tradeoff first.
 
 ## Generate-dataset workflow
 
@@ -61,13 +66,12 @@ Examples:
 2. Explain public vs private collections
 3. Call `get_ragfacile_config()` to read the current `storage.collections` list
 4. Compute the new list by adding or removing the requested ID(s)
-5. Call `update_config("storage.collections", "[id1, id2, ...]")` with the full new list
-   and confirmation (never use run_rag_facile for config writes — use update_config)
+5. After user confirmation, call `run_rag_facile("config set storage.collections [id1, id2, ...]")`
 
 ## Rules
 
 - Read-only commands: run immediately, no confirmation needed
 - Write operations: ALWAYS confirm with the user first
-- Config changes: ALWAYS use update_config, never run_rag_facile
+- Config changes: use run_rag_facile("config set ...") — always confirm first
 - Never construct shell commands outside the allowed subcommands
 - If output is long, summarise the key points rather than dumping everything
