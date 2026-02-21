@@ -41,7 +41,7 @@ triggers: ["keyword1", "keyword2", ...]
 
 Good skill instructions:
 - Tell the agent what to do step-by-step (numbered flow)
-- Reference which tools to call (`get_ragfacile_config()`, `get_docs()`, etc.)
+- Reference which tools to call (`run_rag_facile()`, `get_docs()`, etc.)
 - Include "never" rules to prevent common mistakes
 - Are written for the agent, not the user
 

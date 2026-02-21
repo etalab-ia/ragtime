@@ -5,11 +5,8 @@ The workspace root is set once at session start by the agent harness.
 """
 
 import subprocess
-import tomllib
 from pathlib import Path
-from typing import Any
 
-import tomli_w
 from smolagents import tool
 
 # ── Docs index ────────────────────────────────────────────────────────────────
@@ -63,28 +60,6 @@ def set_available_skills(skills: dict) -> None:
     """Register available skills so activate_skill can resolve names."""
     global _available_skills
     _available_skills = skills
-
-
-@tool
-def get_ragfacile_config() -> str:
-    """Read the current ragfacile.toml configuration.
-
-    Use this to answer questions about the RAG pipeline settings such as
-    which preset is active, retrieval parameters, collection IDs, etc.
-    """
-    if _workspace_root is None:
-        return (
-            "No workspace detected — ragfacile.toml was not found in the current "
-            "directory or any parent directory. "
-            "Run 'rag-facile setup' to create a workspace."
-        )
-    config_file = _workspace_root / "ragfacile.toml"
-    if not config_file.exists():
-        return (
-            "No ragfacile.toml found in this workspace. "
-            "Run 'rag-facile setup' to create one."
-        )
-    return config_file.read_text(encoding="utf-8")
 
 
 @tool
@@ -245,117 +220,72 @@ def activate_skill(name: str) -> str:
     return load_skill(_available_skills[name])
 
 
-# ── Config editing ────────────────────────────────────────────────────────────
+# ── CLI runner ────────────────────────────────────────────────────────────────
 
-
-def _coerce_value(raw: str) -> Any:
-    """Parse a string value into the most appropriate Python type.
-
-    Tries int → float → bool → str in order so that e.g. "10" becomes int(10),
-    "true"/"false" becomes bool, and arbitrary strings stay as str.
-    """
-    # Boolean (must check before int — int("true") raises, but we want bool first)
-    if raw.lower() in ("true", "false"):
-        return raw.lower() == "true"
-    try:
-        return int(raw)
-    except ValueError:
-        pass
-    try:
-        return float(raw)
-    except ValueError:
-        pass
-    return raw
-
-
-def _get_nested(data: dict, keys: list[str]) -> Any:
-    """Return the value at a dotted key path, or None if not found."""
-    current: Any = data
-    for key in keys:
-        if not isinstance(current, dict) or key not in current:
-            return None
-        current = current[key]
-    return current
-
-
-def _set_nested(data: dict, keys: list[str], value: Any) -> None:
-    """Set the value at a dotted key path, creating intermediate dicts as needed."""
-    for key in keys[:-1]:
-        data = data.setdefault(key, {})
-    data[keys[-1]] = value
+# Subcommands the agent is allowed to run — prevents accidental execution of
+# unrelated system commands if the model hallucinates an argument.
+_ALLOWED_SUBCOMMANDS = frozenset(
+    [
+        "collections",
+        "config",
+        "generate-dataset",
+        "setup",
+        "upgrade",
+        "version",
+        "uninstall",
+    ]
+)
 
 
 @tool
-def update_config(key: str, value: str) -> str:
-    """Update a parameter in ragfacile.toml. Writes the file and git-commits the change.
+def run_rag_facile(subcommand: str) -> str:
+    """Run a rag-facile CLI subcommand and return its output.
 
-    ONLY call this tool after completing the mandatory two-step confirmation flow:
-      1. You explained the impact and asked "Puis-je effectuer ce changement ?"
-      2. The user replied with an explicit yes in a SEPARATE message.
-    A request like "mets top_k à 15" is NOT a confirmation — ask first.
+    Use this for all CLI operations: read-only (collections list, config show,
+    version), config changes (config set key value), and long-running operations
+    (generate-dataset).
+
+    Always confirm with the user before running commands that modify state
+    (config set, generate-dataset).
 
     Args:
-        key: Dotted config path, e.g. 'retrieval.top_k' or 'generation.model'.
-        value: New value as a string. Automatically coerced to int, float,
-               bool, or str based on content (e.g. '10' → int, 'true' → bool).
+        subcommand: Subcommand and arguments as a single string, e.g.
+                    'collections list', 'config show', 'version',
+                    'config set retrieval.top_k 15',
+                    'generate-dataset ./docs -o dataset.jsonl -n 20 --provider albert'
     """
-    if _workspace_root is None:
-        return "No workspace detected. Run 'rag-facile setup' to create a workspace."
+    import shlex
 
-    config_file = _workspace_root / "ragfacile.toml"
-    if not config_file.exists():
-        return "No ragfacile.toml found. Run 'rag-facile setup' to create one."
-
-    keys = key.split(".")
-    if not all(k.isidentifier() for k in keys):
-        return f"Invalid config key '{key}'. Keys must be valid TOML identifiers."
-
-    # Read current config
     try:
-        current = tomllib.loads(config_file.read_text(encoding="utf-8"))
-    except tomllib.TOMLDecodeError as exc:
-        return f"Could not read ragfacile.toml: {exc}"
+        parts = shlex.split(subcommand)
+    except ValueError as exc:
+        return f"Invalid command syntax: {exc}"
 
-    old_value = _get_nested(current, keys)
-    new_value = _coerce_value(value)
-    old_display = repr(old_value) if old_value is not None else "(not set)"
+    if not parts:
+        return "No subcommand provided. Example: 'collections list'"
 
-    # No confirmation prompt here — the user already confirmed in the chat.
-    # The tool docstring instructs the agent to only call this after explicit
-    # user agreement, so calling it IS the confirmation.
-
-    # Write updated config
-    _set_nested(current, keys, new_value)
-    try:
-        config_file.write_bytes(tomli_w.dumps(current).encode())
-    except OSError as exc:
-        return f"Could not write ragfacile.toml: {exc}"
-
-    # Git commit (best-effort — silently skipped if not a git repo)
-    try:
-        subprocess.run(
-            ["git", "add", "ragfacile.toml"],
-            cwd=_workspace_root,
-            capture_output=True,
-            check=True,
+    if parts[0] not in _ALLOWED_SUBCOMMANDS:
+        allowed = ", ".join(sorted(_ALLOWED_SUBCOMMANDS))
+        return (
+            f"Subcommand '{parts[0]}' is not available. Allowed subcommands: {allowed}"
         )
-        subprocess.run(
-            [
-                "git",
-                "commit",
-                "-m",
-                f"config: set {key}={new_value!r} (via rag-facile chat)",
-            ],
-            cwd=_workspace_root,
-            capture_output=True,
-            check=True,
-        )
-        committed = True
-    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
-        committed = False
 
-    commit_note = " et committé dans git." if committed else "."
-    return (
-        f"✓ {key} mis à jour : {old_display} → {new_value!r}{commit_note}\n"
-        "Relancez votre application pour que le changement prenne effet."
-    )
+    # Use workspace as cwd when available (for commands that read ragfacile.toml).
+    # Commands like 'collections list' and 'version' work fine without one.
+    cwd = _workspace_root
+
+    try:
+        result = subprocess.run(
+            ["rag-facile"] + parts,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=600,  # generous — generate-dataset can be slow
+        )
+    except FileNotFoundError:
+        return "rag-facile CLI not found. Ensure the package is installed."
+    except subprocess.TimeoutExpired:
+        return "Command timed out after 10 minutes."
+
+    output = result.stdout.strip() or result.stderr.strip()
+    return output if output else "(no output)"

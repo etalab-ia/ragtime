@@ -1,4 +1,4 @@
-"""Tests for the chat agent tools (get_ragfacile_config, get_agents_md, get_recent_git_activity)."""
+"""Tests for the chat agent tools (get_agents_md, get_recent_git_activity, get_docs)."""
 
 import subprocess
 from unittest.mock import MagicMock, patch
@@ -8,7 +8,6 @@ import pytest
 from cli.commands.chat.tools import (
     get_agents_md,
     get_docs,
-    get_ragfacile_config,
     get_recent_git_activity,
     set_workspace_root,
 )
@@ -33,24 +32,6 @@ def workspace(tmp_path):
     )
     set_workspace_root(tmp_path)
     return tmp_path
-
-
-# ── get_ragfacile_config ──────────────────────────────────────────────────────
-
-
-class TestGetRagfacileConfig:
-    def test_returns_hint_when_no_workspace(self):
-        result = get_ragfacile_config()
-        assert "No workspace detected" in result
-
-    def test_returns_config_content(self, workspace):
-        result = get_ragfacile_config()
-        assert "balanced" in result
-
-    def test_returns_hint_when_no_toml(self, tmp_path):
-        set_workspace_root(tmp_path)
-        result = get_ragfacile_config()
-        assert "No ragfacile.toml found" in result
 
 
 # ── get_agents_md ─────────────────────────────────────────────────────────────

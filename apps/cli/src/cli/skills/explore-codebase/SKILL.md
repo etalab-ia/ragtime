@@ -13,7 +13,7 @@ tools to give accurate, specific answers rather than guessing.
 
 1. Call `get_agents_md()` first — AGENTS.md has the package tree and key file locations
 2. Call `get_recent_git_activity()` for "what changed recently?" questions
-3. Call `get_ragfacile_config()` to cross-reference config with implementation
+3. Call `run_rag_facile("config show --format json")` to cross-reference config with implementation
 
 ## Package map (rag_facile namespace)
 

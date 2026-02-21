@@ -73,13 +73,17 @@ class TestChatCommand:
         assert result.exit_code == 1
         assert "No API key found" in result.output
 
-    def test_get_ragfacile_config_tool_no_workspace(self):
-        """Tool returns helpful string (not an error) when no workspace configured."""
+    def test_run_rag_facile_tool_no_workspace(self):
+        """run_rag_facile with no workspace still runs the command (no cwd requirement)."""
+        from unittest.mock import MagicMock, patch
+
         from cli.commands.chat import tools
 
-        # Ensure workspace is None
         tools._workspace_root = None
-        result = tools.get_ragfacile_config()
+        mock_result = MagicMock()
+        mock_result.stdout = "rag-facile v0.17.0"
+        mock_result.stderr = ""
+        with patch("cli.commands.chat.tools.subprocess.run", return_value=mock_result):
+            result = tools.run_rag_facile("version")
 
-        assert "No workspace detected" in result
-        assert "rag-facile setup" in result
+        assert "0.17.0" in result

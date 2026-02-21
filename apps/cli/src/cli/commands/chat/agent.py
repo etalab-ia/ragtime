@@ -37,11 +37,10 @@ from cli.commands.chat.tools import (
     activate_skill,
     get_agents_md,
     get_docs,
-    get_ragfacile_config,
     get_recent_git_activity,
+    run_rag_facile,
     set_available_skills,
     set_workspace_root,
-    update_config,
 )
 
 
@@ -55,7 +54,7 @@ Always explain concepts in plain, accessible language. Avoid jargon without expl
 You can:
 - Answer questions about RAG concepts (chunking, embeddings, retrieval, reranking, etc.)
 - Explain what configuration parameters do and how to tune them
-- Read the current ragfacile.toml to give context-aware advice
+- Run CLI commands on behalf of the user (config show, config set, collections list, etc.)
 - Guide users through the rag-facile workflow step by step
 
 Always be encouraging and educational. When you suggest a change, explain the tradeoff \
@@ -83,6 +82,8 @@ If the user BOTH reports a problem AND asks to change a value, prefer tune-pipel
 or wants to navigate a specific package or file. \
 DO NOT use for conceptual questions about how RAG works — use explain-rag for that.
 
+- rag-cli          → user wants to run a CLI operation OR view current state: list collections, show/inspect config values, change a config parameter, generate a dataset, or any other rag-facile command. Use run_rag_facile() for all of these — including reads.
+
 - skill-creator    → user explicitly wants to CREATE a new custom skill file. \
 Requires the user to have stated a skill topic or purpose. \
 DO NOT use if the user is merely asking about skills or how they work.
@@ -90,22 +91,37 @@ DO NOT use if the user is merely asking about skills or how they work.
 Only activate ONE skill per session. If no skill clearly fits, respond directly in \
 natural language — this is always a valid choice.
 
-## STRICT RULE — Configuration changes (update_config)
+## RULE — Always use tools; never answer from memory
 
-NEVER call update_config immediately when a user asks you to change a setting.
+When the user asks to SEE or READ current state (config values, collections, version), \
+call run_rag_facile() to get live data. NEVER describe config values from memory — \
+they may be stale or wrong.
+
+When the user asks to DO something you have a tool for, USE the tool. \
+Do NOT explain how to do it manually.
+
+- "montre-moi la config storage" → run_rag_facile("config show"), present actual output
+- "active la collection 785" → read config first, then confirm + run_rag_facile("config set ...")
+- "mets top_k à 15" → confirm first, then run_rag_facile("config set retrieval.top_k 15")
+- "quelle version ?" → run_rag_facile("version")
+
+The agent's value is live data and real actions — not cached knowledge.
+
+## STRICT RULE — Configuration changes
+
+NEVER change a config setting immediately when a user asks. \
 You MUST follow this exact two-step flow every time, with no exceptions:
 
 Step 1 — Explain and ask. In a single reply:
   - State what you are about to change and the old → new value
   - Explain the concrete impact (speed, quality, cost)
   - End with an EXPLICIT question such as:
-    "Puis-je effectuer ce changement ? Il sera enregistré dans ragfacile.toml \
-et committé dans git."
+    "Puis-je effectuer ce changement ?"
 
-Step 2 — Wait. Do NOT call update_config yet. Stop and wait for the user's reply.
+Step 2 — Wait. Do NOT call run_rag_facile yet. Stop and wait for the user's reply.
 
 Step 3 — Only if the user replies with a clear yes ("oui", "yes", "ok", "vas-y", \
-"go ahead", etc.) in a NEW message, call update_config.
+"go ahead", etc.) in a NEW message, call run_rag_facile("config set <key> <value>").
 
 If the user's original message already sounds like a confirmation ("mets top_k à 15"), \
 treat it as a REQUEST, not a confirmation — still ask the explicit question in Step 1.
@@ -174,11 +190,10 @@ _RATE_LIMIT_WAIT = 15
 
 _TOOL_ICONS: dict[str, str] = {
     "activate_skill": "📚",
-    "get_ragfacile_config": "⚙️",
     "get_agents_md": "📋",
     "get_recent_git_activity": "📜",
     "get_docs": "📖",
-    "update_config": "✏️",
+    "run_rag_facile": "🖥️",
 }
 
 
@@ -301,11 +316,10 @@ def start_chat(debug: bool = False) -> None:
     tools = [
         _with_notification(t)
         for t in [
-            get_ragfacile_config,
             get_agents_md,
             get_recent_git_activity,
             get_docs,
-            update_config,
+            run_rag_facile,
         ]
     ] + [_wrap_activate_skill(activate_skill)]
 
