@@ -289,10 +289,10 @@ class AlbertPipeline(RAGPipeline):
             tracer.log_trace(trace)
             set_current_trace_id(trace.id)
             _notify_hook(trace)
-            logger.debug("Logged trace %s", trace.id)
+            logger.info("Logged trace %s", trace.id)
         except Exception:  # noqa: BLE001
             # Tracing must never break the pipeline — log and continue
-            logger.debug("Tracing failed (non-critical)", exc_info=True)
+            logger.warning("Tracing failed (non-critical)", exc_info=True)
 
         return context
 

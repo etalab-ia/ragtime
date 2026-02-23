@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import contextvars
 import threading
+from pathlib import Path
 from collections.abc import Callable
 from typing import Any
 
@@ -91,6 +92,29 @@ def _notify_hook(trace: TraceRecord) -> None:
 # ── Factory ───────────────────────────────────────────────────────────────────
 
 
+def _resolve_db_path(raw_path: str) -> Path:
+    """Resolve the database path relative to the workspace root.
+
+    If the path is relative, it's resolved relative to the directory
+    containing ``ragfacile.toml`` (found by walking up from CWD).
+    This ensures the database lands at the workspace root regardless
+    of which subdirectory an app runs from (e.g. ``apps/chainlit-chat/``).
+    """
+    db = Path(raw_path)
+    if db.is_absolute():
+        return db
+
+    # Walk up from CWD to find ragfacile.toml → its parent = workspace root
+    from rag_facile.core.loader import _find_config_file
+
+    config_file = _find_config_file()
+    if config_file is not None:
+        return config_file.parent / db
+
+    # Fallback: resolve relative to CWD (standalone projects without ragfacile.toml)
+    return Path.cwd() / db
+
+
 def get_tracer(config: Any | None = None) -> TracingProvider:
     """Return a configured tracing provider (singleton).
 
@@ -127,7 +151,7 @@ def get_tracer(config: Any | None = None) -> TracingProvider:
                 case "sqlite":
                     from .sqlite import SQLiteProvider
 
-                    _tracer = SQLiteProvider(tracing_cfg.database)
+                    _tracer = SQLiteProvider(_resolve_db_path(tracing_cfg.database))
                 case "none":
                     from .noop import NoopProvider
 
