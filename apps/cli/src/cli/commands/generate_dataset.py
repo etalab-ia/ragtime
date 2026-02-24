@@ -190,9 +190,8 @@ def run(
                 "letta", api_key=api_key, agent_id=agent_id
             )
         else:  # albert
-            provider_instance = get_provider(
-                "albert", api_key=api_key, base_url=base_url, model=model
-            )
+            # Albert provider reads from config and env vars (OPENAI_API_KEY, OPENAI_BASE_URL, etc.)
+            provider_instance = get_provider("albert")
     except ImportError as e:
         console.print(f"Error: {e}")
         raise typer.Exit(1)
