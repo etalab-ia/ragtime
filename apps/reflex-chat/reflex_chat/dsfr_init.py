@@ -1,48 +1,31 @@
-"""DSFR initialization wrapper.
+"""DSFR React component wrappers for Reflex.
 
-This module is imported at app startup to initialize DSFR before any
-components try to render. Wraps Header and Footer with initialization.
+Simple direct wrappers with NO custom initialization code.
+startReactDsfr() is called at app root level instead (see reflex_chat.py).
 """
 
 import reflex as rx
 
 
-# Custom code that initializes DSFR and exports wrapped components
-_DSFR_WRAPPER_CODE = """
-import { startReactDsfr } from "@codegouvfr/react-dsfr/spa";
-import HeaderBase from "@codegouvfr/react-dsfr/Header";
-import FooterBase from "@codegouvfr/react-dsfr/Footer";
-
-// Initialize DSFR at module load time (before anything renders)
-startReactDsfr({ defaultColorScheme: "system" });
-
-// Export wrapped components that are guaranteed to have DSFR initialized
-export const Header = HeaderBase;
-export const Footer = FooterBase;
-"""
-
-
 class DsfrHeader(rx.NoSSRComponent):
-    """DSFR Header (initialized)."""
+    """DSFR Header component."""
 
     library: str = "@codegouvfr/react-dsfr"
     tag: str = "Header"
+    is_default: bool = True
 
     brand_top: rx.Var[str]
     service_title: rx.Var[str]
     service_tagline: rx.Var[str]
     home_link_props: rx.Var[dict]
 
-    @classmethod
-    def _get_custom_code(cls) -> str:
-        return _DSFR_WRAPPER_CODE
-
 
 class DsfrFooter(rx.NoSSRComponent):
-    """DSFR Footer (initialized via DsfrHeader)."""
+    """DSFR Footer component."""
 
     library: str = "@codegouvfr/react-dsfr"
     tag: str = "Footer"
+    is_default: bool = True
 
     brand_top: rx.Var[str]
     accessibility: rx.Var[str]
