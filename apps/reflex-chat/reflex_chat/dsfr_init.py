@@ -19,7 +19,7 @@ startReactDsfr({ defaultColorScheme: "system" });
 class DsfrHeader(rx.NoSSRComponent):
     """DSFR Header component (Vite + React Router)."""
 
-    library: str = "@codegouvfr/react-dsfr"
+    library: str = "@codegouvfr/react-dsfr/Header"
     tag: str = "Header"
     is_default: bool = True
 
@@ -36,7 +36,7 @@ class DsfrHeader(rx.NoSSRComponent):
 class DsfrFooter(rx.NoSSRComponent):
     """DSFR Footer component (Vite + React Router) — custom code via DsfrHeader."""
 
-    library: str = "@codegouvfr/react-dsfr"
+    library: str = "@codegouvfr/react-dsfr/Footer"
     tag: str = "Footer"
     is_default: bool = True
 
