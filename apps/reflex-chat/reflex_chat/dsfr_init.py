@@ -1,27 +1,18 @@
 """DSFR React component wrappers for Reflex.
 
-Reflex v0.8.0+ uses Vite + React Router (not Next.js).
-Use react-dsfr's SPA integration pattern with React Router Link registration.
+Reflex v0.8.0+ uses Vite + React Router (SPA).
+Follows react-dsfr Vite setup pattern: call startReactDsfr() once in custom code.
 """
 
 import reflex as rx
 
 
-# Initialize DSFR with React Router Link integration
+# Custom code injected via _get_custom_code() - runs at module load time
 _DSFR_INIT_CODE = """
 import { startReactDsfr } from "@codegouvfr/react-dsfr/spa";
-import { Link } from "react-router-dom";
 
-startReactDsfr({
-  defaultColorScheme: "system",
-  Link
-});
-
-declare module '@codegouvfr/react-dsfr/spa' {
-  interface RegisterLink {
-    Link: typeof Link;
-  }
-}
+// Initialize DSFR once at module load
+startReactDsfr({ defaultColorScheme: "system" });
 """
 
 
@@ -43,7 +34,7 @@ class DsfrHeader(rx.NoSSRComponent):
 
 
 class DsfrFooter(rx.NoSSRComponent):
-    """DSFR Footer component (Vite + React Router)."""
+    """DSFR Footer component (Vite + React Router) — custom code via DsfrHeader."""
 
     library: str = "@codegouvfr/react-dsfr"
     tag: str = "Footer"
