@@ -3,7 +3,7 @@
 import reflex as rx
 
 from reflex_chat.components import chat, navbar
-from reflex_chat.components.dsfr import dsfr_footer, dsfr_header
+from reflex_chat.dsfr_init import dsfr_footer, dsfr_header
 
 
 def index() -> rx.Component:

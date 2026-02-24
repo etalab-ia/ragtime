@@ -3,7 +3,7 @@
 import reflex as rx
 
 from {{ project_name | replace(from='-', to='_') }}.components import chat, navbar
-from {{ project_name | replace(from='-', to='_') }}.components.dsfr import dsfr_footer, dsfr_header
+from {{ project_name | replace(from='-', to='_') }}.dsfr_init import dsfr_footer, dsfr_header
 
 
 def index() -> rx.Component:
