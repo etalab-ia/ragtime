@@ -1,4 +1,5 @@
 import reflex as rx
+from reflex.style import set_color_mode
 
 from reflex_chat.state import State
 
@@ -112,7 +113,7 @@ def theme_toggle() -> rx.Component:
                     spacing="2",
                     align_items="center",
                 ),
-                on_click=rx.set_color_mode("light"),
+                on_click=set_color_mode("light"),
             ),
             rx.menu.item(
                 rx.hstack(
@@ -121,7 +122,7 @@ def theme_toggle() -> rx.Component:
                     spacing="2",
                     align_items="center",
                 ),
-                on_click=rx.set_color_mode("dark"),
+                on_click=set_color_mode("dark"),
             ),
             rx.menu.item(
                 rx.hstack(
@@ -130,7 +131,7 @@ def theme_toggle() -> rx.Component:
                     spacing="2",
                     align_items="center",
                 ),
-                on_click=rx.set_color_mode("system"),
+                on_click=set_color_mode("system"),
             ),
         ),
     )
