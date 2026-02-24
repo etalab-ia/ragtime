@@ -118,11 +118,10 @@ class AlbertApiProvider:
         # Stream the response from LLM
         logger.info(f"Sending prompt to Albert API (collection: {self.collection_id})")
         seen_samples: set[str] = set()
-        buffer = ""
         total_response = ""
 
         try:
-            # Use the configured model for generation (defaults to openai/gpt-oss-120b)
+            # Use the configured model for generation
             model = self.config.generation.model
             stream = self.client.chat.completions.create(
                 model=model,
@@ -132,39 +131,87 @@ class AlbertApiProvider:
 
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
-                    content = chunk.choices[0].delta.content
-                    total_response += content
-                    buffer += content
-
-                    # Split into lines, keeping the last (possibly incomplete) line
-                    lines = buffer.split("\n")
-                    buffer = lines.pop()  # Keep incomplete line in buffer
-
-                    # Process complete lines
-                    for line in lines:
-                        yield from self._process_line(line, seen_samples)
-
-            # Process any remaining content in the buffer
-            if buffer:
-                yield from self._process_line(buffer, seen_samples)
+                    total_response += chunk.choices[0].delta.content
 
             logger.info("Completed Albert generation")
             logger.debug(
                 f"Total response ({len(total_response)} chars):\n{total_response}\n"
             )
+
+            # Parse after streaming is complete — handles both single-line JSONL
+            # and multi-line pretty-printed JSON objects from the LLM
+            yield from self._parse_response(total_response, seen_samples)
+
         except Exception as e:
             logger.error(f"LLM generation failed: {e}", exc_info=True)
             raise RuntimeError(f"LLM generation failed: {e}") from e
 
-    def _process_line(
-        self, line: str, seen_samples: set[str]
+    def _parse_response(
+        self, response: str, seen_samples: set[str]
     ) -> Iterator[GeneratedSample]:
-        """Process a single line, yielding unique samples."""
-        for sample in self._extract_samples(line):
-            sample_key = sample.user_input
-            if sample_key not in seen_samples:
-                seen_samples.add(sample_key)
-                yield sample
+        """Parse the full LLM response, extracting all valid JSON samples.
+
+        Handles:
+        - One JSON object per line (JSONL format)
+        - Multi-line pretty-printed JSON objects
+        - Markdown code fences (```json ... ```)
+        """
+        # Strip markdown code fences wrapping the whole response
+        text = response.strip()
+        if text.startswith("```"):
+            lines = text.split("\n")
+            # Drop opening fence (```json or ```) and closing fence (```)
+            inner = [
+                ln
+                for ln in lines[1:]
+                if ln.strip() != "```" and ln.strip() != "```json"
+            ]
+            text = "\n".join(inner)
+
+        # Try line-by-line first (proper JSONL)
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or not line.startswith("{"):
+                continue
+            try:
+                data = json.loads(line)
+                if "user_input" in data and "reference" in data:
+                    sample = GeneratedSample.from_dict(data)
+                    if sample.user_input not in seen_samples:
+                        seen_samples.add(sample.user_input)
+                        yield sample
+            except json.JSONDecodeError:
+                pass
+
+        # If nothing found, try to extract all JSON objects via brace matching
+        if not seen_samples:
+            yield from self._extract_json_objects(text, seen_samples)
+
+    def _extract_json_objects(
+        self, text: str, seen_samples: set[str]
+    ) -> Iterator[GeneratedSample]:
+        """Extract JSON objects from text using brace depth tracking."""
+        depth = 0
+        start = -1
+        for i, ch in enumerate(text):
+            if ch == "{":
+                if depth == 0:
+                    start = i
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0 and start != -1:
+                    candidate = text[start : i + 1]
+                    try:
+                        data = json.loads(candidate)
+                        if "user_input" in data and "reference" in data:
+                            sample = GeneratedSample.from_dict(data)
+                            if sample.user_input not in seen_samples:
+                                seen_samples.add(sample.user_input)
+                                yield sample
+                    except json.JSONDecodeError:
+                        pass
+                    start = -1
 
     def cleanup(self) -> None:
         """Delete collection from Albert API."""
@@ -189,8 +236,8 @@ class AlbertApiProvider:
         try:
             from rag_facile.retrieval import search_chunks
 
-            # Delay to allow document indexing in Albert
-            time.sleep(2.0)
+            # Delay to allow document indexing in Albert (PDF parsing takes ~5s)
+            time.sleep(5.0)
 
             # Use several broad search queries to capture different aspects
             search_queries = [
@@ -216,8 +263,8 @@ class AlbertApiProvider:
 
                     if chunks:
                         for chunk in chunks:
-                            # Chunks are dicts with 'text' key
-                            text = chunk.get("text", "")
+                            # RetrievedChunk TypedDicts use 'content' key
+                            text = chunk.get("content", "")
                             if text and text not in passages:
                                 passages.append(text[:500])  # Limit passage length
                 except Exception as e:
@@ -277,16 +324,3 @@ Generate exactly {num_samples} JSON objects, one per line (JSONL format). Each o
 
 Output ONLY the JSON lines with no additional text, explanations, or preamble. Start directly with the first JSON object.
 Generate exactly {num_samples} Q&A pairs."""
-
-    def _extract_samples(self, line: str) -> Iterator[GeneratedSample]:
-        """Extract JSON sample from a single line."""
-        line = line.strip()
-        if not line or not line.startswith("{"):
-            return
-
-        try:
-            data = json.loads(line)
-            if "user_input" in data and "reference" in data:
-                yield GeneratedSample.from_dict(data)
-        except json.JSONDecodeError:
-            pass  # Incomplete JSON, skip
