@@ -1,73 +1,85 @@
 """DSFR React component wrappers for Reflex.
 
 Wraps @codegouvfr/react-dsfr Header and Footer as Reflex NoSSRComponents.
-startReactDsfr() is injected via _get_custom_code() on DsfrHeader and
-runs at module load time (before render), satisfying react-dsfr's
-requirement that initialization happens before any DSFR components render.
+
+Key challenge: @codegouvfr/react-dsfr uses subpath exports
+(@codegouvfr/react-dsfr/Header, /Footer, /spa) which npm/bun cannot install
+as separate packages. Solution: use the root package for installation
+and define thin local wrapper functions via _get_custom_code() that import
+from the correct subpaths and call startReactDsfr() at module load time.
 """
 
 import reflex as rx
 
+# The actual installable npm package (not a subpath).
+_DSFR_PACKAGE = "@codegouvfr/react-dsfr"
+
+# Shared custom code: imports subpaths + initializes DSFR once.
+_DSFR_INIT_AND_WRAPPERS = """
+import { startReactDsfr } from "@codegouvfr/react-dsfr/spa";
+import _DsfrHeaderBase from "@codegouvfr/react-dsfr/Header";
+import _DsfrFooterBase from "@codegouvfr/react-dsfr/Footer";
+
+startReactDsfr({ defaultColorScheme: "system" });
+
+function RagFacileDsfrHeader({ brandTop, serviceTitle, serviceTagline }) {
+  return (
+    <_DsfrHeaderBase
+      brandTop={<>{brandTop}</>}
+      serviceTitle={serviceTitle}
+      serviceTagline={serviceTagline}
+      homeLinkProps={{ href: "/", title: "Accueil - " + serviceTitle }}
+    />
+  );
+}
+
+function RagFacileDsfrFooter({ brandTop, accessibility, contentDescription }) {
+  return (
+    <_DsfrFooterBase
+      brandTop={<>{brandTop}</>}
+      homeLinkProps={{ href: "/", title: "Accueil" }}
+      accessibility={accessibility}
+      contentDescription={contentDescription}
+    />
+  );
+}
+"""
+
 
 class DsfrHeader(rx.NoSSRComponent):
-    """Wraps the @codegouvfr/react-dsfr Header component.
+    """Wraps DSFR Header via a local React wrapper function."""
 
-    Header is the mandatory government identity component — displays
-    the Marianne logo, brand name, and service title at the top of every
-    French government service.
-    """
+    library: str = _DSFR_PACKAGE
+    tag: str = "RagFacileDsfrHeader"
 
-    library: str = "@codegouvfr/react-dsfr/Header"
-    tag: str = "Header"
-    is_default: bool = True
-
-    # Required props (camelCase handled automatically by Reflex)
-    brand_top: rx.Var[str]  # e.g. "République\nFrançaise"
-    home_link_props: rx.Var[dict]  # e.g. {"href": "/", "title": "Accueil"}
-
-    # Optional props
+    brand_top: rx.Var[str]
     service_title: rx.Var[str]
     service_tagline: rx.Var[str]
-    quick_access_items: rx.Var[list]
 
     @classmethod
     def _get_custom_code(cls) -> str:
-        """Inject startReactDsfr() at module load time (before render)."""
-        return (
-            'import { startReactDsfr } from "@codegouvfr/react-dsfr/spa";\n'
-            'startReactDsfr({ defaultColorScheme: "system" });\n'
-        )
+        return _DSFR_INIT_AND_WRAPPERS
 
 
 class DsfrFooter(rx.NoSSRComponent):
-    """Wraps the @codegouvfr/react-dsfr Footer component.
+    """Wraps DSFR Footer via a local React wrapper function."""
 
-    Footer is the mandatory government identity component at the bottom
-    of every French government service.
-    """
+    library: str = _DSFR_PACKAGE
+    tag: str = "RagFacileDsfrFooter"
 
-    library: str = "@codegouvfr/react-dsfr/Footer"
-    tag: str = "Footer"
-    is_default: bool = True
-
-    # Required props
     brand_top: rx.Var[str]
-    home_link_props: rx.Var[dict]
-    # DSFR requires an accessibility statement level
-    accessibility: rx.Var[
-        str
-    ]  # "fully compliant" | "partially compliant" | "non compliant"
-
-    # Optional props
+    accessibility: rx.Var[str]
     content_description: rx.Var[str]
-    bottom_items: rx.Var[list]
+
+    @classmethod
+    def _get_custom_code(cls) -> str:
+        return _DSFR_INIT_AND_WRAPPERS
 
 
 def dsfr_header() -> rx.Component:
     """Render the DSFR government identity header."""
     return DsfrHeader.create(
         brand_top="République\nFrançaise",
-        home_link_props={"href": "/", "title": "Accueil - RAG Facile"},
         service_title="RAG Facile",
         service_tagline="Assistant RAG pour les services publics",
     )
@@ -77,7 +89,6 @@ def dsfr_footer() -> rx.Component:
     """Render the DSFR government identity footer."""
     return DsfrFooter.create(
         brand_top="République\nFrançaise",
-        home_link_props={"href": "/", "title": "Accueil - RAG Facile"},
         accessibility="non compliant",
         content_description=(
             "RAG Facile est un starter kit open source pour construire "
