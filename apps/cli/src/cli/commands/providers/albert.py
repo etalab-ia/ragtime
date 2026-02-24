@@ -108,8 +108,9 @@ class AlbertApiProvider:
                 "No collection ID available. Call upload_documents first."
             )
 
-        # Retrieve sample passages and chunk IDs from the collection
-        document_context, chunk_ids = self._retrieve_document_context()
+        # Retrieve sample passages from broad searches to ground the generation prompt
+        # (specific chunk IDs for each question will be retrieved during parsing)
+        document_context, _ = self._retrieve_document_context()  # noqa: F841
 
         # Build the generation prompt with document context
         prompt = self._build_prompt(num_samples, document_context)
@@ -141,15 +142,16 @@ class AlbertApiProvider:
             )
 
             # Parse after streaming is complete — handles both single-line JSONL
-            # and multi-line pretty-printed JSON objects from the LLM
-            yield from self._parse_response(total_response, seen_samples, chunk_ids)
+            # and multi-line pretty-printed JSON objects from the LLM.
+            # Each sample will have its own chunk IDs based on searching for that question.
+            yield from self._parse_response(total_response, seen_samples)
 
         except Exception as e:
             logger.error(f"LLM generation failed: {e}", exc_info=True)
             raise RuntimeError(f"LLM generation failed: {e}") from e
 
     def _parse_response(
-        self, response: str, seen_samples: set[str], chunk_ids: list[int]
+        self, response: str, seen_samples: set[str]
     ) -> Iterator[GeneratedSample]:
         """Parse the full LLM response, extracting all valid JSON samples.
 
@@ -158,8 +160,8 @@ class AlbertApiProvider:
         - Multi-line pretty-printed JSON objects
         - Markdown code fences (```json ... ```)
 
-        Populates each sample's retrieved_chunk_ids with the chunk IDs from
-        the collection search that grounded the generation.
+        For each sample, searches for that specific question to get chunk IDs
+        relevant to that question (not the broad search chunks from generation).
         """
         # Strip markdown code fences wrapping the whole response
         text = response.strip()
@@ -182,7 +184,8 @@ class AlbertApiProvider:
                 data = json.loads(line)
                 if "user_input" in data and "reference" in data:
                     sample = GeneratedSample.from_dict(data)
-                    # Populate chunk IDs from the search that grounded generation
+                    # Search for this specific question to get question-relevant chunk IDs
+                    chunk_ids = self._search_for_chunk_ids(sample.user_input)
                     sample.retrieved_chunk_ids = [str(cid) for cid in chunk_ids]
                     if sample.user_input not in seen_samples:
                         seen_samples.add(sample.user_input)
@@ -192,13 +195,39 @@ class AlbertApiProvider:
 
         # If nothing found, try to extract all JSON objects via brace matching
         if not seen_samples:
-            yield from self._extract_json_objects(text, seen_samples, chunk_ids)
+            yield from self._extract_json_objects(text, seen_samples)
+
+    def _search_for_chunk_ids(self, question: str) -> list[int]:
+        """Search the collection for chunks relevant to a specific question.
+
+        Returns:
+            List of chunk IDs from the search results for this question
+        """
+        if not self.collection_id:
+            return []
+
+        try:
+            from rag_facile.retrieval import search_chunks
+
+            chunks = search_chunks(
+                self.client,
+                question,
+                [self.collection_id],
+                limit=self.config.retrieval.top_k,
+                method=self.config.retrieval.strategy,
+                score_threshold=self.config.retrieval.score_threshold,
+            )
+            return [
+                chunk.get("chunk_id", 0) for chunk in chunks if chunk.get("chunk_id")
+            ]
+        except Exception as e:
+            logger.debug(f"Failed to search for chunk IDs for question: {e}")
+            return []
 
     def _extract_json_objects(
         self,
         text: str,
         seen_samples: set[str],
-        chunk_ids: list[int],
     ) -> Iterator[GeneratedSample]:
         """Extract JSON objects from text using brace depth tracking."""
         depth = 0
@@ -216,7 +245,8 @@ class AlbertApiProvider:
                         data = json.loads(candidate)
                         if "user_input" in data and "reference" in data:
                             sample = GeneratedSample.from_dict(data)
-                            # Populate chunk IDs from the search
+                            # Search for this specific question to get question-relevant chunk IDs
+                            chunk_ids = self._search_for_chunk_ids(sample.user_input)
                             sample.retrieved_chunk_ids = [str(cid) for cid in chunk_ids]
                             if sample.user_input not in seen_samples:
                                 seen_samples.add(sample.user_input)
