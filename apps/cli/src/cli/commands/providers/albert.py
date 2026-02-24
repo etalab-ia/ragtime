@@ -7,6 +7,7 @@ consistency with the main RAG pipeline.
 
 import json
 import logging
+import random
 import time
 from collections.abc import Iterator
 from pathlib import Path
@@ -126,10 +127,13 @@ class AlbertApiProvider:
             # This is intentionally separate from config.generation.model which
             # controls the RAG pipeline LLM.
             model = self.config.eval.generation_model
+            # Use random seed to encourage diversity in generated Q/A pairs
+            seed = random.randint(0, 2**31 - 1)
             stream = self.client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 stream=True,
+                seed=seed,
             )
 
             for chunk in stream:
