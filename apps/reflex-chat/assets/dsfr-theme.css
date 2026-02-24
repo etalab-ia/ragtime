@@ -137,6 +137,22 @@ body {
     outline-offset: 2px;
 }
 
+/* ─── DSFR Checkbox Override ─── */
+
+/* Radix checkbox uses its own accent tokens — override to Blue France */
+.rt-CheckboxButton:where([data-state="checked"]) {
+    background-color: var(--dsfr-blue-france);
+    color: white;
+}
+
+.rt-CheckboxButton:where([data-state="checked"]):where(:hover) {
+    background-color: var(--dsfr-blue-france-hover);
+}
+
+.rt-CheckboxButton {
+    border-radius: 4px;
+}
+
 /* ─── DSFR Button Adjustments ─── */
 
 /* Reduce border-radius for a more DSFR-aligned look.
@@ -145,7 +161,3 @@ body {
 button, [role="button"] {
     border-radius: 4px !important;
 }
-
-/* ─── Disclaimer in French ─── */
-
-/* The disclaimer text is set in chat.py, but ensure it inherits Marianne */

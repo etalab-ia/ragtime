@@ -104,15 +104,13 @@ def collection_badge(item: dict[str, str]) -> rx.Component:
         rx.checkbox(
             checked=is_active,
             on_change=lambda _val: State.toggle_collection(col_id),
-            color_scheme="blue",
             size="2",
         ),
-        rx.text(name, font_size="0.85em"),
+        rx.text(name, font_size="0.875rem"),
         display="flex",
         align_items="center",
-        gap="6px",
+        gap="0.5rem",  # DSFR 2v
         cursor="pointer",
-        padding="4px 0",
     )
 
 
@@ -123,7 +121,7 @@ def collection_badges() -> rx.Component:
         rx.hstack(
             rx.text(
                 "Collections :",
-                font_size="0.8em",
+                font_size="0.875rem",
                 weight="medium",
                 color=rx.color("slate", 10),
                 white_space="nowrap",
@@ -131,13 +129,14 @@ def collection_badges() -> rx.Component:
             rx.flex(
                 rx.foreach(State.collection_items, collection_badge),
                 wrap="wrap",
-                gap="4",
+                column_gap="1.5rem",  # DSFR 6v between items
+                row_gap="0.5rem",  # DSFR 2v between rows
                 align_items="center",
             ),
             align_items="center",
             justify_content="center",
-            spacing="3",
-            padding="8px 16px",
+            spacing="4",  # DSFR 4v label-to-checkboxes
+            padding="0.5rem 1rem",  # DSFR 2v / 4v
         ),
     )
 
