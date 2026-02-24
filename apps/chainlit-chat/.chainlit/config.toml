@@ -95,7 +95,7 @@ reaction_on_message_received = false
 name = "Assistant RAG Facile"
 
 # Default to light theme (DSFR preference for government sites)
-# default_theme = "light"
+default_theme = "light"
 
 # Force French for all users (DSFR government applications)
 language = "fr-FR"
