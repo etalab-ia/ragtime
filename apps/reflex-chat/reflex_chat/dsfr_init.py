@@ -39,7 +39,7 @@ class DsfrHeader(rx.NoSSRComponent):
 
 
 class DsfrFooter(rx.NoSSRComponent):
-    """DSFR Footer (initialized)."""
+    """DSFR Footer (initialized via DsfrHeader)."""
 
     library: str = "@codegouvfr/react-dsfr"
     tag: str = "Footer"
@@ -48,10 +48,6 @@ class DsfrFooter(rx.NoSSRComponent):
     accessibility: rx.Var[str]
     content_description: rx.Var[str]
     home_link_props: rx.Var[dict]
-
-    @classmethod
-    def _get_custom_code(cls) -> str:
-        return _DSFR_WRAPPER_CODE
 
 
 def dsfr_header() -> rx.Component:
