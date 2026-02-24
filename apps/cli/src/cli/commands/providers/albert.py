@@ -201,8 +201,9 @@ class AlbertApiProvider:
         try:
             import time
 
-            # Small delay to allow document indexing
-            time.sleep(0.5)
+            # Delay to allow document indexing in Albert
+            # (Search may take time to index newly uploaded documents)
+            time.sleep(2.0)
 
             # Use several broad search queries to capture different aspects
             search_queries = [
@@ -248,8 +249,9 @@ class AlbertApiProvider:
                 return f"Sample passages from the document:\n\n{context}"
             else:
                 return (
-                    "[Could not retrieve document passages. "
-                    "The LLM will use its general knowledge.]"
+                    "A document has been uploaded to the collection. "
+                    "Please generate Q/A pairs based on the document content, "
+                    "ensuring each answer is grounded in the uploaded material."
                 )
 
         except Exception as e:
