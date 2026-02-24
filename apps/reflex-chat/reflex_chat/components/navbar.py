@@ -1,4 +1,5 @@
 import reflex as rx
+from reflex.style import set_color_mode
 
 from reflex_chat.state import State
 
@@ -42,7 +43,7 @@ def sidebar(trigger) -> rx.Component:
         rx.drawer.portal(  # type: ignore[missing-argument]
             rx.drawer.content(
                 rx.vstack(
-                    rx.heading("Chats", color=rx.color("mauve", 11)),
+                    rx.heading("Conversations", color=rx.color("slate", 11)),
                     rx.divider(),
                     rx.foreach(State.chat_titles, lambda chat: sidebar_chat(chat)),
                     align_items="stretch",
@@ -53,7 +54,7 @@ def sidebar(trigger) -> rx.Component:
                 height="100%",
                 width="20em",
                 padding="2em",
-                background_color=rx.color("mauve", 2),
+                background_color=rx.color("slate", 2),
                 outline="none",
             )
         ),
@@ -70,22 +71,69 @@ def modal(trigger) -> rx.Component:
             rx.form(
                 rx.hstack(
                     rx.input(
-                        placeholder="Chat name",
+                        placeholder="Nom du chat",
                         name="new_chat_name",
                         flex="1",
                         min_width="20ch",
                     ),
-                    rx.button("Create chat"),
+                    rx.button("Nouveau chat"),
                     spacing="2",
                     wrap="wrap",
                     width="100%",
                 ),
                 on_submit=State.create_chat,
             ),
-            background_color=rx.color("mauve", 1),
+            background_color=rx.color("slate", 1),
         ),
         open=State.is_modal_open,
         on_open_change=State.set_is_modal_open,
+    )
+
+
+def theme_toggle() -> rx.Component:
+    """DSFR-style theme switcher dropdown (Clair / Sombre / Systeme)."""
+    return rx.menu.root(
+        rx.menu.trigger(
+            rx.icon_button(
+                rx.color_mode_cond(
+                    rx.icon("sun", size=18),
+                    rx.icon("moon", size=18),
+                ),
+                variant="ghost",
+                color_scheme="gray",
+                cursor="pointer",
+                size="2",
+            ),
+        ),
+        rx.menu.content(
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon("sun", size=14),
+                    rx.text("Theme clair"),
+                    spacing="2",
+                    align_items="center",
+                ),
+                on_click=set_color_mode("light"),
+            ),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon("moon", size=14),
+                    rx.text("Theme sombre"),
+                    spacing="2",
+                    align_items="center",
+                ),
+                on_click=set_color_mode("dark"),
+            ),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon("monitor", size=14),
+                    rx.text("Suivre le systeme"),
+                    spacing="2",
+                    align_items="center",
+                ),
+                on_click=set_color_mode("system"),
+            ),
+        ),
     )
 
 
@@ -95,24 +143,30 @@ def navbar():
             State.current_chat,
             rx.tooltip(
                 rx.icon("info", size=14),
-                content="The current selected chat.",
+                content="La conversation en cours.",
             ),
             size="3",
-            variant="soft",
+            variant="solid",
+            color_scheme="blue",
             margin_inline_end="auto",
         ),
-        modal(
-            rx.icon_button("message-square-plus"),
-        ),
-        sidebar(
-            rx.icon_button(
-                "messages-square",
-                background_color=rx.color("mauve", 6),
-            )
+        rx.hstack(
+            modal(
+                rx.icon_button("message-square-plus"),
+            ),
+            sidebar(
+                rx.icon_button(
+                    "messages-square",
+                    background_color=rx.color("slate", 6),
+                )
+            ),
+            theme_toggle(),
+            gap="1rem",  # DSFR 4v between action buttons
+            align_items="center",
         ),
         justify_content="space-between",
         align_items="center",
-        padding="12px",
-        border_bottom=f"1px solid {rx.color('mauve', 3)}",
-        background_color=rx.color("mauve", 2),
+        padding="0.5rem 1rem",  # DSFR 2v / 4v
+        border_bottom=f"1px solid {rx.color('slate', 3)}",
+        background_color=rx.color("slate", 2),
     )

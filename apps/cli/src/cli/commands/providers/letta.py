@@ -117,10 +117,9 @@ class LettaProvider:
         total_response = ""
 
         for msg in stream:
-            if hasattr(msg, "message_type") and msg.message_type == "assistant_message":
-                content = (
-                    msg.content if isinstance(msg.content, str) else str(msg.content)
-                )
+            if getattr(msg, "message_type", None) == "assistant_message":
+                raw = getattr(msg, "content", "")
+                content = raw if isinstance(raw, str) else str(raw)
                 total_response += content
                 buffer += content
 

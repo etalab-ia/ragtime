@@ -2,6 +2,7 @@
 
 import tempfile
 from pathlib import Path
+from typing import cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -68,8 +69,10 @@ class TestAlbertApiProvider:
             assert provider.collection_id == "col-123"
 
             # Should call SDK methods for collection creation and document upload
-            provider.albert_client.create_collection.assert_called_once()
-            provider.albert_client.upload_document.assert_called_once()
+            cast(
+                MagicMock, provider.albert_client.create_collection
+            ).assert_called_once()
+            cast(MagicMock, provider.albert_client.upload_document).assert_called_once()
 
     def test_generate_requires_collection(self, mock_albert_client):
         """Should raise error if generate called without uploaded documents."""
@@ -95,7 +98,9 @@ class TestAlbertApiProvider:
         provider.cleanup()
 
         # Should call SDK delete method with collection ID
-        provider.albert_client.delete_collection.assert_called_once_with("col-123")
+        cast(
+            MagicMock, provider.albert_client.delete_collection
+        ).assert_called_once_with("col-123")
 
     def test_generate_streams_samples(self, mock_albert_client):
         """Should stream samples from LLM response."""

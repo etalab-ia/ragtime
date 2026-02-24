@@ -1,0 +1,163 @@
+/*
+ * DSFR (Systeme de Design de l'Etat) Theme for Reflex Chat
+ *
+ * Layers the French Government Design System typography, colors,
+ * and focus styles on top of Radix Themes.
+ */
+
+/* ─── Marianne Font-Face Declarations ─── */
+
+@font-face {
+    font-family: 'Marianne';
+    src: url('/dsfr/fonts/Marianne-Regular.woff2') format('woff2'),
+         url('/dsfr/fonts/Marianne-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Marianne';
+    src: url('/dsfr/fonts/Marianne-Medium.woff2') format('woff2'),
+         url('/dsfr/fonts/Marianne-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Marianne';
+    src: url('/dsfr/fonts/Marianne-Bold.woff2') format('woff2'),
+         url('/dsfr/fonts/Marianne-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Spectral';
+    src: url('/dsfr/fonts/Spectral-Regular.woff2') format('woff2'),
+         url('/dsfr/fonts/Spectral-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ─── DSFR Color Tokens ─── */
+
+:root {
+    --dsfr-blue-france: #000091;
+    --dsfr-blue-france-hover: #1212ff;
+    --dsfr-blue-france-active: #2323ff;
+    --dsfr-red-marianne: #e1000f;
+    --dsfr-grey-1000: #161616;
+    --dsfr-grey-950: #3a3a3a;
+    --dsfr-grey-200: #e5e5e5;
+    --dsfr-grey-100: #f0f0f0;
+    --dsfr-grey-50: #f6f6f6;
+    --dsfr-success: #18753c;
+    --dsfr-info: #0063cb;
+    --dsfr-warning: #b34000;
+    --dsfr-error: #ce0500;
+}
+
+/* ─── Typography Override ─── */
+
+body {
+    font-family: 'Marianne', system-ui, -apple-system, sans-serif;
+}
+
+/* Override Radix Themes default font */
+.radix-themes {
+    --default-font-family: 'Marianne', system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Radix Accent Color Override for Blue France ─── */
+
+/*
+ * Radix "blue" accent is close (~#0090FF) but not Blue France (#000091).
+ * Override the accent scale to use exact DSFR values.
+ */
+.radix-themes {
+    --accent-1: #f5f5ff;
+    --accent-2: #ebebff;
+    --accent-3: #d5d5ff;
+    --accent-4: #b8b8ff;
+    --accent-5: #9c9cff;
+    --accent-6: #7f7fff;
+    --accent-7: #5c5cff;
+    --accent-8: #3939ff;
+    --accent-9: #000091;
+    --accent-10: #00007a;
+    --accent-11: #000091;
+    --accent-12: #00004d;
+    --accent-a1: #0000910a;
+    --accent-a2: #00009114;
+    --accent-a3: #0000912a;
+    --accent-a4: #00009147;
+    --accent-a5: #00009163;
+    --accent-a6: #00009180;
+    --accent-a7: #000091a3;
+    --accent-a8: #000091c6;
+    --accent-a9: #000091;
+    --accent-a10: #00007a;
+    --accent-a11: #000091;
+    --accent-a12: #00004db2;
+    --accent-contrast: #ffffff;
+    --accent-surface: #f5f5ffcc;
+    --accent-indicator: #000091;
+    --accent-track: #000091;
+}
+
+/* Dark mode accent adjustments */
+.dark .radix-themes,
+:is(.dark .radix-themes) {
+    --accent-1: #0a0a2e;
+    --accent-2: #0f0f3d;
+    --accent-3: #16165c;
+    --accent-4: #1e1e7a;
+    --accent-5: #282899;
+    --accent-6: #3333b8;
+    --accent-7: #4444d6;
+    --accent-8: #5555f5;
+    --accent-9: #6666ff;
+    --accent-10: #7777ff;
+    --accent-11: #9999ff;
+    --accent-12: #d5d5ff;
+    --accent-contrast: #ffffff;
+    --accent-surface: #16165ccc;
+    --accent-indicator: #6666ff;
+    --accent-track: #6666ff;
+}
+
+/* ─── DSFR Focus Styles ─── */
+
+:focus-visible {
+    outline: 2px solid var(--dsfr-blue-france);
+    outline-offset: 2px;
+}
+
+/* ─── DSFR Checkbox Override ─── */
+
+/* Radix checkbox uses its own accent tokens — override to Blue France */
+.rt-CheckboxButton:where([data-state="checked"]) {
+    background-color: var(--dsfr-blue-france);
+    color: white;
+}
+
+.rt-CheckboxButton:where([data-state="checked"]):where(:hover) {
+    background-color: var(--dsfr-blue-france-hover);
+}
+
+.rt-CheckboxButton {
+    border-radius: 4px;
+}
+
+/* ─── DSFR Button Adjustments ─── */
+
+/* Reduce border-radius for a more DSFR-aligned look.
+ * !important is required because Radix Themes sets inline border-radius
+ * via style attributes, which cannot be overridden by specificity alone. */
+button, [role="button"] {
+    border-radius: 4px !important;
+}
