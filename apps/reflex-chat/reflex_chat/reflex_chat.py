@@ -3,12 +3,14 @@
 import reflex as rx
 
 from reflex_chat.components import chat, navbar
-from reflex_chat.dsfr_init import dsfr_footer, dsfr_header
+from reflex_chat.dsfr_init import dsfr_footer, dsfr_header, dsfr_init
 
 
 def index() -> rx.Component:
     """The main app."""
     return rx.vstack(
+        # Initialize DSFR first (must be at top before Header/Footer)
+        dsfr_init(),
         dsfr_header(),
         navbar(),
         chat.chat(),
