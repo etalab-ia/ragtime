@@ -12,11 +12,17 @@ from inspect_ai.solver import Solver, TaskState, solver
 logger = logging.getLogger(__name__)
 
 
-def _call_pipeline(question: str) -> tuple[str, list[int]]:
-    """Call the RAG pipeline and return formatted context + chunk IDs.
+def _call_pipeline(question: str) -> tuple[str, list[str]]:
+    """Call the RAG pipeline and return formatted context + individual chunk texts.
 
     Returns:
-        tuple of (formatted_context, list_of_chunk_ids_retrieved)
+        tuple of (formatted_context, list_of_chunk_texts)
+
+        - formatted_context: joined, citation-annotated string for injection into
+          the LLM prompt (produced by ``process_query``).
+        - list_of_chunk_texts: individual passage texts after search + rerank,
+          stored in ``state.metadata["retrieved_contexts"]`` for the
+          ``context_recall`` and ``context_precision`` scorers.
 
     Extracted as a module-level helper so tests can patch it cleanly.
     """
@@ -27,17 +33,15 @@ def _call_pipeline(question: str) -> tuple[str, list[int]]:
     config = get_config()
     pipeline = get_pipeline(config)
 
-    # Get the formatted context from the pipeline
+    # Formatted context for the LLM prompt
     context = pipeline.process_query(question)
 
-    # Extract chunk IDs from search (and optionally rerank using the same config).
-    # The pipeline internally calls search_chunks, but we recreate that call
-    # to capture the chunk IDs directly (they're not exposed by process_query).
+    # Re-run search + rerank to capture individual chunk texts.
+    # process_query doesn't expose them, so we replicate the same call.
     try:
         from rag_facile.reranking import rerank_chunks
 
-        # Get collections: explicit, session, or from config
-        collection_ids = config.storage.collections
+        collection_ids = list(config.storage.collections)
         if pipeline._collection_id:
             collection_ids = list(set(collection_ids) | {pipeline._collection_id})
 
@@ -52,7 +56,6 @@ def _call_pipeline(question: str) -> tuple[str, list[int]]:
                 score_threshold=config.retrieval.score_threshold,
             )
 
-            # Apply reranking if enabled (filter to top_n)
             final_chunks = chunks
             if config.reranking.enabled:
                 final_chunks = rerank_chunks(
@@ -63,16 +66,15 @@ def _call_pipeline(question: str) -> tuple[str, list[int]]:
                     top_n=config.reranking.top_n,
                 )
 
-            reranked_chunk_ids = [
-                chunk.get("chunk_id", 0)
+            chunk_texts = [
+                chunk.get("content", "")
                 for chunk in final_chunks
-                if chunk.get("chunk_id")
+                if chunk.get("content")
             ]
+            return context, chunk_texts
 
-            # For eval, store reranked chunk IDs (what the pipeline actually retrieves)
-            return context, reranked_chunk_ids
     except Exception:
-        logger.warning("Failed to extract chunk IDs from search", exc_info=True)
+        logger.warning("Failed to extract chunk texts from search", exc_info=True)
 
     return context, []
 
@@ -83,12 +85,19 @@ def retrieve_rag_context() -> Solver:
 
     Calls ``AlbertPipeline.process_query()`` using the collections configured
     in ``ragfacile.toml``.  The retrieved context is injected as a prefix to
-    the user message and stored in ``state.metadata["retrieved_contexts"]``
-    for the faithfulness scorer.
+    the user message.
+
+    Two metadata keys are written for the scorers:
+
+    - ``retrieved_contexts``: list[str] — individual chunk texts after
+      search + rerank.  Used by ``context_recall`` and ``context_precision``
+      (token-F1 comparison against ``relevant_contexts`` from the dataset).
+    - The dataset's ``relevant_contexts`` are left untouched so scorers can
+      compare retrieved vs relevant.
 
     If the pipeline returns no context (no collections configured, or no
-    relevant chunks found), the prompt is passed through unchanged and
-    faithfulness is skipped (vacuously true).
+    relevant chunks found), the dataset's pre-computed values are kept and the
+    prompt is passed through unchanged.
     """
 
     async def solve(state: TaskState, generate: object) -> TaskState:  # noqa: ARG001
@@ -98,22 +107,18 @@ def retrieve_rag_context() -> Solver:
             # process_query is synchronous — run in a thread to avoid blocking
             # the Inspect AI event loop.
             loop = asyncio.get_event_loop()
-            context, chunk_ids = await loop.run_in_executor(
+            context, chunk_texts = await loop.run_in_executor(
                 None, _call_pipeline, question
             )
         except Exception:
             logger.warning("RAG pipeline retrieval failed", exc_info=True)
             context = ""
-            chunk_ids = []
+            chunk_texts = []
 
-        if not context:
-            return state
-
-        # Overwrite any pre-computed contexts from the dataset with the
-        # freshly retrieved ones so the faithfulness scorer uses live results.
-        state.metadata["retrieved_contexts"] = [context]
-        # Store chunk IDs for precision@k and recall@k scorers
-        state.metadata["retrieved_chunk_ids"] = [str(cid) for cid in chunk_ids]
+        if context:
+            # Overwrite with live retrieval results.
+            # chunk_texts are individual passage texts for recall/precision scoring.
+            state.metadata["retrieved_contexts"] = chunk_texts
 
         augmented = (
             "Use the following context to answer the question. "

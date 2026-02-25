@@ -1,16 +1,18 @@
 """Inspect AI scorers for rag-facile RAG pipeline evaluation.
 
-Two scorers measuring answer quality:
+Answer-quality scorers (LLM-as-judge):
 
-- :func:`faithfulness`        — LLM-as-judge: is the answer grounded in the
-                                retrieved context?
-- :func:`answer_correctness`  — LLM-as-judge: does the answer match the
-                                reference answer?
-- :func:`rag_eval_scorer`     — combined multi-value scorer (both above)
+- :func:`faithfulness`        — is the answer grounded in the retrieved context?
+- :func:`answer_correctness`  — does the answer match the reference answer?
 
-Legacy chunk-ID scorers (:func:`recall_at_k`, :func:`precision_at_k`) are
-kept for advanced use-cases where stable chunk IDs are available, but are
-not included in the default combined scorer.
+Retrieval-quality scorers (classical IR, no LLM calls):
+
+- :func:`context_recall`      — fraction of relevant passages covered by retrieval
+- :func:`context_precision`   — fraction of retrieved passages that are relevant
+
+Both retrieval scorers use **token-F1 overlap** to match passages, so they work
+with any dataset that stores passage text — synthetic or human gold standard —
+with no dependency on chunk IDs.
 """
 
 from __future__ import annotations
@@ -92,6 +94,32 @@ def _parse_score(text: str) -> float:
 _parse_faithfulness_score = _parse_score
 
 
+def _token_f1(a: str, b: str) -> float:
+    """Token-level F1 between two texts (bag-of-words).
+
+    Splits on whitespace, lowercases, computes precision/recall/F1 over the
+    token sets.  Identical to the SQuAD evaluation metric.
+
+    Returns:
+        Float in [0, 1].  Returns 0.0 if either string is empty.
+    """
+    tokens_a = set(a.lower().split())
+    tokens_b = set(b.lower().split())
+    if not tokens_a or not tokens_b:
+        return 0.0
+    intersection = len(tokens_a & tokens_b)
+    precision = intersection / len(tokens_a)
+    recall = intersection / len(tokens_b)
+    if precision + recall == 0.0:
+        return 0.0
+    return 2 * precision * recall / (precision + recall)
+
+
+def _any_match(text: str, candidates: list[str], threshold: float) -> bool:
+    """Return True if *text* has token-F1 ≥ *threshold* with any candidate."""
+    return any(_token_f1(text, c) >= threshold for c in candidates)
+
+
 # ── Primary scorers ───────────────────────────────────────────────────────────
 
 
@@ -170,104 +198,105 @@ def answer_correctness(model: str | None = None) -> Scorer:
     return score
 
 
-# ── Combined scorer ───────────────────────────────────────────────────────────
-# Note: For multiple metrics, use scorer=[faithfulness(model=...), answer_correctness(model=...)]
-# in the Task definition rather than a combined scorer. This gives each metric
-# its own row in the results.
-
-
-def rag_eval_scorer(model: str | None = None) -> list[Scorer]:
-    """Return a list of all RAG evaluation scorers.
-
-    Convenience function returning [faithfulness, answer_correctness].
-    For Inspect AI, pass this as ``scorer=rag_eval_scorer(model)``.
-    """
-    return [faithfulness(model=model), answer_correctness(model=model)]
-    """Combined RAG evaluation scorer: faithfulness + answer correctness.
-
-    Returns a multi-value score dict so Inspect AI tracks both metrics
-    separately in the log.
-
-    Args:
-        model: Model identifier for both LLM-as-judge scorers.
-    """
-    _faithful = faithfulness(model=model)
-    _correct = answer_correctness(model=model)
-
-    async def score(state: TaskState, target: Target) -> Score:
-        f = await _faithful(state, target)
-        c = await _correct(state, target)
-
-        f_val = float(f.value) if isinstance(f.value, (int, float)) else 0.0
-        c_val = float(c.value) if isinstance(c.value, (int, float)) else 0.0
-
-        return Score(
-            value={
-                "faithfulness": f_val,
-                "answer_correctness": c_val,
-            },
-            explanation=(f"faithfulness={f_val:.2f} answer_correctness={c_val:.2f}"),
-        )
-
-    return score
-
-
-# ── Legacy chunk-ID scorers ───────────────────────────────────────────────────
-# Kept for advanced use-cases where stable chunk IDs are available in the
-# dataset.  Not included in rag_eval_scorer.
+# ── Retrieval-quality scorers (classical IR, no LLM calls) ────────────────────
 
 
 @scorer(metrics=[mean(), stderr()])
-def recall_at_k() -> Scorer:
-    """Fraction of relevant chunks found in retrieved results.
+def context_recall(threshold: float = 0.5) -> Scorer:
+    """Fraction of relevant passages covered by the retrieved context.
 
-    Requires ``relevant_chunk_ids`` and ``retrieved_chunk_ids`` in sample
-    metadata.  Returns 1.0 (vacuously true) when no relevant IDs are defined.
+    For each passage in ``relevant_contexts`` (captured during dataset
+    generation), checks whether any retrieved chunk has a token-F1 score
+    ≥ *threshold* against it.
+
+    Works with any dataset that stores passage text — synthetic or gold
+    standard.  No chunk IDs required, no LLM calls.
+
+    Args:
+        threshold: Minimum token-F1 to count a retrieved chunk as covering a
+            relevant passage.  Defaults to 0.5 (SQuAD loose-match convention).
     """
 
     async def score(state: TaskState, target: Target) -> Score:  # noqa: ARG001
-        retrieved = set(state.metadata.get("retrieved_chunk_ids", []))
-        relevant = set(state.metadata.get("relevant_chunk_ids", []))
+        relevant: list[str] = state.metadata.get("relevant_contexts", [])
+        retrieved: list[str] = state.metadata.get("retrieved_contexts", [])
 
         if not relevant:
             return Score(
                 value=1.0,
-                explanation="No relevant chunk IDs defined — vacuously true",
+                explanation="No relevant contexts defined — vacuously true",
             )
+        if not retrieved:
+            return Score(value=0.0, explanation="No context retrieved")
 
-        hits = relevant & retrieved
-        recall = len(hits) / len(relevant)
+        covered = sum(1 for rel in relevant if _any_match(rel, retrieved, threshold))
+        recall = covered / len(relevant)
         return Score(
             value=recall,
-            explanation=f"{len(hits)}/{len(relevant)} relevant chunks retrieved",
+            explanation=(
+                f"{covered}/{len(relevant)} relevant passages covered "
+                f"(token-F1 ≥ {threshold})"
+            ),
         )
 
     return score
 
 
 @scorer(metrics=[mean(), stderr()])
-def precision_at_k() -> Scorer:
-    """Fraction of retrieved chunks that are relevant.
+def context_precision(threshold: float = 0.5) -> Scorer:
+    """Fraction of retrieved passages that overlap with a relevant passage.
 
-    Requires ``relevant_chunk_ids`` and ``retrieved_chunk_ids`` in sample
-    metadata.  Returns 1.0 (vacuously true) when no chunk IDs are defined.
+    For each passage in ``retrieved_contexts``, checks whether it has a
+    token-F1 score ≥ *threshold* against any passage in ``relevant_contexts``.
+
+    Works with any dataset that stores passage text — synthetic or gold
+    standard.  No chunk IDs required, no LLM calls.
+
+    Args:
+        threshold: Minimum token-F1 to count a retrieved chunk as relevant.
+            Defaults to 0.5 (SQuAD loose-match convention).
     """
 
     async def score(state: TaskState, target: Target) -> Score:  # noqa: ARG001
-        retrieved = set(state.metadata.get("retrieved_chunk_ids", []))
-        relevant = set(state.metadata.get("relevant_chunk_ids", []))
+        relevant: list[str] = state.metadata.get("relevant_contexts", [])
+        retrieved: list[str] = state.metadata.get("retrieved_contexts", [])
 
         if not retrieved:
             return Score(
                 value=1.0,
-                explanation="No chunk IDs defined — vacuously true",
+                explanation="No context retrieved — vacuously true",
+            )
+        if not relevant:
+            return Score(
+                value=1.0,
+                explanation="No relevant contexts defined — vacuously true",
             )
 
-        hits = relevant & retrieved
-        precision = len(hits) / len(retrieved)
+        hits = sum(1 for ret in retrieved if _any_match(ret, relevant, threshold))
+        precision = hits / len(retrieved)
         return Score(
             value=precision,
-            explanation=f"{len(hits)}/{len(retrieved)} retrieved chunks are relevant",
+            explanation=(
+                f"{hits}/{len(retrieved)} retrieved passages are relevant "
+                f"(token-F1 ≥ {threshold})"
+            ),
         )
 
     return score
+
+
+# ── Convenience ───────────────────────────────────────────────────────────────
+
+
+def rag_eval_scorer(model: str | None = None) -> list[Scorer]:
+    """Return the full list of RAG evaluation scorers.
+
+    Includes retrieval-quality scorers (no LLM) and answer-quality scorers
+    (LLM-as-judge).  Pass as ``scorer=rag_eval_scorer(model)`` in a Task.
+    """
+    return [
+        context_recall(),
+        context_precision(),
+        faithfulness(model=model),
+        answer_correctness(model=model),
+    ]

@@ -8,9 +8,9 @@ from inspect_ai.solver import generate
 from rag_facile.evaluation._dataset import load_rag_dataset
 from rag_facile.evaluation._scorers import (
     answer_correctness,
+    context_precision,
+    context_recall,
     faithfulness,
-    precision_at_k,
-    recall_at_k,
 )
 from rag_facile.evaluation._solvers import retrieve_rag_context
 
@@ -25,27 +25,36 @@ def rag_eval(
     For each sample in the dataset:
 
     1. **Retrieve** — ``retrieve_rag_context`` calls ``AlbertPipeline.process_query``
-       using the collections configured in ``ragfacile.toml`` and injects the
-       retrieved passages into the prompt.
+       and stores individual chunk texts in ``state.metadata["retrieved_contexts"]``.
     2. **Generate** — the model answers the question given the retrieved context.
-    3. **Score** — two LLM-as-judge metrics:
+    3. **Score** — four metrics:
+
+       Retrieval quality (classical IR, no LLM calls):
+
+       - *context_recall*: fraction of relevant passages covered by retrieval
+         (token-F1 ≥ 0.5 against ``relevant_contexts`` from the dataset)
+       - *context_precision*: fraction of retrieved passages that are relevant
+         (token-F1 ≥ 0.5 against ``relevant_contexts`` from the dataset)
+
+       Answer quality (LLM-as-judge):
+
        - *faithfulness*: is the answer grounded in the retrieved context?
        - *answer_correctness*: does the answer match the reference answer?
 
-    The dataset only needs ``user_input`` and ``reference`` fields — the
-    ``retrieved_contexts`` from dataset generation are overwritten with live
-    retrieval results.
+    The dataset needs ``user_input``, ``reference``, and ``relevant_contexts``
+    fields.  Works with synthetic datasets (from ``rag-facile generate-dataset``)
+    and human gold-standard datasets alike — no chunk IDs required.
 
     Args:
         dataset_path: Path to a rag-facile JSONL dataset.
-        grader_model: Model identifier for both LLM-as-judge scorers.
+        grader_model: Model identifier for the LLM-as-judge scorers.
     """
     return Task(
         dataset=load_rag_dataset(dataset_path),
         solver=[retrieve_rag_context(), generate()],
         scorer=[
-            recall_at_k(),
-            precision_at_k(),
+            context_recall(),
+            context_precision(),
             faithfulness(model=grader_model),
             answer_correctness(model=grader_model),
         ],

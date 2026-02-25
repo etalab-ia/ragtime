@@ -33,46 +33,44 @@ def _make_state(question: str = "What is RAG?") -> MagicMock:
 
 @pytest.mark.asyncio
 async def test_retrieve_injects_context() -> None:
-    """When the pipeline returns context + chunk IDs, both are stored."""
+    """Pipeline returns (formatted_context, chunk_texts) — both stored correctly."""
+    chunk_texts = [
+        "RAG stands for Retrieval-Augmented Generation.",
+        "It combines retrieval with generation.",
+    ]
     with patch(
         _PIPELINE_HELPER,
-        return_value=(
-            "RAG stands for Retrieval-Augmented Generation.",
-            [1, 2, 3],
-        ),
+        return_value=("RAG stands for Retrieval-Augmented Generation.", chunk_texts),
     ):
         solver = retrieve_rag_context()
         state = _make_state("What is RAG?")
         result = await solver(state, AsyncMock())
 
-    # Context stored in metadata for faithfulness scorer
-    assert "retrieved_contexts" in result.metadata
-    assert len(result.metadata["retrieved_contexts"]) == 1
-    assert "Retrieval-Augmented Generation" in result.metadata["retrieved_contexts"][0]
+    # Individual chunk texts stored for context_recall / context_precision
+    assert result.metadata["retrieved_contexts"] == chunk_texts
 
-    # Chunk IDs stored for precision@k and recall@k
-    assert "retrieved_chunk_ids" in result.metadata
-    assert result.metadata["retrieved_chunk_ids"] == ["1", "2", "3"]
-
-    # Context injected into the first message
+    # Formatted context injected into the first message
     first_message = result.messages[0]
     assert "Retrieval-Augmented Generation" in first_message.content
     assert "What is RAG?" in first_message.content
 
 
 @pytest.mark.asyncio
-async def test_retrieve_no_context_passthrough() -> None:
-    """When the pipeline returns no context, state is passed through unchanged."""
+async def test_retrieve_no_context_keeps_dataset_values() -> None:
+    """When pipeline returns no context, dataset's pre-computed values are kept."""
     with patch(_PIPELINE_HELPER, return_value=("", [])):
         solver = retrieve_rag_context()
         state = _make_state("What is RAG?")
-        original_messages = state.messages[:]
+        # Pre-populate with dataset's pre-computed values (loaded by _dataset.py)
+        state.metadata = {
+            "relevant_contexts": ["The relevant passage about RAG."],
+            "retrieved_contexts": ["Context from dataset generation"],
+        }
         result = await solver(state, AsyncMock())
 
-    # State unchanged
-    assert result is state
-    assert result.messages == original_messages
-    assert "retrieved_contexts" not in result.metadata
+    # Dataset values untouched — used by scorers for static evaluation
+    assert result.metadata["relevant_contexts"] == ["The relevant passage about RAG."]
+    assert result.metadata["retrieved_contexts"] == ["Context from dataset generation"]
 
 
 @pytest.mark.asyncio

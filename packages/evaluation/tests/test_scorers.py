@@ -9,10 +9,11 @@ import pytest
 from rag_facile.evaluation._scorers import (
     _parse_faithfulness_score,
     _parse_score,
+    _token_f1,
     answer_correctness,
+    context_precision,
+    context_recall,
     faithfulness,
-    precision_at_k,
-    recall_at_k,
 )
 
 
@@ -21,8 +22,7 @@ from rag_facile.evaluation._scorers import (
 
 def _make_state(
     *,
-    retrieved_chunk_ids: list[str] | None = None,
-    relevant_chunk_ids: list[str] | None = None,
+    relevant_contexts: list[str] | None = None,
     retrieved_contexts: list[str] | None = None,
     completion: str = "test answer",
     input_text: str = "test question",
@@ -30,8 +30,7 @@ def _make_state(
     """Create a mock TaskState with metadata."""
     state = MagicMock()
     state.metadata = {
-        "retrieved_chunk_ids": retrieved_chunk_ids or [],
-        "relevant_chunk_ids": relevant_chunk_ids or [],
+        "relevant_contexts": relevant_contexts or [],
         "retrieved_contexts": retrieved_contexts or [],
     }
     state.output = MagicMock()
@@ -69,6 +68,142 @@ def test_parse_score_missing() -> None:
 def test_parse_faithfulness_score_alias() -> None:
     """Backwards-compat alias still works."""
     assert _parse_faithfulness_score("SCORE: 0.75") == 0.75
+
+
+# ── _token_f1 ─────────────────────────────────────────────────────────────────
+
+
+def test_token_f1_identical() -> None:
+    assert _token_f1("le chat est sur le toit", "le chat est sur le toit") == 1.0
+
+
+def test_token_f1_no_overlap() -> None:
+    assert _token_f1("chien maison voiture", "soleil lune étoile") == 0.0
+
+
+def test_token_f1_partial() -> None:
+    score = _token_f1("le chat noir", "le chat blanc")
+    # "le" and "chat" overlap → 2/3 precision, 2/3 recall, F1 = 2/3
+    assert 0.6 < score < 0.7
+
+
+def test_token_f1_empty() -> None:
+    assert _token_f1("", "some text") == 0.0
+    assert _token_f1("some text", "") == 0.0
+
+
+def test_token_f1_subset() -> None:
+    # 2 tokens match out of 2 vs 7: recall=1.0, precision=2/7, F1≈0.44
+    score = _token_f1(
+        "homomorphic encryption",
+        "homomorphic encryption allows computation on encrypted data",
+    )
+    assert 0.4 < score < 0.5
+
+
+# ── context_recall ────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_context_recall_perfect() -> None:
+    """All relevant passages are covered."""
+    scorer = context_recall()
+    state = _make_state(
+        relevant_contexts=["homomorphic encryption allows computation"],
+        retrieved_contexts=[
+            "homomorphic encryption allows computation on encrypted data"
+        ],
+    )
+    result = await scorer(state, _make_target())
+    assert result.value == 1.0
+
+
+@pytest.mark.asyncio
+async def test_context_recall_partial() -> None:
+    """Only some relevant passages are covered."""
+    scorer = context_recall()
+    state = _make_state(
+        relevant_contexts=[
+            "homomorphic encryption allows computation",  # covered
+            "quantum computing uses qubits",  # not covered
+        ],
+        retrieved_contexts=[
+            "homomorphic encryption allows computation on encrypted data"
+        ],
+    )
+    result = await scorer(state, _make_target())
+    assert result.value == 0.5
+
+
+@pytest.mark.asyncio
+async def test_context_recall_no_relevant() -> None:
+    """No relevant contexts defined → vacuously true."""
+    scorer = context_recall()
+    state = _make_state(relevant_contexts=[], retrieved_contexts=["some text"])
+    result = await scorer(state, _make_target())
+    assert result.value == 1.0
+
+
+@pytest.mark.asyncio
+async def test_context_recall_nothing_retrieved() -> None:
+    """Nothing retrieved → recall is 0."""
+    scorer = context_recall()
+    state = _make_state(
+        relevant_contexts=["some relevant text"],
+        retrieved_contexts=[],
+    )
+    result = await scorer(state, _make_target())
+    assert result.value == 0.0
+
+
+# ── context_precision ─────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_context_precision_perfect() -> None:
+    """All retrieved passages are relevant."""
+    scorer = context_precision()
+    state = _make_state(
+        relevant_contexts=["homomorphic encryption allows computation"],
+        retrieved_contexts=[
+            "homomorphic encryption allows computation on encrypted data"
+        ],
+    )
+    result = await scorer(state, _make_target())
+    assert result.value == 1.0
+
+
+@pytest.mark.asyncio
+async def test_context_precision_partial() -> None:
+    """Only some retrieved passages are relevant."""
+    scorer = context_precision()
+    state = _make_state(
+        relevant_contexts=["homomorphic encryption allows computation"],
+        retrieved_contexts=[
+            "homomorphic encryption allows computation on encrypted data",  # relevant
+            "the weather in Paris is often rainy in winter",  # not relevant
+        ],
+    )
+    result = await scorer(state, _make_target())
+    assert result.value == 0.5
+
+
+@pytest.mark.asyncio
+async def test_context_precision_no_retrieved() -> None:
+    """Nothing retrieved → vacuously true."""
+    scorer = context_precision()
+    state = _make_state(relevant_contexts=["some text"], retrieved_contexts=[])
+    result = await scorer(state, _make_target())
+    assert result.value == 1.0
+
+
+@pytest.mark.asyncio
+async def test_context_precision_no_relevant() -> None:
+    """No relevant contexts defined → vacuously true."""
+    scorer = context_precision()
+    state = _make_state(relevant_contexts=[], retrieved_contexts=["some text"])
+    result = await scorer(state, _make_target())
+    assert result.value == 1.0
 
 
 # ── faithfulness ──────────────────────────────────────────────────────────────
@@ -144,77 +279,3 @@ async def test_answer_correctness_calls_grader() -> None:
         result = await scorer(state, _make_target("Paris is the capital of France."))
 
     assert result.value == 1.0
-
-
-# ── recall_at_k (legacy) ──────────────────────────────────────────────────────
-
-
-@pytest.mark.asyncio
-async def test_recall_perfect() -> None:
-    scorer = recall_at_k()
-    state = _make_state(
-        relevant_chunk_ids=["a", "b"],
-        retrieved_chunk_ids=["a", "b", "c"],
-    )
-    result = await scorer(state, _make_target())
-    assert result.value == 1.0
-
-
-@pytest.mark.asyncio
-async def test_recall_partial() -> None:
-    scorer = recall_at_k()
-    state = _make_state(
-        relevant_chunk_ids=["a", "b", "c", "d"],
-        retrieved_chunk_ids=["a", "c"],
-    )
-    result = await scorer(state, _make_target())
-    assert result.value == 0.5
-
-
-@pytest.mark.asyncio
-async def test_recall_no_relevant() -> None:
-    scorer = recall_at_k()
-    state = _make_state(relevant_chunk_ids=[], retrieved_chunk_ids=["a"])
-    result = await scorer(state, _make_target())
-    assert result.value == 1.0  # vacuously true
-
-
-@pytest.mark.asyncio
-async def test_recall_none_retrieved() -> None:
-    scorer = recall_at_k()
-    state = _make_state(relevant_chunk_ids=["a", "b"], retrieved_chunk_ids=[])
-    result = await scorer(state, _make_target())
-    assert result.value == 0.0
-
-
-# ── precision_at_k (legacy) ───────────────────────────────────────────────────
-
-
-@pytest.mark.asyncio
-async def test_precision_perfect() -> None:
-    scorer = precision_at_k()
-    state = _make_state(
-        relevant_chunk_ids=["a", "b"],
-        retrieved_chunk_ids=["a", "b"],
-    )
-    result = await scorer(state, _make_target())
-    assert result.value == 1.0
-
-
-@pytest.mark.asyncio
-async def test_precision_partial() -> None:
-    scorer = precision_at_k()
-    state = _make_state(
-        relevant_chunk_ids=["a"],
-        retrieved_chunk_ids=["a", "b", "c", "d"],
-    )
-    result = await scorer(state, _make_target())
-    assert result.value == 0.25
-
-
-@pytest.mark.asyncio
-async def test_precision_no_retrieved() -> None:
-    scorer = precision_at_k()
-    state = _make_state(relevant_chunk_ids=["a"], retrieved_chunk_ids=[])
-    result = await scorer(state, _make_target())
-    assert result.value == 1.0  # vacuously true
