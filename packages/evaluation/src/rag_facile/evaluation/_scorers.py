@@ -94,17 +94,30 @@ def _parse_score(text: str) -> float:
 _parse_faithfulness_score = _parse_score
 
 
-def _token_f1(a: str, b: str) -> float:
-    """Token-level F1 between two texts (bag-of-words).
+def _normalize_tokens(text: str) -> set[str]:
+    """Normalize text to a bag of tokens, SQuAD-style.
 
-    Splits on whitespace, lowercases, computes precision/recall/F1 over the
-    token sets.  Identical to the SQuAD evaluation metric.
+    Steps (order matters):
+    1. Lowercase
+    2. Replace punctuation with spaces (so ``"encryption,"`` → ``"encryption"``)
+    3. Split on whitespace and discard empty tokens
+    """
+    text = text.lower()
+    text = re.sub(r"[^\w\s]", " ", text)
+    return set(text.split())
+
+
+def _token_f1(a: str, b: str) -> float:
+    """Token-level F1 between two texts (bag-of-words), SQuAD-style.
+
+    Normalizes both strings (lowercase + strip punctuation) before computing
+    precision/recall/F1 over the token sets.
 
     Returns:
         Float in [0, 1].  Returns 0.0 if either string is empty.
     """
-    tokens_a = set(a.lower().split())
-    tokens_b = set(b.lower().split())
+    tokens_a = _normalize_tokens(a)
+    tokens_b = _normalize_tokens(b)
     if not tokens_a or not tokens_b:
         return 0.0
     intersection = len(tokens_a & tokens_b)

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from rag_facile.evaluation._scorers import (
+    _normalize_tokens,
     _parse_faithfulness_score,
     _parse_score,
     _token_f1,
@@ -73,6 +74,12 @@ def test_parse_faithfulness_score_alias() -> None:
 # ── _token_f1 ─────────────────────────────────────────────────────────────────
 
 
+def test_normalize_tokens_strips_punctuation() -> None:
+    assert _normalize_tokens("encryption,") == {"encryption"}
+    assert _normalize_tokens("données.") == {"données"}
+    assert _normalize_tokens("(article 5)") == {"article", "5"}
+
+
 def test_token_f1_identical() -> None:
     assert _token_f1("le chat est sur le toit", "le chat est sur le toit") == 1.0
 
@@ -99,6 +106,22 @@ def test_token_f1_subset() -> None:
         "homomorphic encryption allows computation on encrypted data",
     )
     assert 0.4 < score < 0.5
+
+
+def test_token_f1_punctuation_normalized() -> None:
+    """Punctuation must not prevent matches — 'encryption,' == 'encryption'."""
+    assert _token_f1("encryption, data", "encryption data") == 1.0
+
+
+def test_token_f1_case_insensitive() -> None:
+    assert _token_f1("Données Personnelles", "données personnelles") == 1.0
+
+
+def test_token_f1_mixed_punctuation() -> None:
+    """Real French government prose: commas, periods, parentheses stripped."""
+    a = "L'article 5 (alinéa 2) dispose que les données doivent être protégées."
+    b = "L article 5 alinéa 2 dispose que les données doivent être protégées"
+    assert _token_f1(a, b) > 0.9
 
 
 # ── context_recall ────────────────────────────────────────────────────────────
