@@ -9,9 +9,28 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Use environment variable if set, otherwise use parameter, otherwise default to main
+# Determine which ref to install from:
+# - If -Branch parameter is set, use it
+# - If RAG_FACILE_BRANCH env var is set, use it (for testing pre-release branches)
+# - Otherwise, fetch the latest release tag from GitHub API (stable release)
 if ([string]::IsNullOrEmpty($Branch)) {
-    $Branch = if ($env:RAG_FACILE_BRANCH) { $env:RAG_FACILE_BRANCH } else { "main" }
+    if ($env:RAG_FACILE_BRANCH) {
+        $Branch = $env:RAG_FACILE_BRANCH
+        $BranchSource = "RAG_FACILE_BRANCH env var"
+    } else {
+        try {
+            Write-Host "Fetching latest release tag..." -ForegroundColor Yellow
+            $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/etalab-ia/rag-facile/releases/latest" -ErrorAction Stop
+            $Branch = $releaseInfo.tag_name
+            $BranchSource = "latest stable release"
+        } catch {
+            Write-Host "WARNING: Could not fetch latest release tag, falling back to 'main'" -ForegroundColor Yellow
+            $Branch = "main"
+            $BranchSource = "fallback"
+        }
+    }
+} else {
+    $BranchSource = "-Branch parameter"
 }
 
 Write-Host "==> Installing RAG Facile CLI (Windows PowerShell)" -ForegroundColor Green
@@ -213,6 +232,7 @@ Write-Host ""
 
 # 5. Install rag-facile CLI via uv
 Write-Host "Installing RAG Facile CLI..." -ForegroundColor Yellow
+Write-Host "Using ref: $Branch ($BranchSource)" -ForegroundColor Cyan
 try {
     $gitUrl = "git+https://github.com/etalab-ia/rag-facile.git@${Branch}#subdirectory=apps/cli"
     uv tool install rag-facile-cli --force --from $gitUrl

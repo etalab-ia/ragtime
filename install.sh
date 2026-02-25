@@ -330,9 +330,26 @@ fi
 # 6. Install rag-facile CLI via uv
 echo ""
 echo "Installing RAG Facile CLI..."
-BRANCH="${RAG_FACILE_BRANCH:-main}"
 
-if ! uv tool install rag-facile-cli --force --from "git+https://github.com/etalab-ia/rag-facile.git@${BRANCH}#subdirectory=apps/cli"; then
+# Determine which ref to install from:
+# - If RAG_FACILE_BRANCH is set, use it (for testing pre-release branches)
+# - Otherwise, fetch the latest release tag from GitHub API (stable release)
+if [[ -n "${RAG_FACILE_BRANCH:-}" ]]; then
+    REF="$RAG_FACILE_BRANCH"
+    echo "Using branch/ref: $REF (from RAG_FACILE_BRANCH)"
+else
+    echo "Fetching latest release tag..."
+    LATEST_TAG=$(curl -fsSL "https://api.github.com/repos/etalab-ia/rag-facile/releases/latest" 2>/dev/null | grep '"tag_name"' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')
+    if [[ -z "$LATEST_TAG" ]]; then
+        echo "WARNING: Could not fetch latest release tag, falling back to 'main'"
+        REF="main"
+    else
+        REF="$LATEST_TAG"
+        echo "Installing stable release: $REF"
+    fi
+fi
+
+if ! uv tool install rag-facile-cli --force --from "git+https://github.com/etalab-ia/rag-facile.git@${REF}#subdirectory=apps/cli"; then
     echo "ERROR: rag-facile installation failed"
     exit 1
 fi
