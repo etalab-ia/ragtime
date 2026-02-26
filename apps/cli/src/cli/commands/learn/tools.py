@@ -210,7 +210,7 @@ def activate_skill(name: str) -> str:
     Args:
         name: Skill name, e.g. 'tune-pipeline'.
     """
-    from cli.commands.chat.skills import load_skill
+    from cli.commands.learn.skills import load_skill
 
     if not _available_skills:
         return "No skills available in this session."

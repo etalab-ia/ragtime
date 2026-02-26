@@ -1,10 +1,14 @@
 default:
     @just --list
 
-# Sync dependencies
+# Install / update dependencies
 sync:
-    uv sync --python 3.13.11
+    uv sync
 
 # Run the Chainlit application
 run:
     uv run chainlit run app.py -w
+
+# Open the interactive RAG learning assistant
+learn:
+    uv run rag-facile learn

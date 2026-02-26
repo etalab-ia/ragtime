@@ -1,409 +1,207 @@
 #!/usr/bin/env bash
-# RAG Facile CLI installer for Unix/Linux/macOS/WSL/Git Bash
-# Usage: bash <(curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh)
+# RAG Facile installer for Unix / macOS / WSL / Git Bash
+# Prerequisites: curl, unzip (auto-installed on apt/dnf/yum systems if missing)
+# Installs: uv, just, then downloads and sets up the latest RAG Facile workspace.
+#
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
+#
+# Environment variables:
+#   RAG_FACILE_LOCAL_ASSET  Path to a local zip asset (for CI — skips GitHub download)
+#   RAG_FACILE_DIR          Target directory name (default: my-rag-app)
 
 set -e
 
-# Detect OS
-OS_TYPE=$(uname -s)
-if [[ "$OS_TYPE" == MINGW* ]] || [[ "$OS_TYPE" == MSYS* ]]; then
-    OS_IS_WINDOWS=1
-else
-    OS_IS_WINDOWS=0
-fi
-
-PROTO_HOME="${PROTO_HOME:-$HOME/.proto}"
-PROTO_BIN="$PROTO_HOME/bin"
-PROTO_SHIMS="$PROTO_HOME/shims"
+WORKSPACE_DIR="${RAG_FACILE_DIR:-my-rag-app}"
 LOCAL_BIN="$HOME/.local/bin"
-ORIGINAL_PATH="$PATH"
-PROTOTOOLS_FILE="$PROTO_HOME/.prototools"
 
-echo "==> Installing RAG Facile CLI"
+echo ""
+echo "==> RAG Facile Installer"
 echo ""
 
-# Check for proxy configuration
-setup_proxy_config() {
-    local has_proxy=0
-    local proxy_url=""
-    
-    # Check for common proxy environment variables
-    if [[ -n "${HTTP_PROXY:-}" ]]; then
-        proxy_url="$HTTP_PROXY"
-        has_proxy=1
-    elif [[ -n "${http_proxy:-}" ]]; then
-        proxy_url="$http_proxy"
-        has_proxy=1
-    elif [[ -n "${HTTPS_PROXY:-}" ]]; then
-        proxy_url="$HTTPS_PROXY"
-        has_proxy=1
-    elif [[ -n "${https_proxy:-}" ]]; then
-        proxy_url="$https_proxy"
-        has_proxy=1
-    fi
-    
-    if [[ $has_proxy -eq 1 ]]; then
-        echo "==> Detected proxy configuration: $proxy_url"
-        echo "Creating proto configuration for proxy support..."
-        echo ""
-        
-        # Create .proto directory if it doesn't exist
-        mkdir -p "$PROTO_HOME"
-        
-        # Only create .prototools if it doesn't already exist (preserve user config)
-        if [[ ! -f "$PROTOTOOLS_FILE" ]]; then
-            cat > "$PROTOTOOLS_FILE" << EOF
-# Proto configuration created by RAG Facile installer
-# For corporate/restricted networks and VPN environments
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-[settings.http]
-# Proxy configuration
-proxies = ["$proxy_url"]
-
-[settings.offline]
-# Increase timeout for network checks when behind proxy
-timeout = 5000
-EOF
-            echo "✓ Created proto configuration at $PROTOTOOLS_FILE"
-        else
-            echo "✓ Proto configuration already exists at $PROTOTOOLS_FILE (preserving existing config)"
-        fi
-        echo ""
-        
-        # Check for corporate proxy (likely to use SSL inspection)
-        if [[ "$proxy_url" =~ "corp" ]] || [[ "$proxy_url" =~ "internal" ]]; then
-            echo "⚠️  Corporate proxy detected (based on URL)"
-            echo ""
-            echo "If you encounter SSL certificate errors, you have two options:"
-            echo ""
-            echo "Option 1: Export your corporate root certificate"
-            echo "  1. Export the root certificate from your proxy/firewall as a .pem file"
-            echo "  2. Add to $PROTOTOOLS_FILE:"
-            echo "     [settings.http]"
-            echo "     root-cert = \"/path/to/corporate-cert.pem\""
-            echo ""
-            echo "Option 2: Allow invalid certificates (not recommended)"
-            echo "  Add to $PROTOTOOLS_FILE:"
-            echo "  [settings.http]"
-            echo "  allow-invalid-certs = true"
-            echo ""
-        fi
-    fi
-    
-    return 0
-}
-
-# Setup proxy configuration if detected
-setup_proxy_config
-
-# Install prerequisites on Linux if needed (skip on Windows)
-if [[ $OS_IS_WINDOWS -eq 0 ]] && [[ "$(uname)" == "Linux" ]] && command -v apt-get &> /dev/null; then
-    missing=""
-    for cmd in git curl xz unzip; do
-        if ! command -v "$cmd" &> /dev/null; then
-            missing="$missing $cmd"
-        fi
-    done
-    
-    if [[ -n "$missing" ]]; then
-        echo "Installing prerequisites:$missing"
-        # Use sudo if not root
-        if [[ $EUID -eq 0 ]]; then
-            apt-get update && apt-get install -y git curl xz-utils unzip
-        else
-            sudo apt-get update && sudo apt-get install -y git curl xz-utils unzip
-        fi
-        echo ""
-    fi
-fi
-
-# Helper to check if a command exists and get version
 check_tool() {
-    if command -v "$1" &> /dev/null; then
-        version=$("$1" --version 2>/dev/null | head -n1)
-        echo "✓ $1 ($version)"
-        return 0
-    fi
-    return 1
+    command -v "$1" &>/dev/null
 }
 
-# Detect shell profile
-detect_shell_profile() {
-    if [[ -n "$ZSH_VERSION" ]] || [[ "$SHELL" == */zsh ]]; then
-        echo "$HOME/.zshrc"
-    elif [[ -n "$BASH_VERSION" ]] || [[ "$SHELL" == */bash ]]; then
-        if [[ -f "$HOME/.bash_profile" ]]; then
-            echo "$HOME/.bash_profile"
-        else
-            echo "$HOME/.bashrc"
-        fi
-    else
-        echo "$HOME/.profile"
+ensure_bin_on_path() {
+    # Make ~/.local/bin available in this session (uv and just land there)
+    if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
+        export PATH="$LOCAL_BIN:$PATH"
     fi
 }
 
-# Add a path to shell profile if not already there
-add_to_path() {
-    local path_to_add="$1"
-    local profile="$2"
-    local export_line="export PATH=\"$path_to_add:\$PATH\""
-    
-    if ! grep -q "$path_to_add" "$profile" 2>/dev/null; then
-        echo "" >> "$profile"
-        echo "# Added by RAG Facile installer" >> "$profile"
-        echo "$export_line" >> "$profile"
-        echo "Added $path_to_add to $profile"
-    fi
-}
+# ── 0. Ensure prerequisites ───────────────────────────────────────────────────
 
-# Add proto paths to current session
-export PATH="$PROTO_SHIMS:$PROTO_BIN:$LOCAL_BIN:$PATH"
-
-# 1. Install direnv for automatic .env file loading
-if ! check_tool direnv; then
-    echo "Installing direnv..."
-    if [[ $OS_IS_WINDOWS -eq 0 ]] && command -v apt-get &> /dev/null; then
-        # Linux
-        if [[ $EUID -eq 0 ]]; then
-            apt-get update && apt-get install -y direnv
-        else
-            sudo apt-get update && sudo apt-get install -y direnv
-        fi
-    elif [[ $OS_IS_WINDOWS -eq 0 ]] && command -v brew &> /dev/null; then
-        # macOS
-        brew install direnv
-    fi
-    
-    # Add direnv hook to shell profile
-    if check_tool direnv; then
-        profile=$(detect_shell_profile)
-        if ! grep -q "direnv hook" "$profile" 2>/dev/null; then
-            echo "" >> "$profile"
-            echo "# Added by RAG Facile installer" >> "$profile"
-            if [[ "$SHELL" == */zsh ]]; then
-                echo 'eval "$(direnv hook zsh)"' >> "$profile"
+if ! check_tool unzip; then
+    echo "==> Installing prerequisite: unzip"
+    if [[ "$(uname)" == "Linux" ]]; then
+        if command -v apt-get &>/dev/null; then
+            if [[ $EUID -eq 0 ]]; then
+                apt-get update -qq && apt-get install -y -qq unzip
             else
-                echo 'eval "$(direnv hook bash)"' >> "$profile"
+                sudo apt-get update -qq && sudo apt-get install -y -qq unzip
             fi
-            echo "Added direnv hook to $profile"
-        fi
-    fi
-fi
-
-# 2. Install proto if needed
-if ! check_tool proto; then
-    echo "Installing proto..."
-    
-    proto_installer="/tmp/proto-install-$$.sh"
-    
-    # Try downloading with SSL verification first (secure)
-    if ! curl -fsSL https://moonrepo.dev/install/proto.sh -o "$proto_installer" 2>/tmp/curl-error-$$.txt; then
-        # If SSL certificate error, try again with -k (skip SSL verification)
-        if grep -q "SSL certificate" /tmp/curl-error-$$.txt 2>/dev/null; then
-            echo "⚠️  SSL certificate verification failed. Trying with certificate verification disabled..."
-            if curl -fsSLk https://moonrepo.dev/install/proto.sh -o "$proto_installer" 2>/dev/null; then
-                echo "✓ Downloaded successfully (note: SSL verification was disabled)"
-            else
-                # curl -k still failed
-                echo "ERROR: Failed to download proto installer"
-                echo ""
-                echo "This can happen if:"
-                echo "  1. Network connection is unavailable"
-                echo "  2. You're behind a corporate proxy with SSL inspection"
-                echo ""
-                echo "Error details:"
-                cat /tmp/curl-error-$$.txt 2>/dev/null || echo "  (check your network connection)"
-                echo ""
-                echo "Solutions for SSL inspection by corporate proxy:"
-                echo "  1. Ask your IT team to whitelist: github.com, ghcr.io, api.github.com, moonrepo.dev"
-                echo "  2. Or export your corporate root certificate and configure proto:"
-                echo "     mkdir -p ~/.proto"
-                echo "     cat > ~/.proto/.prototools << 'EOF'"
-                echo "     [settings.http]"
-                echo "     root-cert = \"/path/to/corporate-ca.pem\""
-                echo "     EOF"
-                echo ""
-                echo "For more help, see: https://github.com/etalab-ia/rag-facile/blob/main/docs/"
-                rm -f "$proto_installer" /tmp/curl-error-$$.txt
-                exit 1
-            fi
+        elif command -v dnf &>/dev/null; then
+            sudo dnf install -y unzip 2>/dev/null || dnf install -y unzip
+        elif command -v yum &>/dev/null; then
+            sudo yum install -y unzip 2>/dev/null || yum install -y unzip
         else
-            # Not an SSL error
-            echo "ERROR: Failed to download proto installer"
-            echo ""
-            echo "Error details:"
-            cat /tmp/curl-error-$$.txt 2>/dev/null || echo "  (check your network connection)"
-            echo ""
-            echo "For more help, see: https://github.com/etalab-ia/rag-facile/blob/main/docs/"
-            rm -f "$proto_installer" /tmp/curl-error-$$.txt
+            echo "ERROR: 'unzip' is required but could not be installed automatically."
+            echo "       Please install it manually, then re-run this script."
             exit 1
         fi
     fi
-    
-    # Run the installer (preserve proxy env vars so proto can use them)
-    if ! HTTP_PROXY="$HTTP_PROXY" HTTPS_PROXY="$HTTPS_PROXY" bash "$proto_installer" --yes; then
-        echo "ERROR: proto installation failed"
-        echo ""
-        echo "For help, see: https://github.com/etalab-ia/rag-facile/blob/main/docs/"
-        rm -f "$proto_installer" /tmp/curl-error-$$.txt
+    if ! check_tool unzip; then
+        echo "ERROR: 'unzip' is required but is not available."
         exit 1
     fi
-    
-    rm -f "$proto_installer" /tmp/curl-error-$$.txt
-    export PATH="$PROTO_SHIMS:$PROTO_BIN:$PATH"
-    
-    if ! check_tool proto; then
-        echo "ERROR: proto installed but not working"
-        exit 1
-    fi
+    echo "✓ unzip installed"
 fi
 
-# 3. Install moon via proto if needed
-if ! check_tool moon; then
-    echo "Installing moon via proto..."
-    if ! proto install moon; then
-        echo "ERROR: Failed to install moon via proto"
-        echo ""
-        echo "This often happens behind corporate proxies or VPNs."
-        echo "Troubleshooting steps:"
-        echo ""
-        echo "1. Check proto logs for details"
-        echo "2. Verify proxy configuration:"
-        echo "   cat $PROTOTOOLS_FILE"
-        echo ""
-        echo "3. Test connectivity to GitHub:"
-        echo "   curl -I https://github.com"
-        echo ""
-        echo "4. If you're behind a corporate proxy with SSL inspection:"
-        echo "   a) Export your root certificate as a .pem file"
-        echo "   b) Add this to $PROTOTOOLS_FILE:"
-        echo "      [settings.http]"
-        echo "      root-cert = \"/path/to/your/cert.pem\""
-        echo ""
-        echo "For more help, see: https://moonrepo.dev/docs/proto/config"
-        exit 1
-    fi
-    
-    if ! check_tool moon; then
-        echo "ERROR: moon installed but not working"
-        exit 1
-    fi
-fi
+# ── 1. Install uv ─────────────────────────────────────────────────────────────
 
-# 4. Install uv via proto if needed
-if ! check_tool uv; then
-    echo "Installing uv via proto..."
-    if ! proto install uv; then
-        echo "ERROR: Failed to install uv via proto"
-        echo ""
-        echo "This often happens behind corporate proxies or VPNs."
-        echo "See troubleshooting steps from 'moon' installation above."
-        exit 1
-    fi
-    
+ensure_bin_on_path
+
+if check_tool uv; then
+    echo "✓ uv already installed"
+else
+    echo "==> Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    ensure_bin_on_path
     if ! check_tool uv; then
-        echo "ERROR: uv installed but not working"
+        echo "ERROR: uv installation failed"
         exit 1
     fi
+    echo "✓ uv installed"
 fi
 
-# 5. Install just via proto
-if ! check_tool just; then
-    echo "Installing just via proto..."
-    # Register the just plugin (idempotent - safe to run even if already registered)
-    proto plugin add just "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/just/plugin.toml" 2>/dev/null || true
-    
-    if ! proto install just; then
-        echo "ERROR: Failed to install just via proto"
-        echo ""
-        echo "This often happens behind corporate proxies or VPNs."
-        echo "See troubleshooting steps from 'moon' installation above."
-        exit 1
-    fi
-    
+# ── 2. Install just ───────────────────────────────────────────────────────────
+
+if check_tool just; then
+    echo "✓ just already installed"
+else
+    echo "==> Installing just..."
+    # Official just installer — downloads a single static binary to ~/.local/bin
+    curl -LsSf https://just.systems/install.sh | bash -s -- --to "$LOCAL_BIN"
+    ensure_bin_on_path
     if ! check_tool just; then
-        echo "ERROR: just installed but not working"
+        echo "ERROR: just installation failed"
+        exit 1
+    fi
+    echo "✓ just installed"
+fi
+
+# ── 3. Download the release workspace zip ─────────────────────────────────────
+
+if [[ -n "${RAG_FACILE_LOCAL_ASSET:-}" ]]; then
+    # CI mode: use a pre-built local asset (no GitHub API call needed)
+    echo "==> Using local asset: $RAG_FACILE_LOCAL_ASSET"
+    ASSET_PATH="$RAG_FACILE_LOCAL_ASSET"
+else
+    echo "==> Fetching latest release..."
+    LATEST_TAG=$(curl -fsSL "https://api.github.com/repos/etalab-ia/rag-facile/releases/latest" \
+        2>/dev/null | sed -n -E 's/.*"tag_name": *"([^"]+)".*/\1/p')
+
+    if [[ -z "$LATEST_TAG" ]]; then
+        echo "ERROR: Could not fetch latest release tag from GitHub API."
+        echo "       Check your network connection or set RAG_FACILE_LOCAL_ASSET for offline use."
+        exit 1
+    fi
+
+    echo "   Latest release: $LATEST_TAG"
+    ASSET_URL="https://github.com/etalab-ia/rag-facile/releases/download/${LATEST_TAG}/rag-facile-workspace-${LATEST_TAG}.zip"
+    ASSET_PATH="/tmp/rag-facile-workspace-$$.zip"
+
+    echo "==> Downloading workspace..."
+    if ! curl -fsSL "$ASSET_URL" -o "$ASSET_PATH"; then
+        echo "ERROR: Could not download $ASSET_URL"
+        echo "       Make sure the release has the workspace zip attached."
+        rm -f "$ASSET_PATH"
         exit 1
     fi
 fi
 
-# 6. Install rag-facile CLI via uv
-echo ""
-echo "Installing RAG Facile CLI..."
+# ── 4. Extract ────────────────────────────────────────────────────────────────
 
-# Determine which ref to install from:
-# - If RAG_FACILE_BRANCH is set, use it (for testing pre-release branches)
-# - Otherwise, fetch the latest release tag from GitHub API (stable release)
-if [[ -n "${RAG_FACILE_BRANCH:-}" ]]; then
-    REF="$RAG_FACILE_BRANCH"
-    echo "Using branch/ref: $REF (from RAG_FACILE_BRANCH)"
-else
-    echo "Fetching latest release tag..."
-    LATEST_TAG=$(curl -fsSL "https://api.github.com/repos/etalab-ia/rag-facile/releases/latest" 2>/dev/null | sed -n -E 's/.*"tag_name": *"([^"]+)".*/\1/p')
-    if [[ -z "$LATEST_TAG" ]]; then
-        echo "WARNING: Could not fetch latest release tag, falling back to 'main'"
-        REF="main"
-    else
-        REF="$LATEST_TAG"
-        echo "Installing stable release: $REF"
-    fi
-fi
-
-if ! uv tool install rag-facile-cli --force --from "git+https://github.com/etalab-ia/rag-facile.git@${REF}#subdirectory=apps/cli"; then
-    echo "ERROR: rag-facile installation failed"
+if [[ -d "$WORKSPACE_DIR" ]]; then
+    echo "ERROR: Directory '$WORKSPACE_DIR' already exists."
+    echo "       Move it aside or set RAG_FACILE_DIR to a different name:"
+    echo "         RAG_FACILE_DIR=my-app bash install.sh"
+    # Clean up temp asset if we downloaded it
+    [[ -z "${RAG_FACILE_LOCAL_ASSET:-}" ]] && rm -f "$ASSET_PATH"
     exit 1
 fi
 
-# 7. Verify installation
-echo ""
-if ! check_tool rag-facile; then
-    echo "ERROR: rag-facile installation failed"
-    exit 1
-fi
+echo "==> Extracting to ./$WORKSPACE_DIR/ ..."
+# The zip contains a single top-level dir (my-rag-app/).
+# We extract to a temp dir then rename to the chosen WORKSPACE_DIR.
+EXTRACT_TMP="/tmp/rag-facile-extract-$$"
+mkdir -p "$EXTRACT_TMP"
+unzip -q "$ASSET_PATH" -d "$EXTRACT_TMP"
 
-echo "✓ RAG Facile CLI installed successfully!"
+# Find the extracted directory (should be exactly one)
+EXTRACTED_DIR=$(ls -1 "$EXTRACT_TMP" | head -n1)
+mv "$EXTRACT_TMP/$EXTRACTED_DIR" "$WORKSPACE_DIR"
+rm -rf "$EXTRACT_TMP"
+
+# Clean up temp asset if we downloaded it
+[[ -z "${RAG_FACILE_LOCAL_ASSET:-}" ]] && rm -f "$ASSET_PATH"
+
+echo "✓ Extracted to ./$WORKSPACE_DIR/"
+
+# ── 5. Install dependencies ───────────────────────────────────────────────────
+
+echo "==> Installing dependencies (this may take a minute on first run)..."
+cd "$WORKSPACE_DIR"
+uv sync
+cd - >/dev/null
+
+# ── 6. Done ───────────────────────────────────────────────────────────────────
+
+echo ""
+echo "✅ RAG Facile is ready!"
+echo ""
+echo "Next steps:"
+echo ""
+echo "  1. Add your Albert API key:"
+echo "       cd $WORKSPACE_DIR"
+echo "       cp .env.template .env"
+echo "       # Edit .env and set OPENAI_API_KEY=<your-key>"
+echo "       # Get a key at: https://albert.sites.beta.gouv.fr/"
+echo ""
+echo "  2. Start your app:"
+echo "       cd $WORKSPACE_DIR && just run"
+echo ""
+echo "  3. Chat with the RAG assistant:"
+echo "       cd $WORKSPACE_DIR && just learn"
 echo ""
 
-# Provide OS-specific guidance
-if [[ $OS_IS_WINDOWS -eq 1 ]]; then
-    echo "🪟 Windows detected (Git Bash / MSYS2)"
-    echo ""
-    echo "Proto has configured your tools. You may need to:"
-    echo "  1. Open a new Git Bash / terminal window"
-    echo "  2. Or run: source ~/.bashrc"
-    echo ""
-    echo "💡 For a native Windows PowerShell experience, use install.ps1 instead:"
-    echo "  irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex"
-else
-    echo "✓ Proto has configured your tools."
-    echo ""
-    # Check if ~/.local/bin was already in the original PATH
-    if [[ ":$ORIGINAL_PATH:" == *":$LOCAL_BIN:"* ]]; then
-        echo "Tools are ready to use!"
+# Guidance for shell profiles (so just/uv are found after terminal restart)
+if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
+    # Detect shell profile
+    if [[ -n "$ZSH_VERSION" ]] || [[ "$SHELL" == */zsh ]]; then
+        PROFILE="$HOME/.zshrc"
+    elif [[ -f "$HOME/.bash_profile" ]]; then
+        PROFILE="$HOME/.bash_profile"
     else
-        echo "Proto and tool paths may need to be added to your shell profile."
-        profile=$(detect_shell_profile)
-        if [[ ! -f "$profile" ]]; then
-            echo "Creating shell profile: $profile"
-            touch "$profile"
-        fi
-        add_to_path "$PROTO_SHIMS" "$profile"
-        add_to_path "$PROTO_BIN" "$profile"
-        add_to_path "$LOCAL_BIN" "$profile"
-        echo ""
-        echo "Run this to use tools in your current terminal:"
-        echo "  source $profile"
+        PROFILE="$HOME/.bashrc"
     fi
+
+    # Add to profile if not already there
+    if ! grep -q "$LOCAL_BIN" "$PROFILE" 2>/dev/null; then
+        echo "" >> "$PROFILE"
+        echo "# Added by RAG Facile installer" >> "$PROFILE"
+        echo "export PATH=\"$LOCAL_BIN:\$PATH\"" >> "$PROFILE"
+    fi
+
+    echo "  ⚠️  Restart your terminal (or run: source $PROFILE)"
+    echo "     so that 'just' and 'uv' are found in future sessions."
+    echo ""
 fi
 
-# Export PATH to GitHub Actions environment if running in CI
-if [[ -n "$GITHUB_PATH" ]]; then
-    echo "Adding tool paths to GITHUB_PATH for CI..."
-    echo "$PROTO_SHIMS" >> "$GITHUB_PATH"
-    echo "$PROTO_BIN" >> "$GITHUB_PATH"
+# Export to GitHub Actions CI environment if applicable
+if [[ -n "${GITHUB_PATH:-}" ]]; then
     echo "$LOCAL_BIN" >> "$GITHUB_PATH"
 fi
-
-echo ""
-echo "Get started with:"
-echo "  rag-facile setup my-rag-app"

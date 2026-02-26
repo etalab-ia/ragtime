@@ -1,18 +1,17 @@
 # Getting Started
 
-This guide walks through every installation option and helps you choose the right project structure for your needs.
+This guide walks you through installing RAG Facile and running your first RAG application.
 
 > Looking for the 5-minute quickstart? See the [main README](../../README.md).
 
 ## Prerequisites
 
 - An **Albert API key** — [request one here](https://albert.sites.beta.gouv.fr/)
-- **git** and **curl** installed (the installer handles the rest)
-- On Windows: PowerShell 5.1+ or Git Bash
+- **curl** (pre-installed on macOS/Linux/WSL)
 
-## Installation
+The installer handles everything else: it installs [uv](https://docs.astral.sh/uv/) (Python package manager) and [just](https://just.systems/) (command runner), then downloads and sets up a ready-to-run workspace.
 
-The installer sets up the full toolchain automatically: [proto](https://moonrepo.dev/docs/proto) (toolchain manager) → [moon](https://moonrepo.dev/) (task runner) → [uv](https://docs.astral.sh/uv/) (Python package manager) → `rag-facile` CLI.
+## Install
 
 ### Linux / macOS / WSL
 
@@ -22,41 +21,102 @@ curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.s
 
 Then **restart your terminal** (or run the `source` command shown by the installer).
 
-> **Note**: On Ubuntu/Debian, the installer will automatically install prerequisites (git, curl, xz-utils, unzip) if needed.
-
-### Windows (PowerShell) — Recommended
+### Windows (PowerShell)
 
 ```powershell
 irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
 ```
 
-Open a new PowerShell window and you're ready to go.
+Open a new PowerShell window after installation completes.
 
-> For a complete walkthrough, see the [Windows Setup Guide](windows-setup.md).
+## What the installer does
 
-### Windows (Git Bash / MSYS2)
+1. Installs **uv** (Python package manager) — if not already present
+2. Installs **just** (command runner) — if not already present
+3. Downloads the latest **RAG Facile workspace** zip from GitHub Releases
+4. Extracts it to `./my-rag-app/`
+5. Runs `uv sync` to install Python dependencies
 
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh)
-source ~/.bashrc
-```
+Total toolchain: just **curl + uv + just**. No proto, no moon, no global CLI tools.
 
-### Behind a Corporate Proxy or VPN?
+## Your first app
 
-The installer automatically detects and configures proxy support. If you run into issues, see:
-
-- [Proxy & Network Setup](proxy-setup.md)
-- [Proxy Troubleshooting](../troubleshooting/proxy.md)
-
-### Verify
+After installation:
 
 ```bash
-rag-facile --help
+# 1. Add your Albert API key
+cd my-rag-app
+cp .env.template .env
+# Edit .env and set OPENAI_API_KEY=<your-key>
+
+# 2. Start the Chainlit app
+just run
 ```
 
-### Upgrading
+Your app opens at **http://localhost:8000** — upload documents and ask questions.
 
-To upgrade to the latest version, re-run the installer:
+## Available commands
+
+Run `just` inside `my-rag-app/` to see all available commands:
+
+| Command | Description |
+|---------|-------------|
+| `just run` | Start the Chainlit web application |
+| `just learn` | Open the interactive RAG learning assistant |
+| `just sync` | Install / update dependencies |
+
+## Using the RAG Facile CLI
+
+The CLI (`rag-facile`) is included as a development dependency in your workspace. Run it with:
+
+```bash
+cd my-rag-app
+uv run rag-facile --help
+```
+
+Common commands:
+
+```bash
+# Open the interactive RAG learning assistant
+uv run rag-facile learn
+
+# View your current RAG configuration
+uv run rag-facile config show
+
+# Change a configuration value
+uv run rag-facile config set retrieval.top_k 15
+
+# List available Albert public collections
+uv run rag-facile collections list
+
+# Generate a synthetic Q/A evaluation dataset
+uv run rag-facile generate-dataset ./docs -o dataset.jsonl
+```
+
+Or use the shortcut recipes in `justfile`:
+
+```bash
+just learn   # same as: uv run rag-facile learn
+```
+
+## Advanced: scaffold a custom workspace
+
+Power users who want to choose a different preset, frontend (Reflex), or RAG pipeline can scaffold a workspace from scratch:
+
+```bash
+# Default (balanced preset, Chainlit, Albert RAG)
+uv run rag-facile setup my-custom-app
+
+# Expert mode — choose preset, frontend, and pipeline interactively
+uv run rag-facile setup my-custom-app --expert
+
+# Available presets: fast, balanced, accurate, legal, hr
+uv run rag-facile setup my-custom-app --preset legal
+```
+
+## Upgrading
+
+To get the latest version, re-run the installer — it downloads a fresh workspace zip:
 
 ```bash
 # Linux / macOS / WSL
@@ -68,129 +128,37 @@ curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.s
 irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
 ```
 
-### Uninstalling
+> **Note**: Re-running the installer creates a new `my-rag-app/` directory. Your existing workspace is not modified.
 
-To remove RAG Facile and its entire toolchain:
+## Troubleshooting
 
-```bash
-rag-facile uninstall
-```
+### `just: command not found`
 
-See the [Uninstalling Guide](uninstalling.md) for manual steps and details.
-
-## Setting Up Your Workspace
-
-One command gets you to a running RAG app:
+Restart your terminal, or add `~/.local/bin` to your PATH:
 
 ```bash
-rag-facile setup my-rag-app
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-The CLI will interactively guide you through:
+Add this line to your shell profile (`~/.zshrc` or `~/.bashrc`) to make it permanent.
 
-1. **Configuration preset** — Balanced, Fast, Accurate, Legal, or HR
-2. **Environment** — Your Albert API key (presets handle the rest)
+### `uv: command not found`
 
-By default, the CLI creates a simple standalone Chainlit project using the Albert RAG pipeline. For advanced options (project structure, frontend, pipeline selection), use `--expert`:
+Same as above — restart your terminal after installation.
+
+### Albert API errors (401 / 403)
+
+Your `OPENAI_API_KEY` in `.env` is missing or incorrect.
+[Request an API key here](https://albert.sites.beta.gouv.fr/).
+
+### Behind a corporate proxy or VPN?
+
+Set standard proxy environment variables before running the installer:
 
 ```bash
-rag-facile setup my-rag-app --expert
+export HTTP_PROXY=http://proxy.example.com:3128
+export HTTPS_PROXY=http://proxy.example.com:3128
+curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 ```
 
-After configuration, the CLI automatically:
-
-- Creates your project with all pipeline components
-- Writes `ragfacile.toml` based on your chosen preset
-- Creates your `.env` file with your credentials
-- Installs all dependencies with `uv sync`
-- Starts the development server
-
-Your app will open in the browser, ready to use.
-
-## Project Structure
-
-```
-my-rag-app/
-├── pyproject.toml          # rag-facile-lib dependency (installed from GitHub)
-├── .env                    # Your API credentials
-├── ragfacile.toml          # RAG pipeline configuration
-├── app.py                  # Your Chainlit application
-├── chainlit.md             # Chat welcome message
-└── src/
-    └── my_rag_app/         # Your custom code and extensions
-        └── __init__.py
-```
-
-The entire RAG pipeline (`rag_facile.*`) comes from `rag-facile-lib`, installed automatically. No pipeline source directories to manage.
-
-## Running Your App
-
-```bash
-cd my-rag-app
-just run
-```
-
-## Advanced: Project Structures (`--expert`)
-
-With `--expert`, you can choose between a simple standalone project or a monorepo:
-
-### Simple (Default)
-
-Best for: **Quick prototypes, single-app deployments, learning RAG Facile**
-
-- Familiar single-project structure
-- No build tools to learn
-- Easy to understand and modify
-
-### Monorepo
-
-Best for: **Team projects, multiple apps, or adding your own pipeline packages**
-
-```
-my-rag-app/
-├── .moon/              # Moon workspace configuration
-├── apps/
-│   └── chainlit-chat/  # Your selected frontend app
-├── ragfacile.toml      # RAG pipeline configuration
-├── justfile            # Common commands
-└── pyproject.toml      # Workspace root
-```
-
-The RAG pipeline comes from `rag-facile-lib` (same as standalone). Add your own packages under `packages/` when you need to extend the pipeline.
-
-**Advantages:**
-- Multiple apps can share packages
-- Consistent tooling across apps
-- Easy to add new apps with `just add <template>`
-- Built-in task runner with [Moon](https://moonrepo.dev/)
-
-### Which Should I Choose?
-
-| Scenario | Recommendation |
-|----------|----------------|
-| First time using RAG Facile | **Simple** (default) |
-| Building a quick prototype | **Simple** (default) |
-| Single application deployment | **Simple** (default) |
-| Multiple related apps | **Monorepo** (`--expert`) |
-| Team with shared components | **Monorepo** (`--expert`) |
-| Need to add apps later | **Monorepo** (`--expert`) |
-
-### Running a Monorepo
-
-```bash
-cd my-rag-app
-just run chainlit-chat      # Run a specific app
-just run                    # Run all apps
-```
-
-### Available `just` Commands
-
-| Command | Description |
-|---------|-------------|
-| `just run` | Run all apps |
-| `just run <name>` | Run a specific app (e.g., `just run chainlit-chat`) |
-| `just format` | Format code with ruff |
-| `just lint` | Run linter |
-| `just check` | Run all checks (format, lint, type-check) |
-| `just sync` | Sync dependencies with uv |
-| `just add <template>` | Add a new app from template |
+The installer uses `curl` and `uv` which both respect these environment variables automatically.

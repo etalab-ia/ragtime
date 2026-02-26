@@ -1,4 +1,5 @@
 import reflex as rx
+from reflex.style import set_color_mode
 
 from {{ project_name | replace(from='-', to='_') }}.state import State
 
@@ -112,7 +113,7 @@ def theme_toggle() -> rx.Component:
                     spacing="2",
                     align_items="center",
                 ),
-                on_click=rx.set_color_mode("light"),
+                on_click=set_color_mode("light"),
             ),
             rx.menu.item(
                 rx.hstack(
@@ -121,7 +122,7 @@ def theme_toggle() -> rx.Component:
                     spacing="2",
                     align_items="center",
                 ),
-                on_click=rx.set_color_mode("dark"),
+                on_click=set_color_mode("dark"),
             ),
             rx.menu.item(
                 rx.hstack(
@@ -130,7 +131,7 @@ def theme_toggle() -> rx.Component:
                     spacing="2",
                     align_items="center",
                 ),
-                on_click=rx.set_color_mode("system"),
+                on_click=set_color_mode("system"),
             ),
         ),
     )
@@ -145,22 +146,27 @@ def navbar():
                 content="La conversation en cours.",
             ),
             size="3",
-            variant="soft",
+            variant="solid",
+            color_scheme="blue",
             margin_inline_end="auto",
         ),
-        modal(
-            rx.icon_button("message-square-plus"),
+        rx.hstack(
+            modal(
+                rx.icon_button("message-square-plus"),
+            ),
+            sidebar(
+                rx.icon_button(
+                    "messages-square",
+                    background_color=rx.color("slate", 6),
+                )
+            ),
+            theme_toggle(),
+            gap="1rem",  # DSFR 4v between action buttons
+            align_items="center",
         ),
-        sidebar(
-            rx.icon_button(
-                "messages-square",
-                background_color=rx.color("slate", 6),
-            )
-        ),
-        theme_toggle(),
         justify_content="space-between",
         align_items="center",
-        padding="12px",
+        padding="0.5rem 1rem",  # DSFR 2v / 4v
         border_bottom=f"1px solid {rx.color('slate', 3)}",
         background_color=rx.color("slate", 2),
     )

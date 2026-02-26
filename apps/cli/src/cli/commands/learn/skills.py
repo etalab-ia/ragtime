@@ -27,7 +27,7 @@ def _builtin_skills_dir() -> Path | None:
     In both cases the path is the same relative to this file:
       <installed>  site-packages/cli/skills/
       <dev>        apps/cli/src/cli/skills/
-    Both resolve to parents[2] / "skills" from cli/commands/chat/skills.py.
+    Both resolve to parents[2] / "skills" from cli.commands.learn.skills.py.
     """
     candidate = Path(__file__).resolve().parents[2] / "skills"
     return candidate if candidate.exists() else None

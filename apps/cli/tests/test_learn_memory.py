@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import openai
 import pytest
 
-from cli.commands.chat.memory import (
+from cli.commands.learn.memory import (
     append_turn,
     git_commit_session,
     increment_session_count,
@@ -140,7 +140,7 @@ class TestUpdateMemory:
             0
         ].message.content = "- L'utilisateur travaille sur un projet de RAG juridique"
 
-        with patch("cli.commands.chat.memory.openai.OpenAI") as mock_client:
+        with patch("cli.commands.learn.memory.openai.OpenAI") as mock_client:
             mock_client.return_value.chat.completions.create.return_value = (
                 mock_response
             )
@@ -155,7 +155,7 @@ class TestUpdateMemory:
         mock_response = MagicMock()
         mock_response.choices[0].message.content = "- Fait intéressant"
 
-        with patch("cli.commands.chat.memory.openai.OpenAI") as mock_client:
+        with patch("cli.commands.learn.memory.openai.OpenAI") as mock_client:
             mock_client.return_value.chat.completions.create.return_value = (
                 mock_response
             )
@@ -165,7 +165,7 @@ class TestUpdateMemory:
         assert "(empty — will be populated across sessions)" not in memory
 
     def test_skips_gracefully_on_api_error(self, workspace):
-        with patch("cli.commands.chat.memory.openai.OpenAI") as mock_client:
+        with patch("cli.commands.learn.memory.openai.OpenAI") as mock_client:
             mock_client.return_value.chat.completions.create.side_effect = (
                 openai.APIConnectionError(request=MagicMock())
             )
@@ -176,7 +176,7 @@ class TestUpdateMemory:
         mock_response = MagicMock()
         mock_response.choices[0].message.content = ""
 
-        with patch("cli.commands.chat.memory.openai.OpenAI") as mock_client:
+        with patch("cli.commands.learn.memory.openai.OpenAI") as mock_client:
             mock_client.return_value.chat.completions.create.return_value = (
                 mock_response
             )
@@ -193,7 +193,7 @@ class TestUpdateMemory:
 class TestGitCommitSession:
     def test_silent_when_git_not_found(self, workspace):
         with patch(
-            "cli.commands.chat.memory.subprocess.run",
+            "cli.commands.learn.memory.subprocess.run",
             side_effect=FileNotFoundError,
         ):
             git_commit_session(workspace)  # should not raise
@@ -201,7 +201,7 @@ class TestGitCommitSession:
     def test_warns_on_git_failure(self, workspace, capsys):
         err = subprocess.CalledProcessError(1, "git", stderr=b"not a git repo")
         with patch(
-            "cli.commands.chat.memory.subprocess.run",
+            "cli.commands.learn.memory.subprocess.run",
             side_effect=err,
         ):
             git_commit_session(workspace)  # should not raise
@@ -213,7 +213,7 @@ class TestGitCommitSession:
         diff_result = MagicMock(returncode=0)  # 0 = nothing staged
 
         with patch(
-            "cli.commands.chat.memory.subprocess.run",
+            "cli.commands.learn.memory.subprocess.run",
             side_effect=[check_ignore, add_result, diff_result],
         ) as mock_run:
             git_commit_session(workspace)
@@ -225,7 +225,7 @@ class TestGitCommitSession:
         check_ignore = MagicMock(returncode=0)  # 0 = ignored
 
         with patch(
-            "cli.commands.chat.memory.subprocess.run",
+            "cli.commands.learn.memory.subprocess.run",
             return_value=check_ignore,
         ) as mock_run:
             git_commit_session(workspace)

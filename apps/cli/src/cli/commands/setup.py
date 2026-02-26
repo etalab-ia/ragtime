@@ -1,7 +1,6 @@
-"""Setup new RAG Facile workspaces using Init + Patch architecture."""
+"""Setup new RAG Facile standalone workspaces."""
 
 import os
-import shutil
 import subprocess
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_version
@@ -122,115 +121,6 @@ def _get_library_git_ref() -> dict[str, str]:
         return {"branch": "main"}
 
 
-def setup_proto_paths() -> None:
-    """Add proto bin and shims directories to PATH for this session."""
-    proto_home = Path(os.environ.get("PROTO_HOME", Path.home() / ".proto"))
-    proto_bin = proto_home / "bin"
-    proto_shims = proto_home / "shims"
-
-    proto_paths = f"{proto_shims}:{proto_bin}"
-    if proto_paths not in os.environ.get("PATH", ""):
-        os.environ["PATH"] = f"{proto_paths}:{os.environ.get('PATH', '')}"
-
-
-def verify_tool(name: str) -> str | None:
-    """Verify a tool is available and return its version, or None if not found."""
-    if not shutil.which(name):
-        return None
-    try:
-        result = subprocess.run(
-            [name, "--version"], capture_output=True, text=True, timeout=10
-        )
-        if result.returncode == 0:
-            # Extract first line of version output
-            return result.stdout.strip().split("\n")[0]
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        pass
-    return None
-
-
-def install_proto() -> bool:
-    """Install proto using the official installer."""
-    console.print("[yellow]Installing proto...[/yellow]")
-    result = subprocess.run(
-        [
-            "bash",
-            "-c",
-            "bash <(curl -fsSL https://moonrepo.dev/install/proto.sh) --yes",
-        ],
-        capture_output=False,
-    )
-    if result.returncode != 0:
-        console.print("[red]Failed to install proto. Please install manually:[/red]")
-        console.print(
-            "[dim]bash <(curl -fsSL https://moonrepo.dev/install/proto.sh) --yes[/dim]"
-        )
-        return False
-
-    # Update PATH to find the newly installed proto
-    setup_proto_paths()
-    return True
-
-
-def install_via_proto(tool: str) -> bool:
-    """Install a tool using proto."""
-    console.print(f"[yellow]Installing {tool} via proto...[/yellow]")
-    result = subprocess.run(["proto", "install", tool], capture_output=False)
-    if result.returncode != 0:
-        console.print(f"[red]Failed to install {tool}. Please install manually:[/red]")
-        console.print(f"[dim]proto install {tool}[/dim]")
-        return False
-    return True
-
-
-def ensure_toolchain() -> bool:
-    """Ensure proto, moon, and uv are installed, installing them if needed."""
-    # Add proto paths to PATH (in case already installed)
-    setup_proto_paths()
-
-    # 1. Ensure proto is installed
-    version = verify_tool("proto")
-    if version:
-        console.print(f"[dim]✓ proto ({version})[/dim]")
-    else:
-        if not install_proto():
-            return False
-        version = verify_tool("proto")
-        if not version:
-            console.print("[red]proto installed but not working[/red]")
-            return False
-        console.print(f"[green]✓ proto installed ({version})[/green]")
-
-    # 2. Ensure moon is installed
-    version = verify_tool("moon")
-    if version:
-        console.print(f"[dim]✓ moon ({version})[/dim]")
-    else:
-        if not install_via_proto("moon"):
-            return False
-        version = verify_tool("moon")
-        if not version:
-            console.print("[red]moon installed but not working[/red]")
-            return False
-        console.print(f"[green]✓ moon installed ({version})[/green]")
-
-    # 3. Ensure uv is installed
-    version = verify_tool("uv")
-    if version:
-        console.print(f"[dim]✓ uv ({version})[/dim]")
-    else:
-        if not install_via_proto("uv"):
-            return False
-        version = verify_tool("uv")
-        if not version:
-            console.print("[red]uv installed but not working[/red]")
-            return False
-        console.print(f"[green]✓ uv installed ({version})[/green]")
-
-    console.print()
-    return True
-
-
 # Available frontends
 FRONTENDS = {
     "Chainlit": "chainlit-chat",
@@ -241,12 +131,6 @@ FRONTENDS = {
 MODULES = {
     "Local": {"template": "retrieval", "available": True},
     "Albert RAG": {"template": "retrieval", "available": True},
-}
-
-# Project structure options
-PROJECT_STRUCTURES = {
-    "Simple (recommended for getting started)": "standalone",
-    "Monorepo (for multi-app projects)": "monorepo",
 }
 
 # Configuration presets
@@ -505,10 +389,11 @@ def generate_standalone(
     console.print()
     console.print("[bold green]Step 2:[/bold green] Generating project files...")
 
-    # Build uv.sources for library and albert-client
+    # Build uv.sources for library, albert-client, and CLI (dev dep)
     uv_sources = f"""[tool.uv.sources]
 rag-facile-lib = {{ git = "{_GITHUB_REPO}", {ref_key} = "{ref_value}", subdirectory = "packages/rag-facile-lib" }}
 albert-client = {{ git = "{_GITHUB_REPO}", {ref_key} = "{ref_value}", subdirectory = "packages/albert-client" }}
+rag-facile-cli = {{ git = "{_GITHUB_REPO}", {ref_key} = "{ref_value}", subdirectory = "apps/cli" }}
 """
 
     # Frontend-specific dependency and setuptools config
@@ -540,6 +425,11 @@ dependencies = [
     "rag-facile-lib",
     {frontend_dep}
     "python-dotenv>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "rag-facile-cli",
 ]
 
 {setuptools_block}
@@ -739,17 +629,7 @@ def run(
         ),
     ] = False,
 ):
-    """Setup a new RAG Facile workspace with interactive configuration.
-
-    Uses the Init + Patch architecture:
-    1. Bootstrap with `moon init`
-    2. Apply RAG Facile configuration
-    3. Generate selected app and packages
-    """
-    # 0. Ensure toolchain is installed (proto, moon, uv)
-    if not ensure_toolchain():
-        raise typer.Exit(1)
-
+    """Scaffold a new standalone RAG Facile workspace with interactive configuration."""
     # 1. Gather inputs interactively (or use defaults with --yes)
     if not target:
         if yes:
@@ -776,19 +656,6 @@ def run(
         if not overwrite:
             console.print("[yellow]Aborted.[/yellow]")
             raise typer.Exit(0)
-
-    # Select project structure (only shown with --expert)
-    if expert:
-        structure_choice = questionary.select(
-            "What type of project structure do you want?",
-            choices=list(PROJECT_STRUCTURES.keys()),
-        ).ask()
-        if not structure_choice:
-            console.print("[red]Aborted.[/red]")
-            raise typer.Exit(1)
-        is_standalone = PROJECT_STRUCTURES[structure_choice] == "standalone"
-    else:
-        is_standalone = True
 
     # Select preset (expert-only interactive picker; --preset flag still works for everyone)
     if not preset:
@@ -884,9 +751,7 @@ def run(
     console.print()
     console.print("[bold blue]Configuration Summary[/bold blue]")
     console.print(f"  Target: {target_display}")
-    console.print(
-        f"  Structure: {'Simple (standalone)' if is_standalone else 'Monorepo'}"
-    )
+    console.print("  Structure: Standalone")
     console.print(f"  Preset: {preset} ({preset_config['description']})")
     console.print(f"  Frontend: {frontend_choice}")
     console.print(f"  Model: {preset_config['model_alias']}")
@@ -900,270 +765,13 @@ def run(
             console.print("[yellow]Aborted.[/yellow]")
             raise typer.Exit(0)
 
-    # Branch based on project structure choice
-    if is_standalone:
-        generate_standalone(
-            target_path=target_path,
-            target_display=target_display,
-            frontend_choice=frontend_choice,
-            selected_modules=selected_modules,
-            env_config=env_config,
-            preset=preset,
-            preset_config=preset_config,
-            no_serve=no_serve,
-        )
-        return  # Exit after standalone generation
-
-    # ========== MONOREPO GENERATION ==========
-
-    import shutil
-
-    # 1. Bootstrap with moon init
-    console.print()
-    console.print("[bold green]Step 1:[/bold green] Initializing Moon workspace...")
-    if not target_path.exists():
-        target_path.mkdir(parents=True)
-
-    _init_git_repo(target_path)
-
-    if not run_command(["moon", "init", "--yes"], "moon init", cwd=target_path):
-        raise typer.Exit(1)
-    console.print("[green]✓[/green] Moon workspace initialized")
-
-    # 2. Write workspace configuration files directly (no sys-config template needed)
-    console.print()
-    console.print(
-        "[bold green]Step 2:[/bold green] Applying RAG Facile configuration..."
+    generate_standalone(
+        target_path=target_path,
+        target_display=target_display,
+        frontend_choice=frontend_choice,
+        selected_modules=selected_modules,
+        env_config=env_config,
+        preset=preset,
+        preset_config=preset_config,
+        no_serve=no_serve,
     )
-    moon_dir = target_path / ".moon"
-    moon_dir.mkdir(
-        parents=True, exist_ok=True
-    )  # Ensure .moon/ exists (moon init creates it; this is a safety net)
-
-    (moon_dir / "toolchain.yml").write_text(
-        "$schema: 'https://moonrepo.dev/schemas/toolchain.json'\n"
-        "python:\n"
-        "  version: '3.13.11'\n"
-        "  packageManager: uv\n"
-    )
-    console.print("[dim]  ✓ .moon/toolchain.yml[/dim]")
-
-    (moon_dir / "workspace.yml").write_text(
-        "projects:\n"
-        "  - 'apps/*'\n"
-        "  - 'packages/*'\n"
-        "vcs:\n"
-        "  manager: git\n"
-        "  defaultBranch: main\n"
-        "telemetry: false\n"
-        "generator:\n"
-        "  templates:\n"
-        "    - .moon/templates\n"
-    )
-    console.print("[dim]  ✓ .moon/workspace.yml[/dim]")
-
-    (target_path / "pyproject.toml").write_text(
-        "[project]\n"
-        f'name = "{target_path.name}"\n'
-        'version = "0.1.0"\n'
-        'description = "RAG Facile workspace"\n'
-        'requires-python = ">=3.13"\n'
-        "dependencies = []\n"
-        "\n"
-        "[dependency-groups]\n"
-        'dev = ["ruff>=0.9", "ty>=0.0.1a7"]\n'
-        "\n"
-        "[tool.ruff]\n"
-        "# Exclude moon templates (contain Jinja2 syntax, not valid Python/TOML)\n"
-        'extend-exclude = [".moon/templates"]\n'
-        "\n"
-        "[tool.ruff.lint]\n"
-        'exclude = [".moon/templates"]\n'
-        "\n"
-        "[tool.ruff.format]\n"
-        'exclude = [".moon/templates"]\n'
-        "\n"
-        "[tool.ty.src]\n"
-        'exclude = [".moon/templates"]\n'
-        "\n"
-        "[tool.uv]\n"
-        "managed = true\n"
-        "\n"
-        "[tool.uv.workspace]\n"
-        'members = ["apps/*", "packages/*"]\n'
-    )
-    console.print("[dim]  ✓ pyproject.toml[/dim]")
-
-    (target_path / ".python-version").write_text("3.13\n")
-    console.print("[dim]  ✓ .python-version[/dim]")
-
-    (target_path / ".prototools").write_text(
-        f"# Proto toolchain configuration for {target_path.name}\n"
-        'python = "3.13.11"\n'
-        "\n"
-        "[plugins]\n"
-        'just = "source:https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/just/plugin.toml"\n'
-        "\n"
-        "[tools.just]\n"
-        'version = "1.34.0"\n'
-    )
-    console.print("[dim]  ✓ .prototools[/dim]")
-
-    (target_path / "justfile").write_text(
-        f"# {target_path.name} - RAG Facile project\n"
-        "\n"
-        "# Display available commands\n"
-        "default:\n"
-        "    @just --list\n"
-        "\n"
-        "# Run a specific app (e.g., just run chainlit-chat)\n"
-        "run name:\n"
-        '    cd "apps/{{{{ name }}}}" && just run\n'
-        "\n"
-        "# Format code (write changes)\n"
-        "format:\n"
-        "    uv run ruff format .\n"
-        "\n"
-        "# Check formatting without writing\n"
-        "format-check:\n"
-        "    uv run ruff format --check .\n"
-        "\n"
-        "# Run linter\n"
-        "lint:\n"
-        "    uv run ruff check .\n"
-        "\n"
-        "# Run linter with auto-fix\n"
-        "lint-fix:\n"
-        "    uv run ruff check --fix .\n"
-        "\n"
-        "# Run type checker\n"
-        "type-check:\n"
-        "    uv run ty check .\n"
-        "\n"
-        "# Run all checks (format-check, lint, type-check)\n"
-        "check: format-check lint type-check\n"
-        "\n"
-        "# Sync dependencies and install pre-commit hooks\n"
-        "sync:\n"
-        "    uv sync\n"
-        "    uv run pre-commit install\n"
-        "\n"
-        "# Add a new app from template (e.g., just add chainlit-chat)\n"
-        "add template:\n"
-        "    moon generate {{{{template}}}}\n"
-    )
-    console.print("[dim]  ✓ justfile[/dim]")
-
-    (target_path / ".gitignore").write_text(_GITIGNORE_CONTENT)
-    console.print("[dim]  ✓ .gitignore[/dim]")
-
-    console.print("[green]✓[/green] Workspace configuration written")
-
-    # 3. Copy app template and run moon generate for the frontend
-    console.print()
-    console.print(
-        f"[bold green]Step 3:[/bold green] Generating {frontend_choice} app..."
-    )
-
-    # Copy only the frontend template (pipeline packages come from rag-facile-lib)
-    frontend_template = FRONTENDS[frontend_choice]
-    templates_dir = get_templates_dir()
-    target_templates = moon_dir / "templates"
-    target_templates.mkdir(parents=True, exist_ok=True)
-
-    src_tmpl = templates_dir / frontend_template
-    dst_tmpl = target_templates / frontend_template
-    if dst_tmpl.exists():
-        shutil.rmtree(dst_tmpl)
-    shutil.copytree(src_tmpl, dst_tmpl)
-    console.print(f"[dim]  ✓ copied {frontend_template} template[/dim]")
-
-    # Build moon generate command; inject git ref for rag-facile-lib
-    git_ref = _get_library_git_ref()
-    ref_key, ref_value = next(iter(git_ref.items()))
-
-    app_cmd = ["moon", "generate", frontend_template, "--defaults"]
-    if force:
-        app_cmd.append("--force")
-    app_cmd.extend(
-        [
-            "--",
-            f"--openai_api_key={env_config['openai_api_key']}",
-            f"--openai_base_url={env_config['openai_base_url']}",
-            f"--rag_facile_ref_key={ref_key}",
-            f"--rag_facile_ref_value={ref_value}",
-        ]
-    )
-
-    if not run_command(app_cmd, f"generate {frontend_template}", cwd=target_path):
-        raise typer.Exit(1)
-    console.print(f"[green]✓[/green] {frontend_choice} app generated")
-
-    # Post-generation: rename Reflex app package to match project_name
-    if frontend_choice == "Reflex":
-        app_dir = target_path / "apps" / frontend_template
-        static_pkg = app_dir / "app"
-        if static_pkg.exists():
-            rxconfig = app_dir / "rxconfig.py"
-            if rxconfig.exists():
-                import re
-
-                match = re.search(r'app_name="([^"]+)"', rxconfig.read_text())
-                if match:
-                    app_module_name = match.group(1)
-                    target_pkg = app_dir / app_module_name
-                    static_pkg.rename(target_pkg)
-                    static_main = target_pkg / "app.py"
-                    if static_main.exists():
-                        static_main.rename(target_pkg / f"{app_module_name}.py")
-                    console.print(f"[dim]  ✓ Renamed app/ → {app_module_name}/[/dim]")
-
-    # 4. Create config and env files
-    console.print()
-    console.print("[bold green]Step 4:[/bold green] Creating configuration files...")
-
-    env_content = f"""\
-OPENAI_API_KEY={env_config["openai_api_key"]}
-OPENAI_BASE_URL={env_config["openai_base_url"]}
-"""
-    # .env at workspace root (apps pick it up via direnv)
-    (target_path / ".env").write_text(env_content)
-    console.print("[green]✓[/green] Created .env")
-
-    # Also write .env into the generated app directory
-    app_dir = target_path / "apps" / frontend_template
-    (app_dir / ".env").write_text(env_content)
-
-    generate_config_file(target_path, preset, preset_config, selected_modules)
-    console.print("[green]✓[/green] Created ragfacile.toml")
-
-    (target_path / ".python-version").write_text("3.13\n")
-
-    # Done with generation!
-    console.print()
-    console.print("[bold green]✨ Workspace generation complete![/bold green]")
-
-    # Run uv sync to install dependencies
-    console.print()
-    console.print("[bold green]Step 5:[/bold green] Installing dependencies...")
-    if not run_command(["uv", "sync"], "install dependencies", cwd=target_path):
-        console.print("[yellow]Warning: uv sync failed. Run it manually.[/yellow]")
-
-    _initial_git_commit(target_path)
-
-    # Start the dev server (unless --no-serve)
-    if no_serve:
-        _print_no_serve_message(target_display)
-        return
-
-    console.print()
-    console.print(
-        f"[bold green]Step 6:[/bold green] Starting {frontend_choice} dev server..."
-    )
-    console.print()
-    console.print(f"[dim]Your app is at: {target_display}[/dim]")
-    console.print()
-
-    # Run dev server (this will block and show output)
-    dev_cmd = ["moon", "run", f"{FRONTENDS[frontend_choice]}:dev"]
-    subprocess.run(dev_cmd, cwd=target_path)

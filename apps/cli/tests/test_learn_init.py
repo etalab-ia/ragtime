@@ -1,10 +1,10 @@
-"""Tests for the chat first-run init wizard."""
+"""Tests for the learn first-run init wizard."""
 
 from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from cli.commands.chat.init import (
+from cli.commands.learn.init import (
     _profile_template,
     _read_preset,
     needs_init,
@@ -91,10 +91,10 @@ class TestRunInitWizard:
         """Wizard creates MEMORY.md and profile.md in the workspace."""
         with (
             patch(
-                "cli.commands.chat.init.questionary.select",
+                "cli.commands.learn.init.questionary.select",
                 side_effect=_lang_fr_exp_new(),
             ),
-            patch("cli.commands.chat.init._git_add"),
+            patch("cli.commands.learn.init._git_add"),
         ):
             run_init_wizard(tmp_path)
 
@@ -104,10 +104,10 @@ class TestRunInitWizard:
     def test_returns_selected_language(self, tmp_path):
         with (
             patch(
-                "cli.commands.chat.init.questionary.select",
+                "cli.commands.learn.init.questionary.select",
                 side_effect=_lang_en_exp_intermediate(),
             ),
-            patch("cli.commands.chat.init._git_add"),
+            patch("cli.commands.learn.init._git_add"),
         ):
             lang = run_init_wizard(tmp_path)
         assert lang == "en"
@@ -115,10 +115,10 @@ class TestRunInitWizard:
     def test_creates_skills_directory(self, tmp_path):
         with (
             patch(
-                "cli.commands.chat.init.questionary.select",
+                "cli.commands.learn.init.questionary.select",
                 side_effect=_lang_en_exp_intermediate(),
             ),
-            patch("cli.commands.chat.init._git_add"),
+            patch("cli.commands.learn.init._git_add"),
         ):
             run_init_wizard(tmp_path)
 
@@ -127,13 +127,13 @@ class TestRunInitWizard:
     def test_experience_reflected_in_memory(self, tmp_path):
         with (
             patch(
-                "cli.commands.chat.init.questionary.select",
+                "cli.commands.learn.init.questionary.select",
                 side_effect=[
                     type("Q", (), {"ask": lambda self: "en"})(),
                     type("Q", (), {"ask": lambda self: "expert"})(),
                 ],
             ),
-            patch("cli.commands.chat.init._git_add"),
+            patch("cli.commands.learn.init._git_add"),
         ):
             run_init_wizard(tmp_path)
 
@@ -144,10 +144,10 @@ class TestRunInitWizard:
         """If questionary raises EOFError (non-interactive env), defaults are used."""
         with (
             patch(
-                "cli.commands.chat.init.questionary.select",
+                "cli.commands.learn.init.questionary.select",
                 side_effect=EOFError("non-interactive terminal"),
             ),
-            patch("cli.commands.chat.init._git_add"),
+            patch("cli.commands.learn.init._git_add"),
         ):
             run_init_wizard(tmp_path)  # should not raise
 
@@ -156,10 +156,10 @@ class TestRunInitWizard:
     def test_git_add_called_for_workspace_git(self, tmp_path):
         with (
             patch(
-                "cli.commands.chat.init.questionary.select",
+                "cli.commands.learn.init.questionary.select",
                 side_effect=_lang_fr_exp_new(),
             ),
-            patch("cli.commands.chat.init._git_add") as mock_git,
+            patch("cli.commands.learn.init._git_add") as mock_git,
         ):
             run_init_wizard(tmp_path)
 
@@ -170,10 +170,10 @@ class TestRunInitWizard:
         for _ in range(2):
             with (
                 patch(
-                    "cli.commands.chat.init.questionary.select",
+                    "cli.commands.learn.init.questionary.select",
                     side_effect=_lang_fr_exp_new(),
                 ),
-                patch("cli.commands.chat.init._git_add"),
+                patch("cli.commands.learn.init._git_add"),
             ):
                 run_init_wizard(tmp_path)
 
@@ -182,35 +182,35 @@ class TestRunInitWizard:
 
 class TestChatInitIntegration:
     def test_init_runs_when_no_rag_facile_dir(self, tmp_path, monkeypatch):
-        """start_chat() calls init wizard when .rag-facile/ is absent."""
+        """start_learn() calls init wizard when .rag-facile/ is absent."""
         (tmp_path / "ragfacile.toml").write_text('[meta]\npreset = "balanced"\n')
         monkeypatch.setenv("OPENAI_API_KEY", "test-key")
 
         with (
-            patch("cli.commands.chat.agent._detect_workspace", return_value=tmp_path),
-            patch("cli.commands.chat.agent.OpenAIServerModel"),
-            patch("cli.commands.chat.agent.ToolCallingAgent"),
-            patch("cli.commands.chat.agent.run_init_wizard") as mock_init,
-            patch("cli.commands.chat.agent.needs_init", return_value=True),
+            patch("cli.commands.learn.agent._detect_workspace", return_value=tmp_path),
+            patch("cli.commands.learn.agent.OpenAIServerModel"),
+            patch("cli.commands.learn.agent.ToolCallingAgent"),
+            patch("cli.commands.learn.agent.run_init_wizard") as mock_init,
+            patch("cli.commands.learn.agent.needs_init", return_value=True),
         ):
-            result = runner.invoke(main_app, [], input="q\n")
+            result = runner.invoke(main_app, ["learn"], input="q\n")
 
         assert result.exit_code == 0
         mock_init.assert_called_once_with(tmp_path)
 
     def test_init_skipped_when_already_initialised(self, tmp_path, monkeypatch):
-        """start_chat() skips init wizard when .rag-facile/agent/ already exists."""
+        """start_learn() skips init wizard when .rag-facile/agent/ already exists."""
         (tmp_path / "ragfacile.toml").write_text('[meta]\npreset = "balanced"\n')
         monkeypatch.setenv("OPENAI_API_KEY", "test-key")
 
         with (
-            patch("cli.commands.chat.agent._detect_workspace", return_value=tmp_path),
-            patch("cli.commands.chat.agent.OpenAIServerModel"),
-            patch("cli.commands.chat.agent.ToolCallingAgent"),
-            patch("cli.commands.chat.agent.run_init_wizard") as mock_init,
-            patch("cli.commands.chat.agent.needs_init", return_value=False),
+            patch("cli.commands.learn.agent._detect_workspace", return_value=tmp_path),
+            patch("cli.commands.learn.agent.OpenAIServerModel"),
+            patch("cli.commands.learn.agent.ToolCallingAgent"),
+            patch("cli.commands.learn.agent.run_init_wizard") as mock_init,
+            patch("cli.commands.learn.agent.needs_init", return_value=False),
         ):
-            result = runner.invoke(main_app, [], input="q\n")
+            result = runner.invoke(main_app, ["learn"], input="q\n")
 
         assert result.exit_code == 0
         mock_init.assert_not_called()

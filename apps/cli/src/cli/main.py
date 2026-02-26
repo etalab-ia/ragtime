@@ -7,13 +7,11 @@ import typer
 from rich.console import Console
 
 from cli.commands import (
-    chat,
     collections,
     config,
     generate_dataset,
+    learn,
     setup,
-    uninstall,
-    upgrade,
 )
 
 
@@ -32,13 +30,11 @@ BANNER = """[magenta]
 # Getting Started command definitions — single source of truth for both
 # panel registration and sort-key logic in PanelAlphabeticalGroup.
 _GETTING_STARTED_DEFS: dict[str, tuple] = {
-    "chat": (
-        chat.run,
-        "Open the RAG assistant (also the default: just run `rag-facile`)",
+    "learn": (
+        learn.run,
+        "Open the interactive RAG learning assistant",
     ),
-    "setup": (setup.run, "Setup a new workspace"),
-    "uninstall": (uninstall.run, "Remove the RAG Facile CLI (--all for toolchain too)"),
-    "upgrade": (upgrade.run, "Upgrade to the latest version"),
+    "setup": (setup.run, "Scaffold a new workspace (advanced)"),
 }
 
 _PANEL_GETTING_STARTED = "🚀 Getting Started"
@@ -99,9 +95,9 @@ def main_callback(
     if version:
         raise typer.Exit()
 
-    # No subcommand → drop directly into the RAG assistant (like `letta`).
+    # No subcommand → show help.
     if ctx.invoked_subcommand is None:
-        chat.start_chat(debug=debug)
+        console.print(ctx.get_help())
         raise typer.Exit()
 
 

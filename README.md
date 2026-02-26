@@ -17,11 +17,9 @@ Build a RAG application for the French government in under 5 minutes, powered by
 ## Prerequisites
 
 - An **Albert API key** — [request one here](https://albert.sites.beta.gouv.fr/)
-- **git** and **curl** installed
+- **curl** (pre-installed on macOS / Linux / WSL)
 
 ## Install
-
-One command installs the entire toolchain and the `rag-facile` CLI:
 
 Linux / macOS / WSL:
 
@@ -35,19 +33,26 @@ Windows (PowerShell):
 irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
 ```
 
-Then **restart your terminal** (or run the `source` command shown by the installer) and verify it worked:
+This creates a ready-to-run Chainlit workspace at `./my-rag-app/`.
+
+## Quick Start
 
 ```bash
-rag-facile --help
+# Add your Albert API key
+cd my-rag-app
+cp .env.template .env
+# Edit .env and set OPENAI_API_KEY=<your-key>
+
+# Start your app
+just run
 ```
 
-## Create Your App
+Your app opens at **http://localhost:8000** — upload documents and ask questions.
 
 ```bash
-rag-facile setup my-rag-app
+# Chat with the interactive RAG learning assistant
+just learn
 ```
-
-The CLI will guide you through choosing a configuration preset and your API key. After setup, it installs dependencies and starts the dev server — your app opens in the browser, ready to use. Use `--expert` for advanced options like project structure, frontend, and pipeline selection.
 
 ## Upgrade
 
@@ -65,28 +70,17 @@ Windows (PowerShell):
 irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
 ```
 
-## Uninstall
-
-To remove RAG Facile and its entire toolchain:
-
-```bash
-rag-facile uninstall
-```
-
-See the [Uninstalling Guide](docs/guides/uninstalling.md) for manual steps and details.
-
 ## Documentation
 
 | Guide | Description |
 |-------|-------------|
-| [Getting Started](docs/guides/getting-started.md) | Detailed installation options, project structures, and running your app |
+| [Getting Started](docs/guides/getting-started.md) | Detailed installation, available commands, advanced setup |
 | [Understanding the RAG Pipeline](docs/guides/rag-pipeline.md) | What each stage of the pipeline does and why it matters |
 | [`ragfacile.toml` Reference](docs/reference/ragfacile-toml.md) | Every configuration option, presets comparison, environment overrides |
 | [Evaluation Guide](docs/guides/evaluation.md) | Generate synthetic datasets and measure RAG quality |
 | [Components Reference](docs/reference/components.md) | Albert Client SDK, frontend apps, and modules |
 | [Windows Setup](docs/guides/windows-setup.md) | Complete guide for Windows (PowerShell and Git Bash) |
 | [Proxy & Network Setup](docs/guides/proxy-setup.md) | Install behind corporate proxies and VPNs |
-| [Uninstalling](docs/guides/uninstalling.md) | Remove RAG Facile and its toolchain |
 
 ## Contributing
 

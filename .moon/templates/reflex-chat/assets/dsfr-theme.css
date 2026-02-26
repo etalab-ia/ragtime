@@ -120,11 +120,11 @@ body {
     --accent-6: #3333b8;
     --accent-7: #4444d6;
     --accent-8: #5555f5;
-    --accent-9: #6666ff;
+    --accent-9: #6666ff;  /* Bright purple/lavender for dark mode buttons */
     --accent-10: #7777ff;
     --accent-11: #9999ff;
     --accent-12: #d5d5ff;
-    --accent-contrast: #ffffff;
+    --accent-contrast: #000000;  /* Dark text on bright purple */
     --accent-surface: #16165ccc;
     --accent-indicator: #6666ff;
     --accent-track: #6666ff;

@@ -1,305 +1,290 @@
 name: Check Install
 
+# Validates the new installer flow:
+#  1. Build the release asset from the current branch
+#  2. Run install.sh / install.ps1 with RAG_FACILE_LOCAL_ASSET pointing to that zip
+#  3. Verify just run starts the Chainlit app and just learn --version works
+
 on:
   pull_request:
     paths:
-      # Installer scripts
       - 'install.sh'
       - 'install.ps1'
-      - '.prototools'
-      
-      # CLI changes (packaging, bundling, dependencies)
+      - 'tools/build_release_asset.py'
       - 'apps/cli/**'
       - '!apps/cli/**/*.md'
-      
-      # Package structure (bundled with CLI)
       - 'packages/**/pyproject.toml'
       - 'packages/**/src/**'
-      
-      # Templates (bundled with CLI)
       - '.moon/templates/**'
       - '!.moon/templates/**/*.md'
-      
-      # This workflow
       - '.github/workflows/check-install.yml'
   push:
     branches:
       - main
     paths:
-      # Installer scripts
       - 'install.sh'
       - 'install.ps1'
-      - '.prototools'
-      
-      # CLI changes (packaging, bundling, dependencies)
+      - 'tools/build_release_asset.py'
       - 'apps/cli/**'
       - '!apps/cli/**/*.md'
-      
-      # Package structure (bundled with CLI)
       - 'packages/**/pyproject.toml'
       - 'packages/**/src/**'
-      
-      # Templates (bundled with CLI)
       - '.moon/templates/**'
       - '!.moon/templates/**/*.md'
-      
-      # This workflow
       - '.github/workflows/check-install.yml'
 
-# Minimal permissions: workflow only needs to read repo contents
 permissions:
   contents: read
 
 jobs:
   # ============================================================================
-  # LINUX TESTS
+  # BUILD RELEASE ASSET
+  # Shared first step — other jobs download this artifact
   # ============================================================================
-  
-  linux-install:
+
+  build-asset:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    name: "Install on Linux (Ubuntu)"
-    
-    env:
-      RAG_FACILE_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
-    
+    name: "Build release asset"
+
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Run bash installer
+
+      - name: Setup proto
+        uses: moonrepo/setup-proto@v1
+        with:
+          proto-version: latest
+
+      - name: Install uv
+        run: proto install uv
+
+      - name: Install workspace dependencies
+        run: uv sync
+
+      - name: Build release asset
+        run: uv run python tools/build_release_asset.py
+
+      - name: Upload asset as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-asset
+          path: dist/rag-facile-workspace-*.zip
+          retention-days: 1
+
+  # ============================================================================
+  # LINUX SMOKE TEST
+  # ============================================================================
+
+  test-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    name: "Install on Linux (Ubuntu)"
+    needs: build-asset
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download release asset
+        uses: actions/download-artifact@v4
+        with:
+          name: release-asset
+          path: /tmp/assets
+
+      - name: Run installer (using local asset)
         shell: bash
         run: |
-          curl -fsSL ${{ github.server_url }}/${{ github.repository }}/raw/refs/heads/${{ github.event.pull_request.head.ref || github.ref_name }}/install.sh -o /tmp/install.sh
-          bash -x /tmp/install.sh 2>&1 || (echo "=== Installer failed with exit code $? ===" && tail -50 /tmp/install.log 2>/dev/null || echo "No log file" && exit 1)
-      
-      - name: Verify installation
+          ASSET=$(ls /tmp/assets/rag-facile-workspace-*.zip | head -1)
+          RAG_FACILE_LOCAL_ASSET="$ASSET" bash install.sh
+
+      - name: Verify just and uv are available
         shell: bash
         run: |
-          echo "=== Verifying tools ==="
-          rag-facile --version
-          proto --version
-          moon --version
-          uv --version
+          source ~/.bashrc 2>/dev/null || true
+          export PATH="$HOME/.local/bin:$PATH"
           just --version
-      
-      - name: Test just commands
-        shell: bash
-        run: |
-          echo "=== Testing just recipes ==="
-          just --list
-      
-      - name: Smoke test — setup, build and launch app
+          uv --version
+
+      - name: Smoke test — start Chainlit app
         shell: bash
         env:
           OPENAI_API_KEY: "test-key-for-ci"
           OPENAI_BASE_URL: "https://albert.api.etalab.gouv.fr/v1"
         run: |
-          echo "=== Smoke test: scaffold → build → launch → health check ==="
-          
-          # 1. Scaffold a standalone Chainlit app (non-interactive)
-          rag-facile setup /tmp/test-app --preset balanced --yes --no-serve --force
-          
-          # 2. Start Chainlit server in background
-          cd /tmp/test-app
+          export PATH="$HOME/.local/bin:$PATH"
+          cd my-rag-app
+          cp .env.template .env
+          echo "OPENAI_API_KEY=test-key-for-ci" >> .env
+
+          # Start Chainlit in background
           uv run chainlit run app.py --host 0.0.0.0 --port 8000 &
           SERVER_PID=$!
-          
-          # 3. Wait for server to respond (max 60s, poll every 2s)
+
+          # Wait for server to respond (max 60s)
           for i in $(seq 1 30); do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000 2>/dev/null || echo "000")
             if [ "$STATUS" = "200" ]; then
-              echo "✅ Server responded with HTTP 200 after ~$((i * 2)) seconds"
+              echo "✅ Chainlit responded with HTTP 200 after ~$((i * 2))s"
               break
             fi
             if [ "$i" -eq 30 ]; then
-              echo "❌ Server did not respond within 60 seconds (last status: $STATUS)"
+              echo "❌ Chainlit did not respond within 60s (last status: $STATUS)"
               kill $SERVER_PID 2>/dev/null || true
               exit 1
             fi
             sleep 2
           done
-          
-          # 4. Cleanup
+
           kill $SERVER_PID 2>/dev/null || true
-  
-  macos-install-arm64:
+
+      - name: Verify rag-facile CLI accessible via uv run
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          cd my-rag-app
+          uv run rag-facile --version
+
+  # ============================================================================
+  # MACOS SMOKE TEST
+  # ============================================================================
+
+  test-macos:
     runs-on: macos-14
-    timeout-minutes: 10
+    timeout-minutes: 15
     name: "Install on macOS (Apple Silicon)"
-    
-    env:
-      RAG_FACILE_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
-    
+    needs: build-asset
+
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Run bash installer
+
+      - name: Download release asset
+        uses: actions/download-artifact@v4
+        with:
+          name: release-asset
+          path: /tmp/assets
+
+      - name: Run installer (using local asset)
         shell: bash
         run: |
-          curl -fsSL ${{ github.server_url }}/${{ github.repository }}/raw/refs/heads/${{ github.event.pull_request.head.ref || github.ref_name }}/install.sh -o /tmp/install.sh
-          bash -x /tmp/install.sh 2>&1 || (echo "=== Installer failed ===" && exit 1)
-      
-      - name: Verify installation
+          ASSET=$(ls /tmp/assets/rag-facile-workspace-*.zip | head -1)
+          RAG_FACILE_LOCAL_ASSET="$ASSET" bash install.sh
+
+      - name: Verify just and uv are available
         shell: bash
         run: |
-          echo "=== System Info ==="
-          uname -m
-          bash --version | head -1
-          echo ""
-          echo "=== Verifying tools ==="
-          rag-facile --version
-          proto --version
-          moon --version
-          uv --version
+          export PATH="$HOME/.local/bin:$PATH"
           just --version
-      
-      - name: Test just commands
-        shell: bash
-        env:
-          PYTHONUTF8: "1"  # Force UTF-8 encoding for Python
-        run: |
-          echo "=== Testing just recipes ==="
-          just --list
-      
-      - name: Smoke test — setup, build and launch app
+          uv --version
+
+      - name: Smoke test — start Chainlit app
         shell: bash
         env:
           OPENAI_API_KEY: "test-key-for-ci"
           OPENAI_BASE_URL: "https://albert.api.etalab.gouv.fr/v1"
           PYTHONUTF8: "1"
         run: |
-          echo "=== Smoke test: scaffold → build → launch → health check ==="
-          
-          # 1. Scaffold a standalone Chainlit app (non-interactive)
-          rag-facile setup /tmp/test-app --preset balanced --yes --no-serve --force
-          
-          # 2. Start Chainlit server in background
-          cd /tmp/test-app
+          export PATH="$HOME/.local/bin:$PATH"
+          cd my-rag-app
+          cp .env.template .env
+          echo "OPENAI_API_KEY=test-key-for-ci" >> .env
+
+          # Start Chainlit in background
           uv run chainlit run app.py --host 0.0.0.0 --port 8000 &
           SERVER_PID=$!
-          
-          # 3. Wait for server to respond (max 60s, poll every 2s)
+
           for i in $(seq 1 30); do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000 2>/dev/null || echo "000")
             if [ "$STATUS" = "200" ]; then
-              echo "✅ Server responded with HTTP 200 after ~$((i * 2)) seconds"
+              echo "✅ Chainlit responded with HTTP 200 after ~$((i * 2))s"
               break
             fi
             if [ "$i" -eq 30 ]; then
-              echo "❌ Server did not respond within 60 seconds (last status: $STATUS)"
+              echo "❌ Chainlit did not respond within 60s"
               kill $SERVER_PID 2>/dev/null || true
               exit 1
             fi
             sleep 2
           done
-          
-          # 4. Cleanup
+
           kill $SERVER_PID 2>/dev/null || true
-  
-  windows-install-powershell:
+
+      - name: Verify rag-facile CLI accessible via uv run
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          cd my-rag-app
+          uv run rag-facile --version
+
+  # ============================================================================
+  # WINDOWS SMOKE TEST (PowerShell)
+  # ============================================================================
+
+  test-windows:
     runs-on: windows-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     name: "Install on Windows (PowerShell)"
-    
-    env:
-      RAG_FACILE_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
-    
+    needs: build-asset
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download release asset
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0  # Full git history needed for moon format-check/lint
-      
-      - name: Run PowerShell installer
+          name: release-asset
+          path: C:\Temp\assets
+
+      - name: Run PowerShell installer (using local asset)
         shell: powershell
         run: |
-          irm ${{ github.server_url }}/${{ github.repository }}/raw/refs/heads/${{ github.event.pull_request.head.ref || github.ref_name }}/install.ps1 | iex
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Installer failed with exit code $LASTEXITCODE"
-            exit $LASTEXITCODE
-          }
-      
-      - name: Verify installation
+          $Asset = Get-ChildItem "C:\Temp\assets\rag-facile-workspace-*.zip" | Select-Object -First 1
+          $env:RAG_FACILE_LOCAL_ASSET = $Asset.FullName
+          $env:PYTHONUTF8 = "1"
+          . .\install.ps1
+
+      - name: Verify just and uv are available
         shell: powershell
         env:
-          PYTHONUTF8: "1"  # Force UTF-8 encoding for Python (Windows defaults to CP1252)
+          PYTHONUTF8: "1"
         run: |
-          Write-Host "=== Verifying tools ===" -ForegroundColor Cyan
-          rag-facile --version
-          proto --version
-          moon --version
-          uv --version
+          $env:PATH = "$env:USERPROFILE\.local\bin;$env:PATH"
           just --version
-      
-      - name: Test just commands
+          uv --version
+
+      - name: Verify rag-facile CLI accessible via uv run
         shell: powershell
         env:
-          PYTHONUTF8: "1"  # Force UTF-8 encoding for Python
+          PYTHONUTF8: "1"
         run: |
-          Write-Host "=== Testing just recipes ===" -ForegroundColor Cyan
-          just --list
-          just format-check
-          just lint
-  
-  windows-install-gitbash:
-    runs-on: windows-latest
-    timeout-minutes: 10
-    name: "Install on Windows (Git Bash)"
-    
-    env:
-      RAG_FACILE_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run bash installer
-        shell: bash
-        run: |
-          curl -fsSL ${{ github.server_url }}/${{ github.repository }}/raw/refs/heads/${{ github.event.pull_request.head.ref || github.ref_name }}/install.sh -o /tmp/install.sh
-          bash -x /tmp/install.sh 2>&1 || (echo "=== Installer failed ===" && exit 1)
-      
-      - name: Verify installation
-        shell: bash
-        env:
-          PYTHONUTF8: "1"  # Force UTF-8 encoding for Python (Git Bash defaults to CP1252)
-        run: |
-          echo "=== Verifying tools ==="
-          rag-facile --version
-          proto --version
-          moon --version
-          uv --version
-          just --version
-      
-      - name: Test just commands
-        shell: bash
-        env:
-          PYTHONUTF8: "1"  # Force UTF-8 encoding for Python
-        run: |
-          echo "=== Testing just recipes ==="
-          just --list
-  
+          $env:PATH = "$env:USERPROFILE\.local\bin;$env:PATH"
+          Set-Location my-rag-app
+          uv run rag-facile --version
+
+  # ============================================================================
+  # SUMMARY
+  # ============================================================================
+
   test-summary:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     name: "Installation Tests Summary"
-    needs: [linux-install, macos-install-arm64, windows-install-powershell, windows-install-gitbash]
+    needs: [build-asset, test-linux, test-macos, test-windows]
     if: always()
-    
+
     steps:
       - name: Check test results
         run: |
           echo "=== Installation Test Results ==="
-          echo "Linux (Ubuntu): ${{ needs.linux-install.result }}"
-          echo "macOS (ARM64): ${{ needs.macos-install-arm64.result }}"
-          echo "Windows (PowerShell): ${{ needs.windows-install-powershell.result }}"
-          echo "Windows (Git Bash): ${{ needs.windows-install-gitbash.result }}"
-          
-          # Fail if any test failed
-          if [[ "${{ needs.linux-install.result }}" == "failure" || \
-                "${{ needs.macos-install-arm64.result }}" == "failure" || \
-                "${{ needs.windows-install-powershell.result }}" == "failure" || \
-                "${{ needs.windows-install-gitbash.result }}" == "failure" ]]; then
-            echo "❌ One or more installation tests failed"
+          echo "Build asset:       ${{ needs.build-asset.result }}"
+          echo "Linux (Ubuntu):    ${{ needs.test-linux.result }}"
+          echo "macOS (ARM64):     ${{ needs.test-macos.result }}"
+          echo "Windows (PS):      ${{ needs.test-windows.result }}"
+
+          if [[ "${{ needs.build-asset.result }}" == "failure" || \
+                "${{ needs.test-linux.result }}" == "failure" || \
+                "${{ needs.test-macos.result }}" == "failure" || \
+                "${{ needs.test-windows.result }}" == "failure" ]]; then
+            echo "❌ One or more tests failed"
             exit 1
           fi
-          
+
           echo "✅ All installation tests passed!"

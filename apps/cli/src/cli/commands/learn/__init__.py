@@ -1,10 +1,10 @@
-"""rag-facile chat command.
+"""rag-facile learn command.
 
 start_chat() is the primary entry point — called from main.py when the user runs
-`rag-facile` with no subcommand, or explicitly via `rag-facile chat`.
+`rag-facile learn`.
 """
 
-from cli.commands.chat.agent import start_chat
+from cli.commands.learn.agent import start_chat
 
 
 def run(debug: bool = False) -> None:

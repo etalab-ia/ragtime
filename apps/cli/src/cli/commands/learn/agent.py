@@ -1,7 +1,6 @@
-"""smolagents harness for the rag-facile chat experience.
+"""smolagents harness for the rag-facile learn experience.
 
-Entry point: start_chat() — called when the user runs `rag-facile` with no arguments,
-or explicitly via `rag-facile chat`.
+Entry point: start_chat() — called when the user runs `rag-facile learn`.
 """
 
 import os
@@ -17,23 +16,23 @@ from smolagents import OpenAIServerModel, ToolCallingAgent
 from smolagents.monitoring import LogLevel
 from smolagents.utils import AgentError, AgentMaxStepsError
 
-from cli.commands.chat._console import console
+from cli.commands.learn._console import console
 
-from cli.commands.chat.init import needs_init, read_language, run_init_wizard
-from cli.commands.chat.skills import (
+from cli.commands.learn.init import needs_init, read_language, run_init_wizard
+from cli.commands.learn.skills import (
     discover_skills,
     format_skills_list,
     install_skill,
     load_skill,
 )
-from cli.commands.chat.memory import (
+from cli.commands.learn.memory import (
     append_turn,
     git_commit_session,
     increment_session_count,
     load_context,
     update_memory,
 )
-from cli.commands.chat.tools import (
+from cli.commands.learn.tools import (
     activate_skill,
     get_agents_md,
     get_docs,

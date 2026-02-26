@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cli.commands.chat.tools import (
+from cli.commands.learn.tools import (
     get_agents_md,
     get_docs,
     get_recent_git_activity,
@@ -65,7 +65,7 @@ class TestGetRecentGitActivity:
         mock_result = MagicMock()
         mock_result.stdout = "abc1234 feat: initial commit\n"
         with patch(
-            "cli.commands.chat.tools.subprocess.run", return_value=mock_result
+            "cli.commands.learn.tools.subprocess.run", return_value=mock_result
         ) as mock_run:
             result = get_recent_git_activity()
 
@@ -81,13 +81,13 @@ class TestGetRecentGitActivity:
     def test_returns_no_commits_message_on_empty_log(self, workspace):
         mock_result = MagicMock()
         mock_result.stdout = ""
-        with patch("cli.commands.chat.tools.subprocess.run", return_value=mock_result):
+        with patch("cli.commands.learn.tools.subprocess.run", return_value=mock_result):
             result = get_recent_git_activity()
         assert "No commits found" in result
 
     def test_returns_hint_when_git_not_installed(self, workspace):
         with patch(
-            "cli.commands.chat.tools.subprocess.run",
+            "cli.commands.learn.tools.subprocess.run",
             side_effect=FileNotFoundError,
         ):
             result = get_recent_git_activity()
@@ -95,7 +95,7 @@ class TestGetRecentGitActivity:
 
     def test_returns_error_on_git_failure(self, workspace):
         with patch(
-            "cli.commands.chat.tools.subprocess.run",
+            "cli.commands.learn.tools.subprocess.run",
             side_effect=subprocess.CalledProcessError(
                 128, "git", stderr="not a git repo"
             ),
@@ -124,31 +124,31 @@ class TestGetDocs:
 
     def test_returns_index_on_empty_topic(self, tmp_path):
         docs_dir = self._make_docs_dir(tmp_path)
-        with patch("cli.commands.chat.tools._get_docs_dir", return_value=docs_dir):
+        with patch("cli.commands.learn.tools._get_docs_dir", return_value=docs_dir):
             result = get_docs("")
         assert "Available rag-facile documentation" in result
         assert "rag" in result
 
     def test_returns_doc_content_on_match(self, tmp_path):
         docs_dir = self._make_docs_dir(tmp_path)
-        with patch("cli.commands.chat.tools._get_docs_dir", return_value=docs_dir):
+        with patch("cli.commands.learn.tools._get_docs_dir", return_value=docs_dir):
             result = get_docs("rag")
         assert "How RAG Works" in result
 
     def test_partial_topic_match(self, tmp_path):
         docs_dir = self._make_docs_dir(tmp_path)
-        with patch("cli.commands.chat.tools._get_docs_dir", return_value=docs_dir):
+        with patch("cli.commands.learn.tools._get_docs_dir", return_value=docs_dir):
             result = get_docs("preset configuration")
         assert "Configuration" in result
 
     def test_returns_hint_on_unknown_topic(self, tmp_path):
         docs_dir = self._make_docs_dir(tmp_path)
-        with patch("cli.commands.chat.tools._get_docs_dir", return_value=docs_dir):
+        with patch("cli.commands.learn.tools._get_docs_dir", return_value=docs_dir):
             result = get_docs("foobar")
         assert "No documentation found" in result
         assert "Available topics" in result
 
     def test_returns_hint_when_docs_not_found(self):
-        with patch("cli.commands.chat.tools._get_docs_dir", return_value=None):
+        with patch("cli.commands.learn.tools._get_docs_dir", return_value=None):
             result = get_docs("rag")
         assert "not found" in result.lower()

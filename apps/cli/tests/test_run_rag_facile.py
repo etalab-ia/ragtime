@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cli.commands.chat.tools import run_rag_facile, set_workspace_root
+from cli.commands.learn.tools import run_rag_facile, set_workspace_root
 
 
 @pytest.fixture(autouse=True)
@@ -32,7 +32,7 @@ class TestRunRagFacile:
     def test_runs_without_workspace(self):
         """Commands like 'version' and 'collections list' don't require a workspace."""
         with patch(
-            "cli.commands.chat.tools.subprocess.run",
+            "cli.commands.learn.tools.subprocess.run",
             return_value=self._success("0.17.0"),
         ):
             result = run_rag_facile("version")
@@ -40,7 +40,8 @@ class TestRunRagFacile:
 
     def test_runs_allowed_subcommand(self, workspace):
         with patch(
-            "cli.commands.chat.tools.subprocess.run", return_value=self._success("v1.0")
+            "cli.commands.learn.tools.subprocess.run",
+            return_value=self._success("v1.0"),
         ) as m:
             result = run_rag_facile("version")
         cmd = m.call_args[0][0]
@@ -57,7 +58,7 @@ class TestRunRagFacile:
 
     def test_passes_arguments_through(self, workspace):
         with patch(
-            "cli.commands.chat.tools.subprocess.run", return_value=self._success()
+            "cli.commands.learn.tools.subprocess.run", return_value=self._success()
         ) as m:
             run_rag_facile("collections list --limit 5")
         cmd = m.call_args[0][0]
@@ -68,20 +69,20 @@ class TestRunRagFacile:
         r.returncode = 1
         r.stdout = ""
         r.stderr = "API key missing"
-        with patch("cli.commands.chat.tools.subprocess.run", return_value=r):
+        with patch("cli.commands.learn.tools.subprocess.run", return_value=r):
             result = run_rag_facile("collections list")
         assert "API key missing" in result
 
     def test_handles_missing_cli(self, workspace):
         with patch(
-            "cli.commands.chat.tools.subprocess.run", side_effect=FileNotFoundError
+            "cli.commands.learn.tools.subprocess.run", side_effect=FileNotFoundError
         ):
             result = run_rag_facile("version")
         assert "not found" in result.lower()
 
     def test_handles_timeout(self, workspace):
         with patch(
-            "cli.commands.chat.tools.subprocess.run",
+            "cli.commands.learn.tools.subprocess.run",
             side_effect=subprocess.TimeoutExpired("rag-facile", 600),
         ):
             result = run_rag_facile("generate-dataset ./docs -o out.jsonl")
@@ -93,7 +94,8 @@ class TestRunRagFacile:
 
     def test_generate_dataset_is_allowed(self, workspace):
         with patch(
-            "cli.commands.chat.tools.subprocess.run", return_value=self._success("done")
+            "cli.commands.learn.tools.subprocess.run",
+            return_value=self._success("done"),
         ) as m:
             run_rag_facile(
                 "generate-dataset ./docs -o out.jsonl -n 20 --provider albert"
@@ -103,7 +105,7 @@ class TestRunRagFacile:
 
     def test_returns_no_output_placeholder(self, workspace):
         with patch(
-            "cli.commands.chat.tools.subprocess.run", return_value=self._success("")
+            "cli.commands.learn.tools.subprocess.run", return_value=self._success("")
         ):
             result = run_rag_facile("version")
         assert result == "(no output)"

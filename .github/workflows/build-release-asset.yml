@@ -1,0 +1,47 @@
+name: Build Release Asset
+
+# Triggered when a GitHub Release is published (by release-please or manually).
+# Generates the standalone Chainlit workspace zip and uploads it to the release.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write  # needed to upload release assets
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: "Build & upload workspace zip"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup proto
+        uses: moonrepo/setup-proto@v1
+        with:
+          proto-version: latest
+
+      - name: Install uv
+        run: proto install uv
+
+      - name: Install workspace dependencies
+        run: uv sync
+
+      - name: Build release asset
+        run: uv run python tools/build_release_asset.py --version "${{ github.event.release.tag_name }}"
+
+      - name: Upload asset to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          ASSET="dist/rag-facile-workspace-${TAG}.zip"
+          if [ ! -f "$ASSET" ]; then
+            echo "❌ Asset not found: $ASSET"
+            ls dist/ || echo "(dist/ is empty)"
+            exit 1
+          fi
+          gh release upload "${TAG}" "${ASSET}" --clobber
+          echo "✅ Uploaded ${ASSET} to release ${TAG}"

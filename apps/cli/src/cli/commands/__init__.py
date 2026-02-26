@@ -1,6 +1,6 @@
 """CLI commands."""
 
-from . import collections, config, generate_dataset, setup, uninstall, upgrade
+from . import collections, config, generate_dataset, learn, setup
 
 
-__all__ = ["collections", "config", "generate_dataset", "setup", "uninstall", "upgrade"]
+__all__ = ["collections", "config", "generate_dataset", "learn", "setup"]

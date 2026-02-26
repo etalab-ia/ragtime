@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cli.commands.chat.skills import (
+from cli.commands.learn.skills import (
     _extract_description,
     _extract_triggers,
     auto_detect_skill,
@@ -51,14 +51,14 @@ def builtin_dir(tmp_path):
 class TestDiscoverSkills:
     def test_returns_builtin_skills(self, builtin_dir):
         with patch(
-            "cli.commands.chat.skills._builtin_skills_dir", return_value=builtin_dir
+            "cli.commands.learn.skills._builtin_skills_dir", return_value=builtin_dir
         ):
             skills = discover_skills(workspace=None)
         assert "builtin-skill" in skills
 
     def test_returns_workspace_skills(self, workspace, builtin_dir):
         with patch(
-            "cli.commands.chat.skills._builtin_skills_dir", return_value=builtin_dir
+            "cli.commands.learn.skills._builtin_skills_dir", return_value=builtin_dir
         ):
             skills = discover_skills(workspace)
         assert "my-skill" in skills
@@ -73,14 +73,14 @@ class TestDiscoverSkills:
             encoding="utf-8",
         )
         with patch(
-            "cli.commands.chat.skills._builtin_skills_dir", return_value=builtin_dir
+            "cli.commands.learn.skills._builtin_skills_dir", return_value=builtin_dir
         ):
             skills = discover_skills(tmp_path)
         assert "Overridden" in skills["builtin-skill"].read_text()
 
     def test_no_workspace_returns_only_builtins(self, builtin_dir):
         with patch(
-            "cli.commands.chat.skills._builtin_skills_dir", return_value=builtin_dir
+            "cli.commands.learn.skills._builtin_skills_dir", return_value=builtin_dir
         ):
             skills = discover_skills(workspace=None)
         assert all(".agents" not in str(p) for p in skills.values())
@@ -102,7 +102,7 @@ class TestLoadSkill:
 class TestFormatSkillsList:
     def test_shows_workspace_skills(self, workspace, builtin_dir):
         with patch(
-            "cli.commands.chat.skills._builtin_skills_dir", return_value=builtin_dir
+            "cli.commands.learn.skills._builtin_skills_dir", return_value=builtin_dir
         ):
             skills = discover_skills(workspace)
         result = format_skills_list(skills)
@@ -110,14 +110,14 @@ class TestFormatSkillsList:
         assert "A test skill." in result
 
     def test_shows_no_skills_hint_when_empty(self, builtin_dir):
-        with patch("cli.commands.chat.skills._builtin_skills_dir", return_value=None):
+        with patch("cli.commands.learn.skills._builtin_skills_dir", return_value=None):
             skills = discover_skills(workspace=None)
         result = format_skills_list(skills)
         assert "No skills available" in result
 
     def test_shows_install_hint_when_no_workspace_skills(self, builtin_dir):
         with patch(
-            "cli.commands.chat.skills._builtin_skills_dir", return_value=builtin_dir
+            "cli.commands.learn.skills._builtin_skills_dir", return_value=builtin_dir
         ):
             skills = discover_skills(workspace=None)
         result = format_skills_list(skills)
@@ -175,7 +175,9 @@ class TestInstallSkill:
     def test_success(self, workspace):
         mock_result = MagicMock()
         mock_result.returncode = 0
-        with patch("cli.commands.chat.skills.subprocess.run", return_value=mock_result):
+        with patch(
+            "cli.commands.learn.skills.subprocess.run", return_value=mock_result
+        ):
             result = install_skill("org/my-pkg", workspace)
         assert "installed" in result.lower()
 
@@ -184,20 +186,22 @@ class TestInstallSkill:
         mock_result.returncode = 1
         mock_result.stderr = "Package not found"
         mock_result.stdout = ""
-        with patch("cli.commands.chat.skills.subprocess.run", return_value=mock_result):
+        with patch(
+            "cli.commands.learn.skills.subprocess.run", return_value=mock_result
+        ):
             result = install_skill("bad/pkg", workspace)
         assert "Package not found" in result
 
     def test_no_npx(self, workspace):
         with patch(
-            "cli.commands.chat.skills.subprocess.run", side_effect=FileNotFoundError
+            "cli.commands.learn.skills.subprocess.run", side_effect=FileNotFoundError
         ):
             result = install_skill("org/pkg", workspace)
         assert "npx is not installed" in result
 
     def test_timeout(self, workspace):
         with patch(
-            "cli.commands.chat.skills.subprocess.run",
+            "cli.commands.learn.skills.subprocess.run",
             side_effect=subprocess.TimeoutExpired("npx", 60),
         ):
             result = install_skill("org/pkg", workspace)
