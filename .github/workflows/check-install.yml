@@ -62,7 +62,7 @@ jobs:
         run: uv sync
 
       - name: Build release asset
-        run: uv run --project tools python tools/build_release_asset.py
+        run: uv run python tools/build_release_asset.py
 
       - name: Upload asset as workflow artifact
         uses: actions/upload-artifact@v4

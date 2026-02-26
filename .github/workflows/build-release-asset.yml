@@ -30,10 +30,7 @@ jobs:
         run: uv sync
 
       - name: Build release asset
-        run: uv run --project tools python tools/build_release_asset.py --version "${{ github.event.release.tag_name }}"
-        env:
-          # Allow the script to import rag_facile packages from the monorepo
-          PYTHONPATH: ""
+        run: uv run python tools/build_release_asset.py --version "${{ github.event.release.tag_name }}"
 
       - name: Upload asset to release
         env:
