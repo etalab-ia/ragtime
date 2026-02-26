@@ -6,7 +6,7 @@
 #   irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
 #
 # Environment variables:
-#   RAG_FACILE_LOCAL_ASSET  Path to a local zip asset (for CI — skips GitHub download)
+#   RAG_FACILE_LOCAL_ASSET  Path to a local zip asset (for CI - skips GitHub download)
 #   RAG_FACILE_DIR          Target directory name (default: my-rag-app)
 
 param(
@@ -31,16 +31,16 @@ if ($env:PATH -notlike "*$LocalBin*") {
     $env:PATH = "$LocalBin;$env:PATH"
 }
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers -------------------------------------------------------------------
 
 function Test-Command($name) {
     return [bool](Get-Command $name -ErrorAction SilentlyContinue)
 }
 
-# ── 1. Install uv ─────────────────────────────────────────────────────────────
+# -- 1. Install uv -------------------------------------------------------------
 
 if (Test-Command "uv") {
-    Write-Host "✓ uv already installed" -ForegroundColor Green
+    Write-Host "OK uv already installed" -ForegroundColor Green
 } else {
     Write-Host "==> Installing uv..." -ForegroundColor Yellow
     Invoke-RestMethod https://astral.sh/uv/install.ps1 | Invoke-Expression
@@ -50,13 +50,13 @@ if (Test-Command "uv") {
         Write-Error "ERROR: uv installation failed"
         exit 1
     }
-    Write-Host "✓ uv installed" -ForegroundColor Green
+    Write-Host "OK uv installed" -ForegroundColor Green
 }
 
-# ── 2. Install just ───────────────────────────────────────────────────────────
+# -- 2. Install just -----------------------------------------------------------
 
 if (Test-Command "just") {
-    Write-Host "✓ just already installed" -ForegroundColor Green
+    Write-Host "OK just already installed" -ForegroundColor Green
 } else {
     Write-Host "==> Installing just..." -ForegroundColor Yellow
     # Create target directory
@@ -71,10 +71,10 @@ if (Test-Command "just") {
         Write-Error "ERROR: just installation failed"
         exit 1
     }
-    Write-Host "✓ just installed" -ForegroundColor Green
+    Write-Host "OK just installed" -ForegroundColor Green
 }
 
-# ── 3. Download the release workspace zip ─────────────────────────────────────
+# -- 3. Download the release workspace zip -------------------------------------
 
 $AssetPath = ""
 
@@ -104,7 +104,7 @@ if ($env:RAG_FACILE_LOCAL_ASSET) {
     }
 }
 
-# ── 4. Extract ────────────────────────────────────────────────────────────────
+# -- 4. Extract ----------------------------------------------------------------
 
 if (Test-Path $WorkspaceDir) {
     Write-Error "ERROR: Directory '$WorkspaceDir' already exists. Set RAG_FACILE_DIR to a different name."
@@ -123,9 +123,9 @@ Move-Item -Path $ExtractedDir.FullName -Destination $WorkspaceDir
 Remove-Item $ExtractTmp -Recurse -Force -ErrorAction SilentlyContinue
 if (-not $env:RAG_FACILE_LOCAL_ASSET) { Remove-Item $AssetPath -Force -ErrorAction SilentlyContinue }
 
-Write-Host "✓ Extracted to .\$WorkspaceDir\" -ForegroundColor Green
+Write-Host "OK Extracted to .\$WorkspaceDir\" -ForegroundColor Green
 
-# ── 5. Install dependencies ───────────────────────────────────────────────────
+# -- 5. Install dependencies ---------------------------------------------------
 
 Write-Host "==> Installing dependencies (this may take a minute on first run)..." -ForegroundColor Yellow
 Push-Location $WorkspaceDir
@@ -135,10 +135,10 @@ try {
     Pop-Location
 }
 
-# ── 6. Done ───────────────────────────────────────────────────────────────────
+# -- 6. Done -------------------------------------------------------------------
 
 Write-Host ""
-Write-Host "✅ RAG Facile is ready!" -ForegroundColor Green
+Write-Host "Done: RAG Facile is ready!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host ""
@@ -163,6 +163,6 @@ if ($UserPath -notlike "*$LocalBin*") {
         "$LocalBin;$UserPath",
         "User"
     )
-    Write-Host "  ⚠️  Open a new PowerShell window so PATH changes take effect."
+    Write-Host "  WARNING:  Open a new PowerShell window so PATH changes take effect."
     Write-Host ""
 }
