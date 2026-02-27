@@ -448,7 +448,6 @@ package = true
     # Copy and render app files from template
     files_to_copy = [
         ".env.template",
-        ".envrc",
         "README.md",
         "justfile",
     ]
