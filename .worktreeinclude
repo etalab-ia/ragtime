@@ -1,0 +1,15 @@
+# Files copied by `wt step copy-ignored` when creating a new worktree.
+# Only files that are BOTH gitignored AND listed here are copied.
+# See: https://worktrunk.dev
+
+# Secrets
+.env
+
+# Letta Code settings
+.letta
+
+# Agent memory & config
+.rag-facile
+
+# Moon build cache (speeds up repeated tasks)
+.moon/cache
