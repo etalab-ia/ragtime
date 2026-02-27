@@ -1,0 +1,10 @@
+# Worktrunk Project Configuration
+# See: https://worktrunk.dev/config/
+
+[post-create]
+# Install Python dependencies after worktree creation (blocking)
+deps = "uv sync"
+
+[post-start]
+# Copy gitignored files (.env, .letta, .venv, caches) from main worktree (background)
+copy = "wt step copy-ignored"
