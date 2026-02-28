@@ -205,3 +205,17 @@ fi
 if [[ -n "${GITHUB_PATH:-}" ]]; then
     echo "$LOCAL_BIN" >> "$GITHUB_PATH"
 fi
+
+# ── 7. Join the ALLiaNCE community ────────────────────────────────────────────
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "  🤝  Rejoignez la communauté ALLiaNCE !"
+echo ""
+echo "  L'incubateur IA de la DINUM — pour les agents publics de l'État"
+echo "  qui souhaitent faire adopter l'IA au service de la vie des gens et des agents."
+echo ""
+echo "  👉  https://alliance.numerique.gouv.fr/les-membres-de-lincubateur/"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
