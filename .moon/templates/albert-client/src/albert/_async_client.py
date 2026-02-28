@@ -54,7 +54,7 @@ class AsyncAlbertClient:
         )
 
         # Albert-specific endpoints
-        # results = await client.search(query="...", collection_ids=["..."])
+        # results = await client.search(prompt="...", collections=["..."])
         ```
     """
 
@@ -165,8 +165,8 @@ class AsyncAlbertClient:
 
     async def search(
         self,
-        query: str,
-        collection_ids: list[str | int] | None = None,
+        prompt: str,
+        collections: list[str | int] | None = None,
         limit: int = 10,
         offset: int = 0,
         method: str = "semantic",
@@ -175,12 +175,12 @@ class AsyncAlbertClient:
     ) -> SearchResponse:
         """Hybrid RAG search across collections.
 
-        Searches for relevant chunks in the specified collections using the given query.
+        Searches for relevant chunks in the specified collections using the given prompt.
         Supports semantic, lexical, or hybrid search methods.
 
         Args:
-            query: Search query to find relevant chunks.
-            collection_ids: List of collection IDs to search in. Defaults to all collections.
+            prompt: Search query to find relevant chunks.
+            collections: List of collection IDs to search in. Defaults to all collections.
             limit: Maximum number of results to return (1-200). Defaults to 10.
             offset: Pagination offset. Defaults to 0.
             method: Search method - "semantic", "lexical", or "hybrid". Defaults to "semantic".
@@ -196,8 +196,8 @@ class AsyncAlbertClient:
         Example:
             ```python
             results = await client.search(
-                query="Code civil",
-                collection_ids=["legal_docs"],
+                prompt="Code civil",
+                collections=["legal_docs"],
                 limit=5,
                 method="hybrid"
             )
@@ -208,8 +208,8 @@ class AsyncAlbertClient:
         from albert.types import SearchResponse
 
         body = {
-            "query": query,
-            "collection_ids": collection_ids or [],
+            "prompt": prompt,
+            "collections": collections or [],
             "limit": limit,
             "offset": offset,
             "method": method,

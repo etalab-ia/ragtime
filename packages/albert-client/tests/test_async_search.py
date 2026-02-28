@@ -56,7 +56,7 @@ class TestAsyncSearch:
 
         # Make async request
         result = await client.search(
-            query="Loi Énergie Climat", collection_ids=["col_123"]
+            prompt="Loi Énergie Climat", collections=["col_123"]
         )
 
         # Verify result type
@@ -86,8 +86,8 @@ class TestAsyncSearch:
         )
 
         result = await client.search(
-            query="test query",
-            collection_ids=[123],
+            prompt="test query",
+            collections=[123],
             limit=20,
             method="semantic",
             score_threshold=0.8,
@@ -106,7 +106,7 @@ class TestAsyncSearch:
         )
 
         async with AsyncAlbertClient(api_key=api_key, base_url=base_url) as client:
-            result = await client.search(query="test")
+            result = await client.search(prompt="test")
             assert isinstance(result, SearchResponse)
 
     @respx.mock
@@ -118,7 +118,7 @@ class TestAsyncSearch:
             return_value=Response(200, json=empty_response)
         )
 
-        result = await client.search(query="nonexistent query")
+        result = await client.search(prompt="nonexistent query")
 
         assert isinstance(result, SearchResponse)
         assert len(result.data) == 0
@@ -133,7 +133,7 @@ class TestAsyncSearch:
         )
 
         with pytest.raises(Exception):  # httpx.HTTPStatusError
-            await client.search(query="test", collection_ids=["nonexistent"])
+            await client.search(prompt="test", collections=["nonexistent"])
 
 
 class TestAsyncSearchMethods:
@@ -152,6 +152,6 @@ class TestAsyncSearchMethods:
             return_value=Response(200, json=mock_search_response)
         )
 
-        result = await client.search(query="test", method=method)
+        result = await client.search(prompt="test", method=method)
 
         assert result.data[0].method == method
