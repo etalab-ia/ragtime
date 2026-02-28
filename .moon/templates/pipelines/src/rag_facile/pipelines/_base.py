@@ -9,6 +9,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from rag_facile.core import RetrievedChunk
 
 
 class RAGPipeline(ABC):
@@ -24,8 +29,9 @@ class RAGPipeline(ABC):
       - :attr:`supported_extensions` — file extensions this pipeline handles
       - :attr:`accepted_mime_types` — MIME type map for file picker dialogs
 
-    Optional override:
+    Optional overrides:
       - :meth:`process_query` — retrieve context for a user query
+      - :meth:`retrieve_chunks` — return raw retrieved chunks (for evaluation)
     """
 
     # ── Upload-time: file processing ──
@@ -76,6 +82,28 @@ class RAGPipeline(ABC):
             Formatted context string.  Empty string when not applicable.
         """
         return ""
+
+    def retrieve_chunks(self, query: str, **kwargs: object) -> list[RetrievedChunk]:
+        """Return the individual chunks retrieved for a query.
+
+        Unlike :meth:`process_query`, which returns a formatted string ready for
+        LLM injection, this method returns the raw chunks so callers can inspect
+        retrieval quality (e.g. for evaluation metrics like context recall and
+        context precision).
+
+        The default implementation returns an empty list — suitable for basic
+        pipelines that use context stuffing with no chunk-level retrieval.
+        :class:`AlbertPipeline` overrides this to perform the full
+        search → optional rerank pipeline and return the resulting chunks.
+
+        Args:
+            query: User query to retrieve chunks for.
+            **kwargs: Pipeline-specific options (same as :meth:`process_query`).
+
+        Returns:
+            List of retrieved chunks.  Empty list when not applicable.
+        """
+        return []
 
     # ── Capabilities (for UI file dialogs) ──
 

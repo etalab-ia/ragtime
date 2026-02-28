@@ -61,8 +61,8 @@ def search_chunks(
     effective_threshold = score_threshold if method == "semantic" else None
 
     response = client.search(
-        prompt=query,
-        collections=collection_ids,
+        query=query,
+        collection_ids=collection_ids,
         limit=limit,
         method=method,
         score_threshold=effective_threshold,
