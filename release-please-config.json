@@ -7,6 +7,8 @@
 			"release-type": "python",
 			"changelog-path": "CHANGELOG.md",
 			"version-file": "pyproject.toml",
+			"bump-minor-pre-major": true,
+			"bump-patch-for-minor-pre-major": true,
 			"extra-files": [
 				"apps/cli/pyproject.toml",
 				"apps/chainlit-chat/pyproject.toml",
@@ -19,9 +21,9 @@
 				"packages/reranking/pyproject.toml",
 				"packages/retrieval/pyproject.toml",
 				"packages/rag-facile-lib/pyproject.toml",
-			"packages/storage/pyproject.toml",
-			"packages/tracing/pyproject.toml",
-			"packages/evaluation/pyproject.toml"
+				"packages/storage/pyproject.toml",
+				"packages/tracing/pyproject.toml",
+				"packages/evaluation/pyproject.toml"
 			]
 		}
 	}
