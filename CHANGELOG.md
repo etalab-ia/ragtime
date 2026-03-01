@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.1](https://github.com/etalab-ia/rag-facile/compare/v0.18.0...v0.18.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* **ci:** build and upload workspace zip on every release ([2be050a](https://github.com/etalab-ia/rag-facile/commit/2be050aa7fec92214832dea83be3b1661e69fed8))
+* **ci:** build and upload workspace zip on every release ([9416479](https://github.com/etalab-ia/rag-facile/commit/9416479089da4d0372c60d8fae75a0bccba8b624))
+
 ## [0.18.0](https://github.com/etalab-ia/rag-facile/compare/v0.17.0...v0.18.0) (2026-03-01)
 
 
