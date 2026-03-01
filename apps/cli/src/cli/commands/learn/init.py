@@ -1,8 +1,8 @@
 """First-run initialization wizard for the rag-facile chat assistant.
 
 Called automatically by start_chat() when .rag-facile/ is absent from the workspace.
-Creates the directory structure and initial memory files that the agent uses
-to personalise responses and track learning progress across sessions.
+Creates the directory structure and profile file that the agent uses
+to personalise responses across sessions.
 """
 
 import subprocess
@@ -19,7 +19,6 @@ console = Console()
 # ── Directory / file layout ───────────────────────────────────────────────────
 
 _AGENT_DIR = Path(".rag-facile") / "agent"
-_MEMORY_FILE = _AGENT_DIR / "MEMORY.md"
 _PROFILE_FILE = _AGENT_DIR / "profile.md"
 _SKILLS_DIR = Path(".rag-facile") / "skills"
 
@@ -51,31 +50,6 @@ _LANGUAGE_CHOICES = [
 # ── Template generators ───────────────────────────────────────────────────────
 
 
-def _memory_template(project_name: str, preset: str, experience: str) -> str:
-    today = date.today().isoformat()
-    return f"""\
----
-updated: {today}
-project: {project_name}
-preset: {preset}
----
-
-# Project Memory
-
-## User Profile
-- Experience level: {experience}
-- Goals: (not yet defined — ask the user)
-- Completed topics: (none yet)
-
-## Project State
-- Preset: {preset}
-- Albert collections: (check ragfacile.toml)
-
-## Learned Facts
-(empty — will be populated across sessions)
-"""
-
-
 def _profile_template(experience: str, language: str) -> str:
     today = date.today().isoformat()
     experience_labels = {
@@ -91,32 +65,12 @@ def _profile_template(experience: str, language: str) -> str:
 - Experience level: {experience_labels.get(experience, experience)}
 - Initialized: {today}
 
-## Learning Progress
-(none yet — topics will be marked complete as you learn them)
-
 ## Session Count
 0
 """
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-
-
-def _read_preset(workspace: Path) -> str:
-    """Extract the preset name from ragfacile.toml, defaulting to 'balanced'."""
-    config_file = workspace / "ragfacile.toml"
-    if not config_file.exists():
-        return "balanced"
-    try:
-        import tomllib
-
-        with open(config_file, "rb") as f:
-            data = tomllib.load(f)
-        return data.get("meta", {}).get("preset", "balanced")
-    except tomllib.TOMLDecodeError:
-        return "balanced"
-    except OSError:
-        return "balanced"
 
 
 def _git_add(workspace: Path) -> None:
@@ -205,14 +159,6 @@ def run_init_wizard(workspace: Path) -> str:
     agent_dir.mkdir(parents=True, exist_ok=True)
     (workspace / _SKILLS_DIR).mkdir(parents=True, exist_ok=True)
 
-    project_name = workspace.name
-    preset = _read_preset(workspace)
-
-    # Write MEMORY.md
-    (workspace / _MEMORY_FILE).write_text(
-        _memory_template(project_name, preset, experience), encoding="utf-8"
-    )
-
     # Write profile.md
     (workspace / _PROFILE_FILE).write_text(
         _profile_template(experience, language), encoding="utf-8"
@@ -224,7 +170,6 @@ def run_init_wizard(workspace: Path) -> str:
     # ── Confirmation ──────────────────────────────────────────────────────────
     console.print()
     console.print("[green]✓[/green] Assistant ready")
-    console.print(f"[dim]  Memory: {workspace / _MEMORY_FILE}[/dim]")
     console.print(f"[dim]  Profile: {workspace / _PROFILE_FILE}[/dim]")
     console.print()
 

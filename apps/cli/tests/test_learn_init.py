@@ -6,7 +6,6 @@ from typer.testing import CliRunner
 
 from cli.commands.learn.init import (
     _profile_template,
-    _read_preset,
     needs_init,
     read_language,
     run_init_wizard,
@@ -24,21 +23,6 @@ class TestNeedsInit:
     def test_returns_false_when_agent_dir_exists(self, tmp_path):
         (tmp_path / ".rag-facile" / "agent").mkdir(parents=True)
         assert needs_init(tmp_path) is False
-
-
-class TestReadPreset:
-    def test_returns_balanced_when_no_config(self, tmp_path):
-        assert _read_preset(tmp_path) == "balanced"
-
-    def test_reads_preset_from_toml(self, tmp_path):
-        (tmp_path / "ragfacile.toml").write_text(
-            '[meta]\npreset = "accurate"\n', encoding="utf-8"
-        )
-        assert _read_preset(tmp_path) == "accurate"
-
-    def test_returns_balanced_on_missing_key(self, tmp_path):
-        (tmp_path / "ragfacile.toml").write_text("[meta]\n", encoding="utf-8")
-        assert _read_preset(tmp_path) == "balanced"
 
 
 class TestProfileTemplate:
@@ -87,8 +71,8 @@ def _lang_en_exp_intermediate():
 
 
 class TestRunInitWizard:
-    def test_creates_memory_and_profile_files(self, tmp_path):
-        """Wizard creates MEMORY.md and profile.md in the workspace."""
+    def test_creates_profile_file(self, tmp_path):
+        """Wizard creates profile.md in the workspace."""
         with (
             patch(
                 "cli.commands.learn.init.questionary.select",
@@ -98,7 +82,6 @@ class TestRunInitWizard:
         ):
             run_init_wizard(tmp_path)
 
-        assert (tmp_path / ".rag-facile" / "agent" / "MEMORY.md").exists()
         assert (tmp_path / ".rag-facile" / "agent" / "profile.md").exists()
 
     def test_returns_selected_language(self, tmp_path):
@@ -124,7 +107,7 @@ class TestRunInitWizard:
 
         assert (tmp_path / ".rag-facile" / "skills").is_dir()
 
-    def test_experience_reflected_in_memory(self, tmp_path):
+    def test_experience_reflected_in_profile(self, tmp_path):
         with (
             patch(
                 "cli.commands.learn.init.questionary.select",
@@ -137,8 +120,8 @@ class TestRunInitWizard:
         ):
             run_init_wizard(tmp_path)
 
-        memory = (tmp_path / ".rag-facile" / "agent" / "MEMORY.md").read_text()
-        assert "expert" in memory
+        profile = (tmp_path / ".rag-facile" / "agent" / "profile.md").read_text()
+        assert "Expert" in profile
 
     def test_falls_back_to_defaults_on_non_interactive(self, tmp_path):
         """If questionary raises EOFError (non-interactive env), defaults are used."""
@@ -151,7 +134,7 @@ class TestRunInitWizard:
         ):
             run_init_wizard(tmp_path)  # should not raise
 
-        assert (tmp_path / ".rag-facile" / "agent" / "MEMORY.md").exists()
+        assert (tmp_path / ".rag-facile" / "agent" / "profile.md").exists()
 
     def test_git_add_called_for_workspace_git(self, tmp_path):
         with (
@@ -177,7 +160,7 @@ class TestRunInitWizard:
             ):
                 run_init_wizard(tmp_path)
 
-        assert (tmp_path / ".rag-facile" / "agent" / "MEMORY.md").exists()
+        assert (tmp_path / ".rag-facile" / "agent" / "profile.md").exists()
 
 
 class TestChatInitIntegration:

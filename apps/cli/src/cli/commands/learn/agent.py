@@ -26,11 +26,8 @@ from cli.commands.learn.skills import (
     load_skill,
 )
 from cli.commands.learn.memory import (
-    append_turn,
-    git_commit_session,
     increment_session_count,
     load_context,
-    update_memory,
 )
 from cli.commands.learn.tools import (
     activate_skill,
@@ -272,7 +269,7 @@ def start_chat(debug: bool = False) -> None:
     # Load persistent memory — injected into the first user turn (not system prompt)
     # so the model pays full attention to it rather than losing it at the end of
     # smolagents' long built-in system prompt.
-    memory_context = load_context(workspace) if workspace else ""
+    profile_context = load_context(workspace) if workspace else ""
 
     # Increment session count (best-effort — workspace may be None)
     if workspace:
@@ -330,7 +327,7 @@ def start_chat(debug: bool = False) -> None:
         max_steps=5,
     )
 
-    session_turns: list[tuple[str, str]] = []  # accumulated for post-session update
+    _first_turn = True  # used to inject profile context once on the first turn
 
     # Welcome
     workspace_line = (
@@ -424,12 +421,12 @@ def start_chat(debug: bool = False) -> None:
         # Build effective_input — layer memory (first turn) + skill (on load) + message
         effective_input = user_input
 
-        # Inject memory on first turn of the session
-        if memory_context and not session_turns:
+        # Inject profile on first turn of the session
+        if profile_context and _first_turn:
             effective_input = (
-                f"[Mémoire des sessions précédentes]\n{memory_context}\n\n---\n\n"
-                f"{effective_input}"
+                f"[Profil utilisateur]\n{profile_context}\n\n---\n\n{effective_input}"
             )
+            _first_turn = False
 
         # Inject skill content the first time a skill becomes active
         if active_skill_content and not skill_injected:
@@ -478,18 +475,3 @@ def start_chat(debug: bool = False) -> None:
         console.print("[bold green]Assistant[/bold green]:")
         console.print(Markdown(str(response)))
         console.print()
-
-        # Log turn to today's conversation file
-        if workspace:
-            append_turn(workspace, "user", user_input)
-            append_turn(workspace, "assistant", str(response))
-            session_turns.append((user_input, str(response)))
-
-    # ── Post-session: update memory + git commit ──────────────────────────────
-    if workspace and session_turns:
-        session_log = "\n\n".join(
-            f"Vous: {u}\nAssistant: {a}" for u, a in session_turns
-        )
-        with console.status("[dim]Mise à jour de la mémoire...[/dim]", spinner="dots"):
-            update_memory(workspace, session_log)
-            git_commit_session(workspace)
