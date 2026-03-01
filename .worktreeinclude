@@ -1,12 +1,7 @@
-# Files copied by `wt step copy-ignored` when creating a new worktree.
-# Only files that are BOTH gitignored AND listed here are copied.
-# See: https://worktrunk.dev
-
-# Secrets
+# Files to copy from the primary worktree (main/) into new worktrees.
+# Must be gitignored AND listed here to be picked up by `wt step copy-ignored`.
+#
+# .venv/ is intentionally excluded — virtual envs have hardcoded absolute paths
+# and must be rebuilt per-worktree via `uv sync` (handled by the post-create hook).
 .env
-
-# Letta Code settings
-.letta
-
-# Agent memory & config
-.rag-facile
+.letta/
