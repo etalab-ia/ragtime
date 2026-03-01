@@ -2,9 +2,22 @@ name: Build Release Asset
 
 # Triggered when a GitHub Release is published (by release-please or manually).
 # Generates the standalone Chainlit workspace zip and uploads it to the release.
+#
+# NOTE: This workflow will NOT fire automatically when release-please creates a
+# release using GITHUB_TOKEN (GitHub blocks downstream events from GITHUB_TOKEN
+# to prevent infinite loops). The release.yml workflow handles that case by
+# running a build job directly after release-please succeeds.
+#
+# Use this workflow for manual re-runs (e.g. if the build job in release.yml
+# fails, or to patch an existing release's asset).
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build asset for (e.g. v0.18.0)'
+        required: true
 
 permissions:
   contents: write  # needed to upload release assets
@@ -16,7 +29,18 @@ jobs:
     name: "Build & upload workspace zip"
 
     steps:
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
 
       - name: Setup proto
         uses: moonrepo/setup-proto@v1
@@ -30,13 +54,13 @@ jobs:
         run: uv sync
 
       - name: Build release asset
-        run: uv run python tools/build_release_asset.py --version "${{ github.event.release.tag_name }}"
+        run: uv run python tools/build_release_asset.py --version "${{ steps.tag.outputs.tag }}"
 
       - name: Upload asset to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ github.event.release.tag_name }}"
+          TAG="${{ steps.tag.outputs.tag }}"
           ASSET="dist/rag-facile-workspace-${TAG}.zip"
           if [ ! -f "$ASSET" ]; then
             echo "❌ Asset not found: $ASSET"

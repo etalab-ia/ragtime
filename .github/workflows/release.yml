@@ -13,9 +13,59 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # Build and upload the workspace zip whenever a new release is created.
+  #
+  # We run this as a dependent job here rather than relying on the
+  # "build-release-asset" workflow's `on: release: published` trigger, because
+  # GitHub blocks downstream workflow events triggered by GITHUB_TOKEN (used by
+  # release-please above) to prevent infinite loops.
+  build-release-asset:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: "Build & upload workspace zip"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Setup proto
+        uses: moonrepo/setup-proto@v1
+        with:
+          proto-version: latest
+
+      - name: Install uv
+        run: proto install uv
+
+      - name: Install workspace dependencies
+        run: uv sync
+
+      - name: Build release asset
+        run: uv run python tools/build_release_asset.py --version "${{ needs.release-please.outputs.tag_name }}"
+
+      - name: Upload asset to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.release-please.outputs.tag_name }}"
+          ASSET="dist/rag-facile-workspace-${TAG}.zip"
+          if [ ! -f "$ASSET" ]; then
+            echo "❌ Asset not found: $ASSET"
+            ls dist/ || echo "(dist/ is empty)"
+            exit 1
+          fi
+          gh release upload "${TAG}" "${ASSET}" --clobber
+          echo "✅ Uploaded ${ASSET} to release ${TAG}"
