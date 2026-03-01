@@ -5,6 +5,7 @@ Entry point: start_chat() — called when the user runs `rag-facile learn`.
 
 import os
 import time
+from datetime import datetime
 from pathlib import Path
 
 import openai
@@ -25,16 +26,22 @@ from cli.commands.learn.skills import (
     install_skill,
     load_skill,
 )
-from cli.commands.learn.memory import (
-    increment_session_count,
-    load_context,
+from rag_facile.memory.context import bootstrap_context
+from rag_facile.memory.lifecycle import (
+    finalize_session,
+    run_checkpoint,
+    should_checkpoint,
 )
+from rag_facile.memory.stores import EpisodicLog, SemanticStore
+
 from cli.commands.learn.tools import (
     activate_skill,
     get_agents_md,
     get_docs,
     get_recent_git_activity,
+    remember_fact,
     run_rag_facile,
+    search_memory,
     set_available_skills,
     set_workspace_root,
 )
@@ -86,6 +93,26 @@ DO NOT use if the user is merely asking about skills or how they work.
 
 Only activate ONE skill per session. If no skill clearly fits, respond directly in \
 natural language — this is always a valid choice.
+
+## Memory tools
+
+You have persistent memory across sessions. Use these tools proactively:
+
+- remember_fact(section, fact) → Save important facts to long-term memory.
+  Call this when you learn:
+  - User's name, role, or team
+  - Project preferences (preset, language, model choices)
+  - Technical decisions or constraints
+  - Frequently asked topics (so you can be more helpful next time)
+
+- search_memory(query) → Search past conversations and saved facts.
+  Call this when:
+  - User references something from a previous session
+  - You need context about an earlier discussion
+  - Looking up a preference or decision that was made before
+
+Do NOT wait to be asked — save facts proactively. If the user says "I'm Luis" \
+or "We're using the legal preset", call remember_fact immediately.
 
 ## RULE — Always use tools; never answer from memory
 
@@ -190,6 +217,8 @@ _TOOL_ICONS: dict[str, str] = {
     "get_recent_git_activity": "📜",
     "get_docs": "📖",
     "run_rag_facile": "🖥️",
+    "remember_fact": "💾",
+    "search_memory": "🔍",
 }
 
 
@@ -269,11 +298,11 @@ def start_chat(debug: bool = False) -> None:
     # Load persistent memory — injected into the first user turn (not system prompt)
     # so the model pays full attention to it rather than losing it at the end of
     # smolagents' long built-in system prompt.
-    profile_context = load_context(workspace) if workspace else ""
+    profile_context = bootstrap_context(workspace) if workspace else ""
 
-    # Increment session count (best-effort — workspace may be None)
-    if workspace:
-        increment_session_count(workspace)
+    # Ensure memory.md exists for new workspaces
+    if workspace and not (workspace / ".rag-facile" / "agent" / "memory.md").exists():
+        SemanticStore.create(workspace)
 
     # Discover skills: built-in + workspace (.agents/skills/)
     available_skills = discover_skills(workspace)
@@ -316,6 +345,8 @@ def start_chat(debug: bool = False) -> None:
             get_recent_git_activity,
             get_docs,
             run_rag_facile,
+            remember_fact,
+            search_memory,
         ]
     ] + [_wrap_activate_skill(activate_skill)]
 
@@ -328,6 +359,9 @@ def start_chat(debug: bool = False) -> None:
     )
 
     _first_turn = True  # used to inject profile context once on the first turn
+    session_turns: list[dict[str, str]] = []  # conversation history for memory
+    session_start = datetime.now()
+    turn_count = 0
 
     # Welcome
     workspace_line = (
@@ -357,6 +391,12 @@ def start_chat(debug: bool = False) -> None:
         if user_input.lower() in ("q", "quit", "exit", "bye", "au revoir", "quitter"):
             console.print(f"[dim]{ui['goodbye']}[/dim]")
             break
+
+        # Track user turn in episodic log + session history
+        if workspace:
+            EpisodicLog.append_turn(workspace, "user", user_input)
+        session_turns.append({"role": "user", "content": user_input})
+        turn_count += 1
 
         # ── /skills slash commands ────────────────────────────────────────────
         _skill_bootstrap = (
@@ -472,6 +512,22 @@ def start_chat(debug: bool = False) -> None:
         if response is None:
             continue
 
+        response_text = str(response)
+
+        # Track assistant turn in episodic log + session history
+        if workspace:
+            EpisodicLog.append_turn(workspace, "assistant", response_text)
+        session_turns.append({"role": "assistant", "content": response_text})
+        turn_count += 1
+
+        # Mid-session checkpoint every 8 turns
+        if workspace and should_checkpoint(turn_count):
+            run_checkpoint(workspace, session_turns[-8:])
+
         console.print("[bold green]Assistant[/bold green]:")
-        console.print(Markdown(str(response)))
+        console.print(Markdown(response_text))
         console.print()
+
+    # ── Session finalization (after loop exit) ────────────────────────────
+    if workspace and session_turns:
+        finalize_session(workspace, session_turns, session_start)

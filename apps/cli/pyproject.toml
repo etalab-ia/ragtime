@@ -14,6 +14,7 @@ dependencies = [
     "retrieval",
     "storage",
     "evaluation",
+    "memory",
     "datasets>=3.0.0",
     "huggingface-hub>=1.3.0",
     "letta-client>=0.1.0",
@@ -43,6 +44,7 @@ reranking = { workspace = true }
 retrieval = { workspace = true }
 storage = { workspace = true }
 evaluation = { workspace = true }
+memory = { workspace = true }
 
 [project.scripts]
 rag-facile = "cli.main:app"

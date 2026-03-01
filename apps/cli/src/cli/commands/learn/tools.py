@@ -9,6 +9,11 @@ from pathlib import Path
 
 from smolagents import tool
 
+from rag_facile.memory.consolidation import consolidate_entry
+from rag_facile.memory.index import MemoryIndex
+from rag_facile.memory.search import format_search_results, hybrid_search
+from rag_facile.memory.stores import SemanticStore
+
 # ── Docs index ────────────────────────────────────────────────────────────────
 # Maps topic keywords to doc paths relative to the docs root.
 # Keys are lowercase — matched against lowercased user query.
@@ -218,6 +223,81 @@ def activate_skill(name: str) -> str:
         available = ", ".join(sorted(_available_skills.keys()))
         return f"Skill '{name}' not found. Available: {available}"
     return load_skill(_available_skills[name])
+
+
+# ── Memory tools ──────────────────────────────────────────────────────────────
+
+# Module-level index reference — initialised lazily on first search_memory call.
+_memory_index: MemoryIndex | None = None
+
+
+def _get_memory_index() -> MemoryIndex | None:
+    """Return a MemoryIndex for the current workspace, or None."""
+    global _memory_index
+    if _workspace_root is None:
+        return None
+    if _memory_index is None:
+        _memory_index = MemoryIndex(_workspace_root)
+    return _memory_index
+
+
+@tool
+def remember_fact(section: str, fact: str) -> str:
+    """Save an important fact to the agent's long-term memory.
+
+    Call this when you learn something important about the user, their project,
+    or their preferences that should persist across sessions.
+
+    The fact is added to the Semantic Store (memory.md) under the specified section.
+    If a conflicting entry already exists (e.g., old preset value), it is replaced
+    automatically.
+
+    Available sections: User Identity, Preferences, Project State, Key Facts,
+    Routing Table, Recent Context.
+
+    Args:
+        section: Target section in memory.md, e.g. 'Key Facts' or 'Preferences'.
+        fact: The fact to remember, e.g. 'Uses the accurate preset for legal documents'.
+    """
+    if _workspace_root is None:
+        return "No workspace detected — cannot persist memory."
+
+    # Check for conflicts and consolidate
+    existing = SemanticStore.read_section(_workspace_root, section)
+    consolidated = consolidate_entry(existing, fact)
+    if len(consolidated) == len(existing):
+        # Replacement happened — rewrite the section by adding the new entry
+        # (add_entry prepends, which is the right behaviour for updates)
+        SemanticStore.add_entry(_workspace_root, section, fact)
+        return f"Updated existing entry in '{section}'."
+
+    SemanticStore.add_entry(_workspace_root, section, fact)
+    return f"Saved to '{section}': {fact}"
+
+
+@tool
+def search_memory(query: str) -> str:
+    """Search the agent's memory for relevant past conversations and facts.
+
+    Use this when the user asks about something they mentioned before, or when you
+    need context from previous sessions. Searches across all memory files (semantic
+    store, episodic logs, session snapshots) using keyword matching.
+
+    Args:
+        query: Natural language search query, e.g. 'preset configuration' or
+               'what did we discuss about chunking'.
+    """
+    index = _get_memory_index()
+    if index is None:
+        return "No workspace detected — memory search unavailable."
+
+    # Run incremental index before searching (fast — skips unchanged files)
+    from rag_facile.memory.indexer import rebuild_index
+
+    rebuild_index(_workspace_root, index)
+
+    results = hybrid_search(index, query, limit=5)
+    return format_search_results(results)
 
 
 # ── CLI runner ────────────────────────────────────────────────────────────────

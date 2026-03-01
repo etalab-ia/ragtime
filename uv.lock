@@ -14,6 +14,7 @@ members = [
     "context",
     "evaluation",
     "ingestion",
+    "memory",
     "pipelines",
     "query",
     "rag-core",
@@ -422,7 +423,7 @@ wheels = [
 
 [[package]]
 name = "chainlit-chat"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "apps/chainlit-chat" }
 dependencies = [
     { name = "albert-client" },
@@ -498,7 +499,7 @@ wheels = [
 
 [[package]]
 name = "context"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/context" }
 dependencies = [
     { name = "rag-core" },
@@ -662,7 +663,7 @@ wheels = [
 
 [[package]]
 name = "evaluation"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/evaluation" }
 dependencies = [
     { name = "httpx" },
@@ -1020,7 +1021,7 @@ wheels = [
 
 [[package]]
 name = "ingestion"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/ingestion" }
 dependencies = [
     { name = "albert-client" },
@@ -1436,6 +1437,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec9
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
 ]
+
+[[package]]
+name = "memory"
+version = "0.18.2"
+source = { editable = "packages/memory" }
 
 [[package]]
 name = "mmh3"
@@ -2387,7 +2393,7 @@ wheels = [
 
 [[package]]
 name = "pipelines"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/pipelines" }
 dependencies = [
     { name = "context" },
@@ -2809,7 +2815,7 @@ wheels = [
 
 [[package]]
 name = "query"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/query" }
 dependencies = [
     { name = "albert-client" },
@@ -2836,7 +2842,7 @@ wheels = [
 
 [[package]]
 name = "rag-core"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/rag-core" }
 dependencies = [
     { name = "pydantic" },
@@ -2853,7 +2859,7 @@ requires-dist = [
 
 [[package]]
 name = "rag-facile"
-version = "0.18.1"
+version = "0.18.2"
 source = { virtual = "." }
 dependencies = [
     { name = "albert-client" },
@@ -2861,6 +2867,7 @@ dependencies = [
     { name = "context" },
     { name = "evaluation" },
     { name = "ingestion" },
+    { name = "memory" },
     { name = "pipelines" },
     { name = "query" },
     { name = "rag-core" },
@@ -2892,6 +2899,7 @@ requires-dist = [
     { name = "context", editable = "packages/context" },
     { name = "evaluation", editable = "packages/evaluation" },
     { name = "ingestion", editable = "packages/ingestion" },
+    { name = "memory", editable = "packages/memory" },
     { name = "pipelines", editable = "packages/pipelines" },
     { name = "query", editable = "packages/query" },
     { name = "rag-core", editable = "packages/rag-core" },
@@ -2918,7 +2926,7 @@ dev = [
 
 [[package]]
 name = "rag-facile-cli"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "apps/cli" }
 dependencies = [
     { name = "albert-client" },
@@ -2929,6 +2937,7 @@ dependencies = [
     { name = "ingestion" },
     { name = "letta-client" },
     { name = "libcst" },
+    { name = "memory" },
     { name = "pipelines" },
     { name = "pypdf" },
     { name = "python-dotenv" },
@@ -2959,6 +2968,7 @@ requires-dist = [
     { name = "ingestion", editable = "packages/ingestion" },
     { name = "letta-client", specifier = ">=0.1.0" },
     { name = "libcst", specifier = ">=1.8.6" },
+    { name = "memory", editable = "packages/memory" },
     { name = "pipelines", editable = "packages/pipelines" },
     { name = "pypdf", specifier = ">=5.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
@@ -2981,7 +2991,7 @@ dev = [
 
 [[package]]
 name = "rag-facile-lib"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/rag-facile-lib" }
 dependencies = [
     { name = "albert-client" },
@@ -3048,7 +3058,7 @@ wheels = [
 
 [[package]]
 name = "reflex-chat"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "apps/reflex-chat" }
 dependencies = [
     { name = "albert-client" },
@@ -3140,7 +3150,7 @@ wheels = [
 
 [[package]]
 name = "reranking"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/reranking" }
 dependencies = [
     { name = "albert-client" },
@@ -3167,7 +3177,7 @@ wheels = [
 
 [[package]]
 name = "retrieval"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/retrieval" }
 dependencies = [
     { name = "albert-client" },
@@ -3428,7 +3438,7 @@ wheels = [
 
 [[package]]
 name = "storage"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/storage" }
 dependencies = [
     { name = "albert-client" },
@@ -3626,7 +3636,7 @@ wheels = [
 
 [[package]]
 name = "tracing"
-version = "0.18.1"
+version = "0.18.2"
 source = { editable = "packages/tracing" }
 dependencies = [
     { name = "rag-core" },
