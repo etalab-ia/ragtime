@@ -92,6 +92,8 @@ jobs:
 
       - name: Run installer (using local asset)
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ASSET=$(ls /tmp/assets/rag-facile-workspace-*.zip | head -1)
           RAG_FACILE_LOCAL_ASSET="$ASSET" bash install.sh
@@ -164,6 +166,8 @@ jobs:
 
       - name: Run installer (using local asset)
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ASSET=$(ls /tmp/assets/rag-facile-workspace-*.zip | head -1)
           RAG_FACILE_LOCAL_ASSET="$ASSET" bash install.sh
@@ -235,6 +239,8 @@ jobs:
 
       - name: Run PowerShell installer (using local asset)
         shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $Asset = Get-ChildItem "C:\Temp\assets\rag-facile-workspace-*.zip" | Select-Object -First 1
           $env:RAG_FACILE_LOCAL_ASSET = $Asset.FullName
