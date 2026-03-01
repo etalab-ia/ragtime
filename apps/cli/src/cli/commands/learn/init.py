@@ -65,9 +65,6 @@ def _profile_template(experience: str, language: str) -> str:
 - Experience level: {experience_labels.get(experience, experience)}
 - Initialized: {today}
 
-## Learning Progress
-(none yet — topics will be marked complete as you learn them)
-
 ## Session Count
 0
 """

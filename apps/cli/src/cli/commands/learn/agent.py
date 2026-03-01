@@ -269,7 +269,7 @@ def start_chat(debug: bool = False) -> None:
     # Load persistent memory — injected into the first user turn (not system prompt)
     # so the model pays full attention to it rather than losing it at the end of
     # smolagents' long built-in system prompt.
-    memory_context = load_context(workspace) if workspace else ""
+    profile_context = load_context(workspace) if workspace else ""
 
     # Increment session count (best-effort — workspace may be None)
     if workspace:
@@ -422,9 +422,9 @@ def start_chat(debug: bool = False) -> None:
         effective_input = user_input
 
         # Inject profile on first turn of the session
-        if memory_context and _first_turn:
+        if profile_context and _first_turn:
             effective_input = (
-                f"[Profil utilisateur]\n{memory_context}\n\n---\n\n{effective_input}"
+                f"[Profil utilisateur]\n{profile_context}\n\n---\n\n{effective_input}"
             )
             _first_turn = False
 
