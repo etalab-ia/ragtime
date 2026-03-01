@@ -5,6 +5,84 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0](https://github.com/etalab-ia/rag-facile/compare/v0.17.0...v0.18.0) (2026-03-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* install.sh no longer installs `rag-facile` globally. The CLI is available as `uv run rag-facile` inside the workspace.
+
+### Features
+
+* add DSFR theme for Chainlit chat app ([a9d4570](https://github.com/etalab-ia/rag-facile/commit/a9d4570a9bc51caf1b23c33bf7666b9cd3e114c5))
+* add DSFR theme for Reflex chat app ([d523204](https://github.com/etalab-ia/rag-facile/commit/d523204d16a639b7a8a54f1fcb680b561b6b0a7d))
+* add DSFR-style theme toggle dropdown to Reflex navbar ([b402a67](https://github.com/etalab-ia/rag-facile/commit/b402a6763ee95bd790b2189ced88be0552fc69aa))
+* add pipeline tracing with SQLite backend ([563a206](https://github.com/etalab-ia/rag-facile/commit/563a2064a98e975e81a6d3d2e5e8dbecd15a65b3))
+* add pipeline tracing with SQLite backend ([6701619](https://github.com/etalab-ia/rag-facile/commit/67016199ede798a6c5b94f7dc37a2c6b48fc0e01))
+* add random seed to LLM calls for diversity ([53de37b](https://github.com/etalab-ia/rag-facile/commit/53de37bbe016686e6f95e4baeb59cf5912850092))
+* apply reranking consistently in dataset generation and evaluation ([d50a319](https://github.com/etalab-ia/rag-facile/commit/d50a319c328366246c7419b22e202b698e160fe1))
+* capture chunk IDs in dataset generation and evaluation ([1b60175](https://github.com/etalab-ia/rag-facile/commit/1b60175a35ef99410d67c11c3bb58b8a6160b5c3))
+* capture relevant_chunk_ids and relevant_contexts for ground truth ([bdd5911](https://github.com/etalab-ia/rag-facile/commit/bdd5911801aea57408c1237b35adba75ff3ab9aa))
+* DSFR theme for Chainlit chat app ([6eef5cf](https://github.com/etalab-ia/rag-facile/commit/6eef5cf3559c055e738279a7fe1e0570b7806c4a))
+* DSFR theme for Reflex chat app ([16b1c06](https://github.com/etalab-ia/rag-facile/commit/16b1c0614c6daf06b6b37a4357825071f7fedc88))
+* end-to-end evaluation with live RAG pipeline ([bd6b426](https://github.com/etalab-ia/rag-facile/commit/bd6b42686aab568d048c6843f1345d2dcbd4a69d))
+* extract text content from `Hub-France-IA-Les-risques-de-lIA-Generative.pdf` into a new `.txt` file. ([0f190ff](https://github.com/etalab-ia/rag-facile/commit/0f190ff2dda7259dbc09e3e765a910f10cc2174a))
+* new install flow — curl+uv+just, pre-built workspace zip ([9ab8c7a](https://github.com/etalab-ia/rag-facile/commit/9ab8c7a0ae0e5f4643c09b6a54cb358ab7d6d461))
+* RAG evaluation with Inspect AI — recall@k, precision@k, faithfulness ([6151adf](https://github.com/etalab-ia/rag-facile/commit/6151adf1566152f682e6ef3b022df96d10d90480))
+* RAG evaluation with Inspect AI — recall@k, precision@k, faithfulness ([9820954](https://github.com/etalab-ia/rag-facile/commit/982095424e51c5e0493c70537ab2275191fc0d60))
+* semantic skill routing via activate_skill tool — drop keyword detection ([aaac2e9](https://github.com/etalab-ia/rag-facile/commit/aaac2e995865e1ff762083672fe3441abe076398))
+* universal run_rag_facile tool + rag-cli skill ([1e4bbfd](https://github.com/etalab-ia/rag-facile/commit/1e4bbfd310420e64f220205b09797efd687337fd))
+* universal run_rag_facile tool + rag-cli skill ([1d46a39](https://github.com/etalab-ia/rag-facile/commit/1d46a3999c2afe3e8b3d69ab831adb6391647ca2))
+* update_config tool, model aliases, shared console ([fe464ef](https://github.com/etalab-ia/rag-facile/commit/fe464ef7637e9da1861bec5125bce88d76c981e5))
+* update_config tool, model aliases, shared console ([cf47f73](https://github.com/etalab-ia/rag-facile/commit/cf47f73aa9d938a9a76432081aef71c043921507))
+* use openweight-large for dataset generation ([f382dd3](https://github.com/etalab-ia/rag-facile/commit/f382dd34ec6442c4ee9d51dd2abc4d29c95a6452))
+
+
+### Bug Fixes
+
+* address PR [#138](https://github.com/etalab-ia/rag-facile/issues/138) review comments + rename chat model env var ([c633a10](https://github.com/etalab-ia/rag-facile/commit/c633a10d46b0fb8dff827d9382acc6354f935f28))
+* address PR [#143](https://github.com/etalab-ia/rag-facile/issues/143) review comments ([e5acc66](https://github.com/etalab-ia/rag-facile/commit/e5acc66c8861ff3f37ea6486dbde1f1f2ef6200b))
+* address review — missed mauve→slate + document !important ([4838d30](https://github.com/etalab-ia/rag-facile/commit/4838d309c5dd5366aaa9ee7ba702e4b92f54c51d))
+* address review comments — imports, ty exclusions, solver API ([1d417f8](https://github.com/etalab-ia/rag-facile/commit/1d417f8b5333ab2158c2db5b5dc436b8287d0c16))
+* address review comments, schema migration, and stage ordering ([704199d](https://github.com/etalab-ia/rag-facile/commit/704199dc7b0040047301fe4b58c64c3b7d2fb701))
+* agent must use run_rag_facile for reads, not answer from memory ([cb3e3e7](https://github.com/etalab-ia/rag-facile/commit/cb3e3e7a986ccc1c5f93d569676b26ae593f7f5a))
+* catch httpx.HTTPStatusError in eval solver for Albert API failures ([2bd5457](https://github.com/etalab-ia/rag-facile/commit/2bd5457b756dd337a376a5bb66720bb55e59453f))
+* check for unzip and auto-install on Linux if missing ([d67a23b](https://github.com/etalab-ia/rag-facile/commit/d67a23b0ae0f982c92ccca172f74c04e1dc500fe))
+* **ci:** drop --project tools so rag_facile is available when building release asset ([2cdb1c7](https://github.com/etalab-ia/rag-facile/commit/2cdb1c7f1931da946d463f1e318e465070887431))
+* consolidate grep|sed into single sed command ([aaa717f](https://github.com/etalab-ia/rag-facile/commit/aaa717f646cb90500d6230f124cac0a67dcf46d9))
+* enforce two-step confirmation before update_config tool call ([d2aa5a3](https://github.com/etalab-ia/rag-facile/commit/d2aa5a3bf9185f73a3f4311394aa2a8b5cd0b0ae))
+* ground dataset generation in actual document content ([21606b9](https://github.com/etalab-ia/rag-facile/commit/21606b93800f94bc1138dc8f96e60dd125c57f6e))
+* harden skill routing against hallucination ([4d0f831](https://github.com/etalab-ia/rag-facile/commit/4d0f831eef4cdabc8865323e901e16abed327a33))
+* harden skill routing against hallucination ([dddb619](https://github.com/etalab-ia/rag-facile/commit/dddb619402483197300db3d72c6624cc8eb5619f))
+* install scripts now default to latest release tag instead of main ([de24615](https://github.com/etalab-ia/rag-facile/commit/de246155e1a99efdc4d3e3897b698bbb0eb6a883))
+* install scripts now default to latest release tag instead of main ([8be87bb](https://github.com/etalab-ia/rag-facile/commit/8be87bb68bb9c42ef3f78505cc6c7c8e3a4257a0))
+* normalize text before token-F1 (strip punctuation, lowercase) ([5b7958b](https://github.com/etalab-ia/rag-facile/commit/5b7958b9468b8a7631a8a967707b939f72fa6aec))
+* pass module name to Inspect AI instead of absolute path ([0725c5e](https://github.com/etalab-ia/rag-facile/commit/0725c5e5ea9a330597046a1fd47c1b5425c563a1))
+* pin workspace deps to git SHA instead of version tag ([e2c95b8](https://github.com/etalab-ia/rag-facile/commit/e2c95b8163bfcb9c13129ae102228b0f69518751))
+* populate relevant_contexts in dataset loader for recall/precision scorers ([4d9833f](https://github.com/etalab-ia/rag-facile/commit/4d9833f058f964ee8ff76f9431a707bc0ffd4fc3))
+* precision_at_k returns 1.0 when no chunk IDs defined ([cb15694](https://github.com/etalab-ia/rag-facile/commit/cb156945cb3fda15abd668e05d5c59d497dd43f4))
+* remove double confirmation from update_config — resolves terminal freeze ([a4ea2ea](https://github.com/etalab-ia/rag-facile/commit/a4ea2ea54b12d948d6eb39d989f72a066f8d0726))
+* resolve trace database path relative to workspace root ([63f3692](https://github.com/etalab-ia/rag-facile/commit/63f3692314a1d26d07222b920ef7fb02b3c00901))
+* resolve ty type check errors in letta provider and tests ([ef83e2c](https://github.com/etalab-ia/rag-facile/commit/ef83e2c546564fc149ce7f7065fcfed6cebbf8b6))
+* revert dark mode button color to match DSFR purple/lavender ([37ac0c2](https://github.com/etalab-ia/rag-facile/commit/37ac0c266462e5fc2649f6a567f0cc5877f0d911))
+* search for unique chunk IDs for each generated question ([65034b8](https://github.com/etalab-ia/rag-facile/commit/65034b879bebfade6d63854a776cca6a847b5f64))
+* three bugs in dataset generation ([b82fb48](https://github.com/etalab-ia/rag-facile/commit/b82fb48e7154c839292334905bd1765ec714dc5e))
+* update CLI to match refactored Albert provider ([b054452](https://github.com/etalab-ia/rag-facile/commit/b054452cac46dc608889dc62203a9c9ce5f91cb7))
+* update search() to use query/collection_ids per Albert API v0.4.1 ([f123ad7](https://github.com/etalab-ia/rag-facile/commit/f123ad7e2e9a4a9ef81a5d5b6f5684fe79b4bdd3))
+* use Chainlit i18n for welcome message instead of hardcoding ([7327ea1](https://github.com/etalab-ia/rag-facile/commit/7327ea106cd0fc0a87a067f6f8f32c885e8323ca))
+* use get_running_loop() and handle empty context in eval solver ([88c3df4](https://github.com/etalab-ia/rag-facile/commit/88c3df4c32ccf9be2785eb9cf79daa4d979039a9))
+* use Inspect AI Python API instead of subprocess CLI ([ab99b48](https://github.com/etalab-ia/rag-facile/commit/ab99b484c9ca8d498016724690e12bb923d2cc1a))
+* use set_color_mode from reflex.style for Reflex 0.8.27 ([ae78a80](https://github.com/etalab-ia/rag-facile/commit/ae78a8013feb9a4bd46cc1b00218ebf394387dcf))
+* **windows:** install just from GitHub Releases binary zip ([c1899ba](https://github.com/etalab-ia/rag-facile/commit/c1899ba2b2924bcb805df44a75e25e7ea85226e3))
+* **windows:** replace non-ASCII chars in install.ps1 ([0add5ed](https://github.com/etalab-ia/rag-facile/commit/0add5ed3efc0e314292db5ba61263715e6515b6e))
+
+
+### Documentation
+
+* add worktrees guide for bare repo + worktrunk workflow ([e1d8762](https://github.com/etalab-ia/rag-facile/commit/e1d876270d1ad18297f456a048da58922c4edbd1))
+* add worktrees guide for bare repo + worktrunk workflow ([06b2294](https://github.com/etalab-ia/rag-facile/commit/06b2294a640317526841939f65b9dd120b66f5dc))
+* fix cp path and remove duplicate wt config block ([ed12336](https://github.com/etalab-ia/rag-facile/commit/ed123362ab18ec5b46ca491653c5d062821e25a0))
+
 ## [0.17.0](https://github.com/etalab-ia/rag-facile/compare/v0.16.0...v0.17.0) (2026-02-20)
 
 
