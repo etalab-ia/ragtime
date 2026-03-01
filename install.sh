@@ -158,35 +158,35 @@ cd "$WORKSPACE_DIR"
 uv sync
 cd - >/dev/null
 
-# ── 6. Done ───────────────────────────────────────────────────────────────────
+# ── 6. Terminé ────────────────────────────────────────────────────────────────
 
 echo ""
-echo "✅ RAG Facile is ready!"
+echo "✅ RAG Facile est prêt !"
 echo ""
-echo "Next steps:"
+echo "Prochaines étapes :"
 echo ""
-echo "  1. Add your Albert API key:"
+echo "  1. Ajoutez votre clé API Albert :"
 echo "       cd $WORKSPACE_DIR"
 echo "       cp .env.template .env"
-echo "       # Edit .env and set OPENAI_API_KEY=<your-key>"
-echo "       # Get a key at: https://albert.sites.beta.gouv.fr/"
+echo "       # Modifiez .env et définissez OPENAI_API_KEY=<votre-clé>"
+echo "       # Obtenez une clé sur : https://albert.sites.beta.gouv.fr/"
 echo ""
-echo "  2. Start your app:"
+echo "  2. Lancez votre application :"
 echo "       cd $WORKSPACE_DIR && just run"
 echo ""
 cat <<EOF
-  3. Learn, explore and configure with your AI assistant:
+  3. Apprenez, explorez et configurez avec votre assistant IA :
        cd $WORKSPACE_DIR && just learn
 
-     Your assistant can help you:
-       • Understand the codebase you just installed
-       • Learn about RAG concepts
-       • Configure your app
+     Votre assistant peut vous aider à :
+       • Comprendre le projet que vous venez d'installer
+       • Apprendre les concepts RAG
+       • Configurer votre application
 
-  4. New to RAG-based conversational assistants?
-     The official DINUM guide walks you through the methodology
-     step by step, from investigation to production — designed
-     for product owners, project managers and non-expert teams.
+  4. Vous découvrez les assistants conversationnels basés sur le RAG ?
+     Le guide officiel de la DINUM vous accompagne pas à pas,
+     de l'investigation jusqu'à la mise en production — conçu pour
+     les porteurs de projet, chefs de projet et équipes non-expertes.
 
      👉  https://docs.numerique.gouv.fr/docs/6bd3ca79-9cb9-4603-866a-6fa1788d2c8e/
 
@@ -206,12 +206,12 @@ if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
     # Add to profile if not already there
     if ! grep -q "$LOCAL_BIN" "$PROFILE" 2>/dev/null; then
         echo "" >> "$PROFILE"
-        echo "# Added by RAG Facile installer" >> "$PROFILE"
+        echo "# Ajouté par l'installateur RAG Facile" >> "$PROFILE"
         echo "export PATH=\"$LOCAL_BIN:\$PATH\"" >> "$PROFILE"
     fi
 
-    echo "  ⚠️  Restart your terminal (or run: source $PROFILE)"
-    echo "     so that 'just' and 'uv' are found in future sessions."
+    echo "  ⚠️  Redémarrez votre terminal (ou lancez : source $PROFILE)"
+    echo "     pour que 'just' et 'uv' soient disponibles dans les prochaines sessions."
     echo ""
 fi
 
@@ -220,7 +220,7 @@ if [[ -n "${GITHUB_PATH:-}" ]]; then
     echo "$LOCAL_BIN" >> "$GITHUB_PATH"
 fi
 
-# ── 7. Join the ALLiaNCE community ────────────────────────────────────────────
+# ── 7. Rejoindre la communauté ALLiaNCE ───────────────────────────────────────
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
