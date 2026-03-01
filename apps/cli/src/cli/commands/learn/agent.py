@@ -144,7 +144,7 @@ _UI: dict[str, dict[str, str]] = {
         "you": "Vous",
         "goodbye": "À bientôt\u00a0!",
         "interrupted": "Interrompu.",
-        "api_error_hint": "Vérifiez vos variables OPENAI_API_KEY, OPENAI_BASE_URL et RAG_ASSISTANT_MODEL.",
+        "api_error_hint": "Vérifiez vos variables OPENAI_API_KEY et OPENAI_BASE_URL dans votre fichier .env.",
         "too_many_steps": (
             "J'ai eu besoin de trop d'étapes pour répondre. "
             "Pouvez-vous reformuler ou poser une question plus simple\u00a0?"
@@ -169,7 +169,7 @@ _UI: dict[str, dict[str, str]] = {
         "you": "You",
         "goodbye": "À bientôt!",
         "interrupted": "Interrupted.",
-        "api_error_hint": "Check your OPENAI_API_KEY, OPENAI_BASE_URL and RAG_ASSISTANT_MODEL.",
+        "api_error_hint": "Check your OPENAI_API_KEY and OPENAI_BASE_URL in your .env file.",
         "too_many_steps": (
             "I needed too many steps to answer that. "
             "Could you rephrase or break it into smaller questions?"
@@ -228,22 +228,21 @@ def _detect_workspace() -> Path | None:
     return None
 
 
-def _build_model(reasoning_effort: str | None = None) -> OpenAIServerModel:
+def _build_model(
+    model_id: str, reasoning_effort: str | None = None
+) -> OpenAIServerModel:
     """Construct the OpenAIServerModel pointed at Albert API.
 
     Args:
+        model_id: Albert model alias to use (e.g. ``"openweight-large"``).
+            Configured via ``[assistant].model`` in ragfacile.toml.
         reasoning_effort: Optional reasoning effort level to pass to the API
             (``"low"``, ``"medium"``, or ``"high"``). When set, trades answer
             depth for latency. ``None`` lets the API use its default.
+            Configured via ``[assistant].reasoning_effort`` in ragfacile.toml.
     """
     api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("ALBERT_API_KEY", "")
     api_base = os.environ.get("OPENAI_BASE_URL", "https://albert.api.etalab.gouv.fr/v1")
-    # Use Albert model aliases (resolved server-side) rather than raw model IDs.
-    # openweight-large = the largest available generation model (best quality).
-    # Intentionally separate from OPENAI_MODEL (RAG pipeline) — the assistant
-    # and the RAG pipeline are different use cases with different quality needs.
-    # Override with RAG_ASSISTANT_MODEL in .env for a lighter/faster model.
-    model_id = os.environ.get("RAG_ASSISTANT_MODEL", "openweight-large")
 
     if not api_key:
         console.print(
@@ -297,18 +296,20 @@ def start_chat(debug: bool = False) -> None:
     skill_injected = False  # True once content has been sent to agent
 
     # Load assistant config from ragfacile.toml (best-effort — no workspace = defaults)
+    assistant_model = "openweight-large"
     reasoning_effort: str | None = None
     if workspace:
         try:
             from rag_facile.core.loader import load_config  # noqa: PLC0415
 
             rag_config = load_config(workspace / "ragfacile.toml")
+            assistant_model = rag_config.assistant.model
             reasoning_effort = rag_config.assistant.reasoning_effort
         except (OSError, ValueError):
             pass  # config missing or invalid — use defaults
 
     # Build model + agent — typer.Exit propagates naturally on missing API key
-    model = _build_model(reasoning_effort=reasoning_effort)
+    model = _build_model(model_id=assistant_model, reasoning_effort=reasoning_effort)
 
     # Side-effect hook: when the agent calls activate_skill(), persist the returned
     # content so it's injected into subsequent turns (same as explicit /skills load).

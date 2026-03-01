@@ -551,10 +551,7 @@ class AssistantConfig(BaseModel):
 
     model: str = Field(
         default="openweight-large",
-        description=(
-            "Model alias for the assistant. "
-            "Override at runtime with the RAG_ASSISTANT_MODEL env var."
-        ),
+        description="Model alias for the assistant (e.g. openweight-large, openweight-medium).",
     )
     reasoning_effort: Literal["low", "medium", "high"] | None = Field(
         default=None,
