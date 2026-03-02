@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from rag_facile.memory.lifecycle import (
+    _extract_checkpoint_summary,
     _extract_topics,
     _format_transcript,
     finalize_session,
@@ -275,3 +276,96 @@ class TestExtractTopics:
         ]
         topics = _extract_topics(turns)
         assert "uniqueword12345" not in topics
+
+
+# ── _extract_checkpoint_summary ───────────────────────────────────────────────
+
+
+class TestExtractCheckpointSummary:
+    def test_summary_from_last_assistant(self):
+        turns = [
+            {"role": "user", "content": "Bonjour"},
+            {"role": "assistant", "content": "Bienvenue ! Comment puis-je aider ?"},
+        ]
+        summary, decisions, facts = _extract_checkpoint_summary(turns)
+        assert "Bienvenue" in summary
+
+    def test_summary_truncated_at_200(self):
+        turns = [
+            {"role": "user", "content": "Dis-moi tout"},
+            {"role": "assistant", "content": "A" * 300},
+        ]
+        summary, _, _ = _extract_checkpoint_summary(turns)
+        assert len(summary) <= 201 + 1  # 200 chars + "…"
+
+    def test_fallback_when_no_assistant(self):
+        turns = [{"role": "user", "content": "test"}]
+        summary, _, _ = _extract_checkpoint_summary(turns)
+        assert summary == "Session checkpoint"
+
+    def test_detects_config_set_decision(self):
+        turns = [
+            {"role": "user", "content": "mets top_k à 15"},
+            {"role": "assistant", "content": "J'ai changé top_k de 10 à 15."},
+        ]
+        _, decisions, _ = _extract_checkpoint_summary(turns)
+        assert "top_k" in decisions
+
+    def test_detects_english_decision(self):
+        turns = [
+            {"role": "user", "content": "set temperature to 0.5"},
+            {"role": "assistant", "content": "I've updated temperature to 0.5."},
+        ]
+        _, decisions, _ = _extract_checkpoint_summary(turns)
+        assert "temperature" in decisions
+
+    def test_detects_user_preference_fact(self):
+        turns = [
+            {"role": "user", "content": "Je préfère des réponses courtes."},
+            {"role": "assistant", "content": "Noté !"},
+        ]
+        _, _, facts = _extract_checkpoint_summary(turns)
+        assert "préfère" in facts
+
+    def test_detects_english_preference_fact(self):
+        turns = [
+            {"role": "user", "content": "I prefer short answers."},
+            {"role": "assistant", "content": "Got it!"},
+        ]
+        _, _, facts = _extract_checkpoint_summary(turns)
+        assert "prefer" in facts
+
+    def test_no_decisions_or_facts_for_plain_chat(self):
+        turns = [
+            {"role": "user", "content": "Bonjour !"},
+            {"role": "assistant", "content": "Bonjour, comment allez-vous ?"},
+        ]
+        _, decisions, facts = _extract_checkpoint_summary(turns)
+        assert decisions == ""
+        assert facts == ""
+
+    def test_caps_at_three_decisions(self):
+        turns = []
+        for i in range(5):
+            turns.append({"role": "user", "content": f"change {i}"})
+            turns.append(
+                {"role": "assistant", "content": f"J'ai changé param_{i} à {i}."}
+            )
+        _, decisions, _ = _extract_checkpoint_summary(turns)
+        # At most 3 semicolon-separated entries
+        assert decisions.count(";") <= 2
+
+    def test_checkpoint_writes_decisions_and_facts(self, workspace):
+        turns = [
+            {"role": "user", "content": "Je préfère le preset accurate."},
+            {
+                "role": "assistant",
+                "content": "J'ai changé le preset de balanced à accurate.",
+            },
+        ]
+        run_checkpoint(workspace, turns)
+        from rag_facile.memory.stores import EpisodicLog
+
+        content = EpisodicLog.today_path(workspace).read_text()
+        assert "Checkpoint" in content
+        assert "**Decisions**" in content and "**New facts**" in content

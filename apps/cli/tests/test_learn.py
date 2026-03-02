@@ -82,3 +82,56 @@ class TestLearnCommand:
             result = tools.run_rag_facile("version")
 
         assert "0.17.0" in result
+
+
+class TestNewCommand:
+    """/new command resets session and saves memory."""
+
+    def test_new_command_prints_reset_message(self, monkeypatch):
+        """/new shows the session reset message."""
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+
+        with (
+            patch("cli.commands.learn.agent._detect_workspace", return_value=None),
+            patch("cli.commands.learn.agent.OpenAIServerModel"),
+            patch("cli.commands.learn.agent.ToolCallingAgent"),
+        ):
+            # Type /new, then q to quit
+            result = runner.invoke(main_app, ["learn"], input="/new\nq\n")
+
+        assert result.exit_code == 0
+        # Session reset message visible (without workspace, finalize is a no-op)
+        assert "session" in result.output.lower()
+
+    def test_new_command_calls_finalize(self, monkeypatch, tmp_path):
+        """/new triggers session finalization before resetting."""
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+
+        # Create a minimal workspace
+        (tmp_path / "ragfacile.toml").write_text("")
+        (tmp_path / ".env").write_text("")
+        agent_dir = tmp_path / ".agent"
+        agent_dir.mkdir()
+        (agent_dir / "profile.md").write_text(
+            "# Profile\n\n## Session Count\n0\n", encoding="utf-8"
+        )
+        (agent_dir / "MEMORY.md").write_text("# Memory\n", encoding="utf-8")
+
+        with (
+            patch("cli.commands.learn.agent._detect_workspace", return_value=tmp_path),
+            patch("cli.commands.learn.agent.OpenAIServerModel"),
+            patch("cli.commands.learn.agent.ToolCallingAgent") as mock_agent_cls,
+            patch("cli.commands.learn.agent.needs_init", return_value=False),
+            patch("cli.commands.learn.agent.read_language", return_value="en"),
+            patch("cli.commands.learn.agent._finalize") as mock_finalize,
+        ):
+            mock_agent = mock_agent_cls.return_value
+            mock_agent.run.return_value = "Hello!"
+            mock_agent.memory = None
+
+            # Ask a question, then /new, then quit
+            result = runner.invoke(main_app, ["learn"], input="hello\n/new\nq\n")
+
+        assert result.exit_code == 0
+        # _finalize called twice: once for /new, once for quit
+        assert mock_finalize.call_count == 2

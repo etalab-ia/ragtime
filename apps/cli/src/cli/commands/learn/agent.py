@@ -103,6 +103,9 @@ MEMORY PROTOCOL:
 ASSUME INTERRUPTION: Your context window might be reset at any moment. \
 Record progress to memory so future sessions can pick up where you left off.
 
+Users can type /new to start a fresh session. Your memory will be saved automatically \
+before the reset — any facts you wrote to MEMORY.md will be available in the next session.
+
 Keep memory organized: use memory_edit() to update existing facts. \
 Use memory_write() to create or overwrite entire files. \
 Available memory sections in MEMORY.md: \
@@ -152,7 +155,8 @@ _UI: dict[str, dict[str, str]] = {
         "subtitle": (
             "Posez-moi vos questions sur RAG, votre configuration "
             "ou comment améliorer vos résultats.\n"
-            "Tapez [bold]q[/bold] ou Ctrl+C pour quitter."
+            "Tapez [bold]/new[/bold] pour une nouvelle session, "
+            "[bold]q[/bold] ou Ctrl+C pour quitter."
         ),
         "no_workspace_hint": (
             "\n[dim]💡 Aucun ragfacile.toml trouvé — lancez "
@@ -168,6 +172,7 @@ _UI: dict[str, dict[str, str]] = {
             "Pouvez-vous reformuler ou poser une question plus simple\u00a0?"
         ),
         "rate_limited": "Limite de requêtes atteinte — nouvelle tentative dans {n}s (Ctrl+C pour annuler)\u00a0...",
+        "session_reset": "🔄 Nouvelle session — mémoire sauvegardée.",
         "skill_loaded": "📚 Compétence '{name}' activée.",
         "skill_cleared": "📚 Compétence désactivée.",
         "skill_not_found": "Compétence '{name}' introuvable. Tapez /skills pour voir la liste.",
@@ -177,7 +182,8 @@ _UI: dict[str, dict[str, str]] = {
         "greeting": "Bonjour! I'm your RAG assistant.",
         "subtitle": (
             "Ask me anything about RAG, your pipeline config, or how to improve your results.\n"
-            "Type [bold]q[/bold] or press Ctrl+C to quit."
+            "Type [bold]/new[/bold] for a new session, "
+            "[bold]q[/bold] or Ctrl+C to quit."
         ),
         "no_workspace_hint": (
             "\n[dim]💡 No ragfacile.toml found — run "
@@ -193,6 +199,7 @@ _UI: dict[str, dict[str, str]] = {
             "Could you rephrase or break it into smaller questions?"
         ),
         "rate_limited": "Rate limit reached — retrying in {n}s (Ctrl+C to cancel)...",
+        "session_reset": "🔄 New session — memory saved.",
         "skill_loaded": "📚 Skill '{name}' activated.",
         "skill_cleared": "📚 Skill deactivated.",
         "skill_not_found": "Skill '{name}' not found. Type /skills to see the list.",
@@ -203,6 +210,33 @@ _UI: dict[str, dict[str, str]] = {
 # Albert API allows 10 req/min; smolagents may use several calls per turn.
 # Wait 15s on 429 before one automatic retry.
 _RATE_LIMIT_WAIT = 15
+
+
+class _SessionState:
+    """Mutable session state — reset via ``new()`` for /new command."""
+
+    __slots__ = (
+        "turns",
+        "start",
+        "turn_count",
+        "first_turn",
+        "active_skill",
+        "active_skill_content",
+        "skill_injected",
+    )
+
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        """Reset all fields to their initial values."""
+        self.turns: list[dict[str, str]] = []
+        self.start: datetime = datetime.now()  # noqa: DTZ005
+        self.turn_count: int = 0
+        self.first_turn: bool = True
+        self.active_skill: str | None = None
+        self.active_skill_content: str | None = None
+        self.skill_injected: bool = False
 
 
 _TOOL_ICONS: dict[str, str] = {
@@ -318,17 +352,12 @@ def start_chat(debug: bool = False) -> None:
     if workspace and not (workspace / ".agent" / "MEMORY.md").exists():
         SemanticStore.create(workspace)
 
-    # Session state — used by lifecycle hooks
-    session_turns: list[dict[str, str]] = []
-    session_start = datetime.now()  # noqa: DTZ005 — local time is intentional
-    turn_count = 0
+    # Session state — used by lifecycle hooks; reset by /new
+    ss = _SessionState()
 
     # Discover skills: built-in + workspace (.agents/skills/)
     available_skills = discover_skills(workspace)
     set_available_skills(available_skills)  # expose to activate_skill tool
-    active_skill: str | None = None  # name of currently loaded skill
-    active_skill_content: str | None = None  # SKILL.md content to inject
-    skill_injected = False  # True once content has been sent to agent
 
     # Build model + agent — typer.Exit propagates naturally on missing API key
     model = _build_model()
@@ -336,10 +365,9 @@ def start_chat(debug: bool = False) -> None:
     # Side-effect hook: when the agent calls activate_skill(), persist the returned
     # content so it's injected into subsequent turns (same as explicit /skills load).
     def _on_skill_activated(skill_name: str, content: str) -> None:
-        nonlocal active_skill, active_skill_content, skill_injected
-        active_skill = skill_name
-        active_skill_content = content
-        skill_injected = True  # content already in agent context this turn
+        ss.active_skill = skill_name
+        ss.active_skill_content = content
+        ss.skill_injected = True  # content already in agent context this turn
         console.print(f"[dim]{ui['skill_loaded'].format(name=skill_name)}[/dim]")
 
     def _wrap_activate_skill(tool_obj):
@@ -378,8 +406,6 @@ def start_chat(debug: bool = False) -> None:
         max_steps=5,
     )
 
-    _first_turn = True  # used to inject profile context once on the first turn
-
     # Welcome
     workspace_line = (
         f"\n[dim]Workspace: {workspace}[/dim]" if workspace else ui["no_workspace_hint"]
@@ -400,7 +426,7 @@ def start_chat(debug: bool = False) -> None:
             user_input = console.input(f"[bold cyan]{ui['you']}[/bold cyan]: ").strip()
         except (KeyboardInterrupt, EOFError):
             console.print(f"\n[dim]{ui['goodbye']}[/dim]")
-            _finalize(workspace, session_turns, session_start)
+            _finalize(workspace, ss.turns, ss.start)
             break
 
         if not user_input:
@@ -408,8 +434,24 @@ def start_chat(debug: bool = False) -> None:
 
         if user_input.lower() in ("q", "quit", "exit", "bye", "au revoir", "quitter"):
             console.print(f"[dim]{ui['goodbye']}[/dim]")
-            _finalize(workspace, session_turns, session_start)
+            _finalize(workspace, ss.turns, ss.start)
             break
+
+        # ── /new — reset session ──────────────────────────────────────────────
+        if user_input.strip().lower() == "/new":
+            _finalize(workspace, ss.turns, ss.start)
+            ss.reset()
+
+            # Reset agent conversation history
+            if hasattr(agent, "memory") and agent.memory is not None:
+                agent.memory.reset()
+
+            # Reload profile context for the new session
+            profile_context = bootstrap_context(workspace) if workspace else ""
+
+            console.print(f"[dim]{ui['session_reset']}[/dim]")
+            console.print()
+            continue
 
         # ── /skills slash commands ────────────────────────────────────────────
         _skill_bootstrap = (
@@ -442,22 +484,22 @@ def start_chat(debug: bool = False) -> None:
                     available_skills = discover_skills(workspace)
 
             elif sub == "clear":
-                active_skill = None
-                active_skill_content = None
-                skill_injected = False
+                ss.active_skill = None
+                ss.active_skill_content = None
+                ss.skill_injected = False
                 console.print(f"[dim]{ui['skill_cleared']}[/dim]")
 
             elif sub in available_skills:
                 # /skills <name> — explicit load: activate and bootstrap the flow
-                active_skill = sub
-                active_skill_content = load_skill(available_skills[sub])
+                ss.active_skill = sub
+                ss.active_skill_content = load_skill(available_skills[sub])
                 console.print(f"[dim]{ui['skill_loaded'].format(name=sub)}[/dim]")
                 # Inject skill + trigger word so the agent starts its flow immediately
                 user_input = (
-                    f"[Compétence chargée: {sub}]\n{active_skill_content}\n\n---\n\n"
+                    f"[Compétence chargée: {sub}]\n{ss.active_skill_content}\n\n---\n\n"
                     "Commence."
                 )
-                skill_injected = True
+                ss.skill_injected = True
                 _skill_bootstrap = (
                     True  # skip the outer continue — fall through to agent
                 )
@@ -474,26 +516,26 @@ def start_chat(debug: bool = False) -> None:
         # Episodic logging — record user turn
         if workspace:
             EpisodicLog.append_turn(workspace, "user", user_input)
-        session_turns.append({"role": "user", "content": user_input})
-        turn_count += 1
+        ss.turns.append({"role": "user", "content": user_input})
+        ss.turn_count += 1
 
         # Build effective_input — layer memory (first turn) + skill (on load) + message
         effective_input = user_input
 
         # Inject profile on first turn of the session
-        if profile_context and _first_turn:
+        if profile_context and ss.first_turn:
             effective_input = (
                 f"[Profil utilisateur]\n{profile_context}\n\n---\n\n{effective_input}"
             )
-            _first_turn = False
+            ss.first_turn = False
 
         # Inject skill content the first time a skill becomes active
-        if active_skill_content and not skill_injected:
+        if ss.active_skill_content and not ss.skill_injected:
             effective_input = (
-                f"[Compétence chargée: {active_skill}]\n{active_skill_content}\n\n---\n\n"
+                f"[Compétence chargée: {ss.active_skill}]\n{ss.active_skill_content}\n\n---\n\n"
                 f"{effective_input}"
             )
-            skill_injected = True
+            ss.skill_injected = True
 
         # Retry loop — keeps retrying on 429 until success or Ctrl+C
         response = None
@@ -536,15 +578,15 @@ def start_chat(debug: bool = False) -> None:
         # Episodic logging — record assistant turn
         if workspace:
             EpisodicLog.append_turn(workspace, "assistant", response_text)
-        session_turns.append({"role": "assistant", "content": response_text})
-        turn_count += 1
+        ss.turns.append({"role": "assistant", "content": response_text})
+        ss.turn_count += 1
 
         # Mid-session checkpoint every 8 turns
         if workspace:
             from rag_facile.memory.lifecycle import run_checkpoint, should_checkpoint
 
-            if should_checkpoint(turn_count):
-                run_checkpoint(workspace, session_turns[-8:])
+            if should_checkpoint(ss.turn_count):
+                run_checkpoint(workspace, ss.turns[-8:])
 
         console.print("[bold green]Assistant[/bold green]:")
         console.print(Markdown(response_text))

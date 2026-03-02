@@ -41,8 +41,9 @@ def run_checkpoint(
 
     1. Build a transcript from *recent_turns*
     2. If *summarise_fn* is provided, call it to generate a summary;
-       otherwise use the last assistant response as a rough summary.
-    3. Append a Checkpoint entry to today's episodic log.
+       otherwise extract a structured summary from the turns.
+    3. Append a Checkpoint entry to today's episodic log with summary,
+       decisions, and new facts.
 
     Parameters
     ----------
@@ -56,16 +57,14 @@ def run_checkpoint(
     transcript = _format_transcript(recent_turns)
     if summarise_fn is not None:
         summary = str(summarise_fn(transcript))
+        decisions = ""
+        facts = ""
     else:
-        # Fallback: use the last assistant message as the summary
-        assistant_msgs = [
-            t["content"] for t in recent_turns if t["role"] == "assistant"
-        ]
-        summary = (
-            (assistant_msgs[-1][:200] + "…") if assistant_msgs else "Session checkpoint"
-        )
+        summary, decisions, facts = _extract_checkpoint_summary(recent_turns)
 
-    EpisodicLog.append_checkpoint(workspace, summary=summary)
+    EpisodicLog.append_checkpoint(
+        workspace, summary=summary, decisions=decisions, facts=facts
+    )
 
 
 # ── Session finalisation ──────────────────────────────────────────────────────
@@ -222,6 +221,83 @@ def git_commit_session(workspace: Path) -> None:
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+# Phrases that indicate a config change or actionable decision was made.
+_DECISION_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(p, re.IGNORECASE)
+    for p in [
+        r"config\s+set\b",
+        r"changé|modifié|mis\s+à\s+jour",
+        r"changed|updated|set\s+to",
+        r"top_k|top_n|chunk_size|temperature|model",
+        r"j'ai\s+(changé|modifié|activé|désactivé)",
+        r"I('ve| have)\s+(changed|updated|enabled|disabled)",
+    ]
+]
+
+# Phrases that indicate a user preference or new fact was learned.
+_FACT_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(p, re.IGNORECASE)
+    for p in [
+        r"je\s+(préfère|veux|souhaite|travaille)",
+        r"I\s+(prefer|want|need|work)",
+        r"mon\s+(projet|équipe|cas)",
+        r"my\s+(project|team|use\s+case)",
+        r"n'oublie\s+pas|remember\s+that",
+        r"rappelle-toi|note\s+que|note\s+that",
+    ]
+]
+
+
+def _match_lines(
+    turns: list[dict[str, str]],
+    *,
+    role: str,
+    patterns: list[re.Pattern[str]],
+) -> list[str]:
+    """Scan turns of a given *role* for the first line matching any pattern.
+
+    Returns at most one match per turn (the first matching line, truncated
+    to 150 chars).
+    """
+    matched: list[str] = []
+    for turn in turns:
+        if turn.get("role") != role:
+            continue
+        content = turn.get("content", "")
+        for pattern in patterns:
+            if pattern.search(content):
+                for line in content.splitlines():
+                    if pattern.search(line):
+                        matched.append(line.strip()[:150])
+                        break
+                break  # one match per turn is enough
+    return matched
+
+
+def _extract_checkpoint_summary(
+    turns: list[dict[str, str]],
+) -> tuple[str, str, str]:
+    """Extract a structured summary from recent turns.
+
+    Returns
+    -------
+    tuple[str, str, str]
+        ``(summary, decisions, facts)`` — each may be an empty string.
+    """
+    # Summary: last assistant message, truncated
+    assistant_msgs = [t["content"] for t in turns if t["role"] == "assistant"]
+    summary = (
+        (assistant_msgs[-1][:200] + "…") if assistant_msgs else "Session checkpoint"
+    )
+
+    decision_lines = _match_lines(turns, role="assistant", patterns=_DECISION_PATTERNS)
+    fact_lines = _match_lines(turns, role="user", patterns=_FACT_PATTERNS)
+
+    decisions = "; ".join(decision_lines[:3])  # cap at 3 decisions
+    facts = "; ".join(fact_lines[:3])  # cap at 3 facts
+
+    return summary, decisions, facts
 
 
 def _format_transcript(turns: list[dict[str, str]]) -> str:
