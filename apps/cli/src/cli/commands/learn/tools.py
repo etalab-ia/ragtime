@@ -227,6 +227,7 @@ def activate_skill(name: str) -> str:
 
 from rag_facile.memory.tool import memory_edit  # noqa: E402, F401
 from rag_facile.memory.tool import memory_read  # noqa: E402, F401
+from rag_facile.memory.tool import memory_search  # noqa: E402, F401
 from rag_facile.memory.tool import memory_write  # noqa: E402, F401
 from rag_facile.memory.tool import set_workspace_root as _set_memory_workspace  # noqa: E402, F401
 

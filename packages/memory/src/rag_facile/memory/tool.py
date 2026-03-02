@@ -1,10 +1,11 @@
-"""Standard file-operation tools for agent memory (Read / Write / Edit).
+"""Standard file-operation tools for agent memory (Read / Write / Edit / Search).
 
-Three ``@tool``-decorated functions scoped to the ``.agent/`` directory:
+Four ``@tool``-decorated functions scoped to the ``.agent/`` directory:
 
-- ``memory_read``  — list a directory or read a file (with optional line range)
-- ``memory_write`` — create or overwrite a file
-- ``memory_edit``  — find-and-replace in a file
+- ``memory_read``   — list a directory or read a file (with optional line range)
+- ``memory_write``  — create or overwrite a file
+- ``memory_edit``   — find-and-replace in a file
+- ``memory_search`` — keyword search across all memory files
 
 All paths are validated to stay within ``.agent/`` (path traversal protection).
 """
@@ -261,3 +262,43 @@ def memory_edit(path: str, old_str: str, new_str: str) -> str:
     new_content = content.replace(old_str, new_str, 1)
     resolved.write_text(new_content, encoding="utf-8")
     return f"Edited .agent/{path}: replaced 1 occurrence."
+
+
+@tool
+def memory_search(query: str) -> str:
+    """Search across all memory files for relevant information.
+
+    Uses keyword matching to find snippets in MEMORY.md, daily logs, and
+    session archives.  Results include file paths with line ranges — use
+    memory_read(path:start-end) to read more context.
+
+    Use this BEFORE memory_read when you need to find information but don't
+    know which file contains it.
+
+    Args:
+        query: Natural language search query, e.g. "deployment config",
+               "Albert API rate limit", "user preferences".
+    """
+    if _workspace_root is None:
+        return "No workspace detected — memory unavailable."
+
+    from rag_facile.memory.search import keyword_search
+
+    results = keyword_search(_workspace_root, query, max_results=8)
+
+    if not results:
+        return f'No results found for "{query}".'
+
+    lines: list[str] = [f'Found {len(results)} result(s) for "{query}":\n']
+    for i, r in enumerate(results, 1):
+        path_ref = f"{r['file']}:{r['line_start']}-{r['line_end']}"
+        lines.append(f"{i}. [{r['score']:.2f}] {path_ref}")
+        # Indent snippet lines with >
+        for snippet_line in r["snippet"].splitlines()[:4]:
+            lines.append(f"   > {snippet_line}")
+        lines.append("")
+
+    lines.append(
+        'Use memory_read("file:start-end") to read more context from any result.'
+    )
+    return "\n".join(lines)
