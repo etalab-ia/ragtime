@@ -1,7 +1,10 @@
 """Setup new RAG Facile standalone workspaces."""
 
+import json
 import os
 import subprocess
+import urllib.error
+import urllib.request
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_version
 from pathlib import Path
@@ -29,6 +32,9 @@ class PresetConfig(TypedDict):
 
 # GitHub repository URL for installing the library from source
 _GITHUB_REPO = "https://github.com/etalab-ia/rag-facile.git"
+
+# GitHub API URL for fetching the latest release
+_GITHUB_API_LATEST = "https://api.github.com/repos/etalab-ia/rag-facile/releases/latest"
 
 # Default .gitignore for generated projects
 _GITIGNORE_CONTENT = """\
@@ -102,18 +108,41 @@ frontend.zip
 """
 
 
+def _get_latest_release_tag() -> str | None:
+    """Fetch the latest rag-facile release tag from GitHub. Returns None on failure."""
+    try:
+        req = urllib.request.Request(
+            _GITHUB_API_LATEST,
+            headers={
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "rag-facile-cli",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read())
+            return data.get("tag_name")
+    except (urllib.error.URLError, json.JSONDecodeError):
+        return None
+
+
 def _get_library_git_ref() -> dict[str, str]:
     """Determine the git ref for rag-facile-lib and albert-client sources.
 
-    Returns a dict with either {"tag": "v0.15.0"} or {"branch": "main"}.
-    Priority: RAG_FACILE_BRANCH env var > CLI version tag > "main" fallback.
+    Returns a dict with either {"tag": "v0.19.0"} or {"branch": "main"}.
+    Priority: RAG_FACILE_BRANCH env var > latest GitHub release > CLI version tag > "main" fallback.
     """
-    # Dev testing: use branch from env var (same pattern as install.sh)
+    # Dev/CI override: use branch from env var (same pattern as install.sh)
     branch = os.environ.get("RAG_FACILE_BRANCH")
     if branch:
         return {"branch": branch}
 
-    # Production: use tag matching CLI version
+    # Prefer the latest published release so new workspaces always get the
+    # most recent version, even when running an older CLI.
+    latest_tag = _get_latest_release_tag()
+    if latest_tag:
+        return {"tag": latest_tag}
+
+    # Offline fallback: use the version tag matching the installed CLI.
     try:
         cli_version = get_version("rag-facile-cli")
         return {"tag": f"v{cli_version}"}
