@@ -7,13 +7,13 @@ This guide walks you through installing RAG Facile and running your first RAG ap
 ## Prerequisites
 
 - An **Albert API key** — [request one here](https://albert.sites.beta.gouv.fr/)
-- **curl** (pre-installed on macOS/Linux/WSL)
+- **curl** (pre-installed on macOS/Linux/WSL/Git Bash)
 
-The installer handles everything else: it installs [uv](https://docs.astral.sh/uv/) (Python package manager) and [just](https://just.systems/) (command runner), then downloads and sets up a ready-to-run workspace.
+The installer handles everything else: it installs [uv](https://docs.astral.sh/uv/) (Python package manager), [just](https://just.systems/) (command runner), and the `rag-facile` CLI as a global tool.
 
 ## Install
 
-### Linux / macOS / WSL
+### Linux / macOS / WSL / Windows (Git Bash)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
@@ -21,36 +21,25 @@ curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.s
 
 Then **restart your terminal** (or run the `source` command shown by the installer).
 
-### Windows (PowerShell)
-
-```powershell
-irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
-```
-
-Open a new PowerShell window after installation completes.
-
 ## What the installer does
 
 1. Installs **uv** (Python package manager) — if not already present
 2. Installs **just** (command runner) — if not already present
-3. Downloads the latest **RAG Facile workspace** zip from GitHub Releases
-4. Extracts it to `./my-rag-app/`
-5. Runs `uv sync` to install Python dependencies
+3. Fetches the latest release tag from GitHub
+4. Installs **rag-facile** as a global tool via `uv tool install`
 
-Total toolchain: just **curl + uv + just**. No proto, no moon, no global CLI tools.
+Total toolchain: **curl + uv + just + rag-facile**. No proto, no moon.
 
 ## Your first app
 
-After installation:
+After installation, create and configure your project:
 
 ```bash
-# 1. Add your Albert API key
-cd my-rag-app
-cp .env.template .env
-# Edit .env and set OPENAI_API_KEY=<your-key>
+# Create your RAG project (prompts for API key and preferences)
+rag-facile setup mon-projet
 
-# 2. Start the Chainlit app
-just run
+# Start the Chainlit app
+cd mon-projet && just run
 ```
 
 Your app opens at **http://localhost:8000** — upload documents and ask questions.
@@ -67,68 +56,61 @@ Run `just` inside `my-rag-app/` to see all available commands:
 
 ## Using the RAG Facile CLI
 
-The CLI (`rag-facile`) is included as a development dependency in your workspace. Run it with:
+`rag-facile` is installed globally — run it from anywhere:
 
 ```bash
-cd my-rag-app
-uv run rag-facile --help
+rag-facile --help
 ```
 
 Common commands:
 
 ```bash
-# Open the interactive RAG learning assistant
-uv run rag-facile learn
+# Create a new RAG project
+rag-facile setup mon-projet
+
+# Open the interactive RAG learning assistant (inside your project)
+rag-facile learn
 
 # View your current RAG configuration
-uv run rag-facile config show
+rag-facile config show
 
 # Change a configuration value
-uv run rag-facile config set retrieval.top_k 15
+rag-facile config set retrieval.top_k 15
 
 # List available Albert public collections
-uv run rag-facile collections list
+rag-facile collections list
 
 # Generate a synthetic Q/A evaluation dataset
-uv run rag-facile generate-dataset ./docs -o dataset.jsonl
+rag-facile generate-dataset ./docs -o dataset.jsonl
 ```
 
-Or use the shortcut recipes in `justfile`:
+Or use the shortcut recipes in your project's `justfile`:
 
 ```bash
-just learn   # same as: uv run rag-facile learn
+just learn   # same as: rag-facile learn
 ```
 
-## Advanced: scaffold a custom workspace
+## Advanced: setup options
 
-Power users who want to choose a different preset, frontend (Reflex), or RAG pipeline can scaffold a workspace from scratch:
+`rag-facile setup` accepts flags for non-default configurations:
 
 ```bash
-# Default (balanced preset, Chainlit, Albert RAG)
-uv run rag-facile setup my-custom-app
-
 # Expert mode — choose preset, frontend, and pipeline interactively
-uv run rag-facile setup my-custom-app --expert
+rag-facile setup mon-projet --expert
 
 # Available presets: fast, balanced, accurate, legal, hr
-uv run rag-facile setup my-custom-app --preset legal
+rag-facile setup mon-projet --preset legal
 ```
 
 ## Upgrading
 
-To get the latest version, re-run the installer — it downloads a fresh workspace zip:
+To get the latest version, re-run the installer:
 
 ```bash
-# Linux / macOS / WSL
 curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 ```
 
-```powershell
-# Windows (PowerShell)
-irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
-```
-
-> **Note**: Re-running the installer creates a new `my-rag-app/` directory. Your existing workspace is not modified.
+This reinstalls the `rag-facile` CLI pinned to the latest release. Your existing project workspaces are not affected.
 
 ## Troubleshooting
 

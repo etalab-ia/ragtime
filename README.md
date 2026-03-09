@@ -17,34 +17,24 @@ Build a RAG application for the French government in under 5 minutes, powered by
 ## Prerequisites
 
 - An **Albert API key** — [request one here](https://albert.sites.beta.gouv.fr/)
-- **curl** (pre-installed on macOS / Linux / WSL)
+- **curl** (pre-installed on macOS / Linux / WSL / Git Bash)
 
 ## Install
 
-Linux / macOS / WSL:
+Linux / macOS / WSL / Windows (Git Bash):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 ```
 
-Windows (PowerShell):
-
-```powershell
-irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
-```
-
-This creates a ready-to-run Chainlit workspace at `./my-rag-app/`.
-
 ## Quick Start
 
 ```bash
-# Add your Albert API key
-cd my-rag-app
-cp .env.template .env
-# Edit .env and set OPENAI_API_KEY=<your-key>
+# Create your RAG project (prompts for API key and preferences)
+rag-facile setup mon-projet
 
 # Start your app
-just run
+cd mon-projet && just run
 ```
 
 Your app opens at **http://localhost:8000** — upload documents and ask questions.
@@ -58,16 +48,8 @@ just learn
 
 Re-run the installer to get the latest version:
 
-Linux / macOS / WSL:
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
-```
-
-Windows (PowerShell):
-
-```powershell
-irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
 ```
 
 ## Documentation
@@ -79,7 +61,7 @@ irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | ie
 | [`ragfacile.toml` Reference](docs/reference/ragfacile-toml.md) | Every configuration option, presets comparison, environment overrides |
 | [Evaluation Guide](docs/guides/evaluation.md) | Generate synthetic datasets and measure RAG quality |
 | [Components Reference](docs/reference/components.md) | Albert Client SDK, frontend apps, and modules |
-| [Windows Setup](docs/guides/windows-setup.md) | Complete guide for Windows (PowerShell and Git Bash) |
+| [Windows Setup](docs/guides/windows-setup.md) | Installation on Windows via Git Bash |
 | [Proxy & Network Setup](docs/guides/proxy-setup.md) | Install behind corporate proxies and VPNs |
 
 ## Contributing

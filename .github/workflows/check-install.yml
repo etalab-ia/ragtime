@@ -1,79 +1,33 @@
 name: Check Install
 
-# Validates the new installer flow:
-#  1. Build the release asset from the current branch
-#  2. Run install.sh / install.ps1 with RAG_FACILE_LOCAL_ASSET pointing to that zip
-#  3. Verify just run starts the Chainlit app and just learn --version works
+# Validates install.sh across platforms:
+#  1. Run install.sh (installs uv, just, rag-facile as a global tool)
+#  2. Verify rag-facile --version, just --version, uv --version
 
 on:
   pull_request:
     paths:
       - 'install.sh'
-      - 'install.ps1'
-      - 'tools/build_release_asset.py'
       - 'apps/cli/**'
       - '!apps/cli/**/*.md'
       - 'packages/**/pyproject.toml'
       - 'packages/**/src/**'
-      - '.moon/templates/**'
-      - '!.moon/templates/**/*.md'
       - '.github/workflows/check-install.yml'
   push:
     branches:
       - main
     paths:
       - 'install.sh'
-      - 'install.ps1'
-      - 'tools/build_release_asset.py'
       - 'apps/cli/**'
       - '!apps/cli/**/*.md'
       - 'packages/**/pyproject.toml'
       - 'packages/**/src/**'
-      - '.moon/templates/**'
-      - '!.moon/templates/**/*.md'
       - '.github/workflows/check-install.yml'
 
 permissions:
   contents: read
 
 jobs:
-  # ============================================================================
-  # BUILD RELEASE ASSET
-  # Shared first step — other jobs download this artifact
-  # ============================================================================
-
-  build-asset:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    name: "Build release asset"
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup proto
-        uses: moonrepo/setup-proto@v1
-        with:
-          proto-version: latest
-
-      - name: Install uv
-        run: proto install uv
-
-      - name: Install workspace dependencies
-        run: uv sync
-
-      - name: Build release asset
-        env:
-          # Use the real branch HEAD, not the ephemeral PR merge commit
-          BUILD_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: uv run python tools/build_release_asset.py
-
-      - name: Upload asset as workflow artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-asset
-          path: dist/rag-facile-workspace-*.zip
-          retention-days: 1
-
   # ============================================================================
   # LINUX SMOKE TEST
   # ============================================================================
@@ -82,71 +36,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     name: "Install on Linux (Ubuntu)"
-    needs: build-asset
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download release asset
-        uses: actions/download-artifact@v4
-        with:
-          name: release-asset
-          path: /tmp/assets
+      - name: Run installer
+        run: bash install.sh
 
-      - name: Run installer (using local asset)
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify tools are available
         run: |
-          ASSET=$(ls /tmp/assets/rag-facile-workspace-*.zip | head -1)
-          RAG_FACILE_LOCAL_ASSET="$ASSET" bash install.sh
-
-      - name: Verify just and uv are available
-        shell: bash
-        run: |
-          source ~/.bashrc 2>/dev/null || true
           export PATH="$HOME/.local/bin:$PATH"
           just --version
           uv --version
-
-      - name: Smoke test — start Chainlit app
-        shell: bash
-        env:
-          OPENAI_API_KEY: "test-key-for-ci"
-          OPENAI_BASE_URL: "https://albert.api.etalab.gouv.fr/v1"
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          cd my-rag-app
-          cp .env.template .env
-          echo "OPENAI_API_KEY=test-key-for-ci" >> .env
-
-          # Start Chainlit in background
-          uv run chainlit run app.py --host 0.0.0.0 --port 8000 &
-          SERVER_PID=$!
-
-          # Wait for server to respond (max 60s)
-          for i in $(seq 1 30); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000 2>/dev/null || echo "000")
-            if [ "$STATUS" = "200" ]; then
-              echo "✅ Chainlit responded with HTTP 200 after ~$((i * 2))s"
-              break
-            fi
-            if [ "$i" -eq 30 ]; then
-              echo "❌ Chainlit did not respond within 60s (last status: $STATUS)"
-              kill $SERVER_PID 2>/dev/null || true
-              exit 1
-            fi
-            sleep 2
-          done
-
-          kill $SERVER_PID 2>/dev/null || true
-
-      - name: Verify rag-facile CLI accessible via uv run
-        shell: bash
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          cd my-rag-app
-          uv run rag-facile --version
+          rag-facile --version
 
   # ============================================================================
   # MACOS SMOKE TEST
@@ -156,117 +58,43 @@ jobs:
     runs-on: macos-14
     timeout-minutes: 15
     name: "Install on macOS (Apple Silicon)"
-    needs: build-asset
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download release asset
-        uses: actions/download-artifact@v4
-        with:
-          name: release-asset
-          path: /tmp/assets
+      - name: Run installer
+        run: bash install.sh
 
-      - name: Run installer (using local asset)
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ASSET=$(ls /tmp/assets/rag-facile-workspace-*.zip | head -1)
-          RAG_FACILE_LOCAL_ASSET="$ASSET" bash install.sh
-
-      - name: Verify just and uv are available
-        shell: bash
+      - name: Verify tools are available
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           just --version
           uv --version
-
-      - name: Smoke test — start Chainlit app
-        shell: bash
-        env:
-          OPENAI_API_KEY: "test-key-for-ci"
-          OPENAI_BASE_URL: "https://albert.api.etalab.gouv.fr/v1"
-          PYTHONUTF8: "1"
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          cd my-rag-app
-          cp .env.template .env
-          echo "OPENAI_API_KEY=test-key-for-ci" >> .env
-
-          # Start Chainlit in background
-          uv run chainlit run app.py --host 0.0.0.0 --port 8000 &
-          SERVER_PID=$!
-
-          for i in $(seq 1 30); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000 2>/dev/null || echo "000")
-            if [ "$STATUS" = "200" ]; then
-              echo "✅ Chainlit responded with HTTP 200 after ~$((i * 2))s"
-              break
-            fi
-            if [ "$i" -eq 30 ]; then
-              echo "❌ Chainlit did not respond within 60s"
-              kill $SERVER_PID 2>/dev/null || true
-              exit 1
-            fi
-            sleep 2
-          done
-
-          kill $SERVER_PID 2>/dev/null || true
-
-      - name: Verify rag-facile CLI accessible via uv run
-        shell: bash
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          cd my-rag-app
-          uv run rag-facile --version
+          rag-facile --version
 
   # ============================================================================
-  # WINDOWS SMOKE TEST (PowerShell)
+  # WINDOWS SMOKE TEST (Git Bash)
   # ============================================================================
 
   test-windows:
     runs-on: windows-latest
     timeout-minutes: 15
-    name: "Install on Windows (PowerShell)"
-    needs: build-asset
+    name: "Install on Windows (Git Bash)"
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download release asset
-        uses: actions/download-artifact@v4
-        with:
-          name: release-asset
-          path: C:\Temp\assets
+      - name: Run installer (Git Bash)
+        shell: bash
+        run: bash install.sh
 
-      - name: Run PowerShell installer (using local asset)
-        shell: powershell
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify tools are available
+        shell: bash
         run: |
-          $Asset = Get-ChildItem "C:\Temp\assets\rag-facile-workspace-*.zip" | Select-Object -First 1
-          $env:RAG_FACILE_LOCAL_ASSET = $Asset.FullName
-          $env:PYTHONUTF8 = "1"
-          . .\install.ps1
-
-      - name: Verify just and uv are available
-        shell: powershell
-        env:
-          PYTHONUTF8: "1"
-        run: |
-          $env:PATH = "$env:USERPROFILE\.local\bin;$env:PATH"
+          export PATH="$HOME/.local/bin:$PATH"
           just --version
           uv --version
-
-      - name: Verify rag-facile CLI accessible via uv run
-        shell: powershell
-        env:
-          PYTHONUTF8: "1"
-        run: |
-          $env:PATH = "$env:USERPROFILE\.local\bin;$env:PATH"
-          Set-Location my-rag-app
-          uv run rag-facile --version
+          rag-facile --version
 
   # ============================================================================
   # SUMMARY
@@ -276,21 +104,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     name: "Installation Tests Summary"
-    needs: [build-asset, test-linux, test-macos, test-windows]
+    needs: [test-linux, test-macos, test-windows]
     if: always()
 
     steps:
       - name: Check test results
         run: |
           echo "=== Installation Test Results ==="
-          echo "Build asset:       ${{ needs.build-asset.result }}"
-          echo "Linux (Ubuntu):    ${{ needs.test-linux.result }}"
-          echo "macOS (ARM64):     ${{ needs.test-macos.result }}"
-          echo "Windows (PS):      ${{ needs.test-windows.result }}"
+          echo "Linux (Ubuntu):     ${{ needs.test-linux.result }}"
+          echo "macOS (ARM64):      ${{ needs.test-macos.result }}"
+          echo "Windows (Git Bash): ${{ needs.test-windows.result }}"
 
-          if [[ "${{ needs.build-asset.result }}" == "failure" || \
-                "${{ needs.test-linux.result }}" == "failure" || \
-                "${{ needs.test-macos.result }}" == "failure" || \
+          if [[ "${{ needs.test-linux.result }}"   == "failure" || \
+                "${{ needs.test-macos.result }}"   == "failure" || \
                 "${{ needs.test-windows.result }}" == "failure" ]]; then
             echo "❌ One or more tests failed"
             exit 1
