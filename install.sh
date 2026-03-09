@@ -1,97 +1,131 @@
 #!/usr/bin/env bash
-# RAG Facile installer for Unix / macOS / WSL / Git Bash
-# Prerequisites: curl
-# Installs: uv, just, then the rag-facile CLI as a global tool.
+# Installateur RAG Facile pour Unix / macOS / WSL / Git Bash
+# Prérequis : curl
+# Installe : uv, just, puis la commande rag-facile en tant qu'outil global.
 #
-# Usage:
+# Utilisation :
 #   curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 #
-# Environment variables:
-#   RAG_FACILE_VERSION  Specific version tag to install (default: latest release)
+# Variables d'environnement :
+#   RAG_FACILE_VERSION  Version spécifique à installer (par défaut : dernière version)
 
 set -e
 
 LOCAL_BIN="$HOME/.local/bin"
 
 echo ""
-echo "==> RAG Facile Installer"
+echo "==> Installateur RAG Facile"
 echo ""
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Fonctions utilitaires ──────────────────────────────────────────────────────
 
-check_tool() {
+outil_disponible() {
     command -v "$1" &>/dev/null
 }
 
-ensure_bin_on_path() {
-    # Make ~/.local/bin available in this session (uv, just, and rag-facile land there)
+ajouter_au_path() {
+    # Rendre ~/.local/bin disponible dans cette session
     if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
         export PATH="$LOCAL_BIN:$PATH"
     fi
 }
 
-# ── 1. Install uv ─────────────────────────────────────────────────────────────
+spinner_start() {
+    # Lance un spinner (points toutes les 2 secondes) en arrière-plan.
+    # Utilisation : spinner_start ; ... ; spinner_stop
+    while true; do
+        printf '.'
+        sleep 2
+    done &
+    SPINNER_PID=$!
+}
 
-ensure_bin_on_path
+spinner_stop() {
+    kill "$SPINNER_PID" 2>/dev/null
+    wait "$SPINNER_PID" 2>/dev/null || true
+    printf '\n'
+}
 
-if check_tool uv; then
-    echo "✓ uv already installed"
+# ── 1. Installation de uv ─────────────────────────────────────────────────────
+
+ajouter_au_path
+
+if outil_disponible uv; then
+    echo "✓ uv déjà installé"
 else
-    echo "==> Installing uv..."
+    echo "==> Installation de uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    ensure_bin_on_path
-    if ! check_tool uv; then
-        echo "ERROR: uv installation failed"
+    ajouter_au_path
+    if ! outil_disponible uv; then
+        echo "ERREUR : l'installation de uv a échoué"
         exit 1
     fi
-    echo "✓ uv installed"
+    echo "✓ uv installé"
 fi
 
-# ── 2. Install just ───────────────────────────────────────────────────────────
+# ── 2. Installation de just ───────────────────────────────────────────────────
 
-if check_tool just; then
-    echo "✓ just already installed"
+if outil_disponible just; then
+    echo "✓ just déjà installé"
 else
-    echo "==> Installing just..."
+    echo "==> Installation de just..."
     curl -LsSf https://just.systems/install.sh | bash -s -- --to "$LOCAL_BIN"
-    ensure_bin_on_path
-    if ! check_tool just; then
-        echo "ERROR: just installation failed"
+    ajouter_au_path
+    if ! outil_disponible just; then
+        echo "ERREUR : l'installation de just a échoué"
         exit 1
     fi
-    echo "✓ just installed"
+    echo "✓ just installé"
 fi
 
-# ── 3. Fetch release tag ───────────────────────────────────────────────────────
+# ── 3. Récupération de la version ─────────────────────────────────────────────
 
 if [[ -n "${RAG_FACILE_VERSION:-}" ]]; then
     LATEST_TAG="$RAG_FACILE_VERSION"
-    echo "==> Using version: $LATEST_TAG"
+    echo "==> Utilisation de la version : $LATEST_TAG"
 else
-    echo "==> Fetching latest release..."
+    echo "==> Récupération de la dernière version..."
     LATEST_TAG=$(curl -fsSL "https://api.github.com/repos/etalab-ia/rag-facile/releases/latest" \
         2>/dev/null | sed -n -E 's/.*"tag_name": *"([^"]+)".*/\1/p')
 
     if [[ -z "$LATEST_TAG" ]]; then
-        echo "ERROR: Could not fetch latest release tag from GitHub API."
-        echo "       Check your network connection or set RAG_FACILE_VERSION manually."
+        echo "ERREUR : impossible de récupérer la dernière version depuis l'API GitHub."
+        echo "         Vérifiez votre connexion ou définissez RAG_FACILE_VERSION manuellement."
         exit 1
     fi
 
-    echo "   Latest release: $LATEST_TAG"
+    echo "   Dernière version : $LATEST_TAG"
 fi
 
-# ── 4. Install rag-facile CLI ─────────────────────────────────────────────────
+# ── 4. Installation de rag-facile ─────────────────────────────────────────────
 
-echo "==> Installing rag-facile $LATEST_TAG..."
+UV_LOG=$(mktemp)
+printf "==> Installation de rag-facile %s " "$LATEST_TAG"
+spinner_start
+
 uv tool install \
     "rag-facile-cli @ git+https://github.com/etalab-ia/rag-facile.git@${LATEST_TAG}#subdirectory=apps/cli" \
-    --force
+    --force >"$UV_LOG" 2>&1 \
+    || { UV_FAILED=true; }
 
-ensure_bin_on_path
+spinner_stop
 
-if ! check_tool rag-facile; then
-    echo "ERROR: rag-facile installation failed"
+if [[ "${UV_FAILED:-}" == "true" ]]; then
+    cat "$UV_LOG"
+    rm -f "$UV_LOG"
+    echo "ERREUR : l'installation de rag-facile a échoué"
+    exit 1
+fi
+
+# Afficher uniquement la ligne de résumé (ex. "Installed 1 executable: rag-facile")
+SUMMARY=$(grep -E "^Installed [0-9]+ executable" "$UV_LOG" | tail -1)
+[[ -n "$SUMMARY" ]] && echo "   $SUMMARY"
+rm -f "$UV_LOG"
+
+ajouter_au_path
+
+if ! outil_disponible rag-facile; then
+    echo "ERREUR : la commande rag-facile n'est pas disponible après installation"
     exit 1
 fi
 
@@ -128,7 +162,7 @@ Prochaines étapes :
 
 EOF
 
-# Guidance for shell profiles (so just/uv/rag-facile are found after terminal restart)
+# Mise à jour du profil shell si ~/.local/bin n'est pas encore dans le PATH permanent
 if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
     if [[ -n "$ZSH_VERSION" ]] || [[ "$SHELL" == */zsh ]]; then
         PROFILE="$HOME/.zshrc"
@@ -145,11 +179,11 @@ if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
     fi
 
     echo "  ⚠️  Redémarrez votre terminal (ou lancez : source $PROFILE)"
-    echo "     pour que 'just', 'uv' et 'rag-facile' soient disponibles dans les prochaines sessions."
+    echo "     pour que 'just', 'uv' et 'rag-facile' soient disponibles."
     echo ""
 fi
 
-# Export to GitHub Actions CI environment if applicable
+# Export vers l'environnement GitHub Actions si applicable
 if [[ -n "${GITHUB_PATH:-}" ]]; then
     echo "$LOCAL_BIN" >> "$GITHUB_PATH"
 fi
