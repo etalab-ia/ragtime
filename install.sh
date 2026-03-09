@@ -69,7 +69,29 @@ if outil_disponible just; then
     echo "✓ just déjà installé"
 else
     echo "==> Installation de just..."
-    curl -LsSf https://just.systems/install.sh | bash -s -- --to "$LOCAL_BIN"
+    JUST_TAG=$(curl -fsSL "https://api.github.com/repos/casey/just/releases/latest" \
+        2>/dev/null | sed -n -E 's/.*"tag_name": *"([^"]+)".*/\1/p')
+    if [[ -z "$JUST_TAG" ]]; then
+        echo "ERREUR : impossible de récupérer la version de just depuis l'API GitHub."
+        exit 1
+    fi
+    case "$(uname -s)-$(uname -m)" in
+        Linux-x86_64)   JUST_TARGET="x86_64-unknown-linux-musl" ;;
+        Linux-aarch64)  JUST_TARGET="aarch64-unknown-linux-musl" ;;
+        Darwin-x86_64)  JUST_TARGET="x86_64-apple-darwin" ;;
+        Darwin-arm64)   JUST_TARGET="aarch64-apple-darwin" ;;
+        MINGW*|MSYS*)   JUST_TARGET="x86_64-pc-windows-msvc" ;;
+        *)
+            echo "ERREUR : plateforme non supportée : $(uname -s)-$(uname -m)"
+            exit 1 ;;
+    esac
+    JUST_TMP=$(mktemp -d)
+    JUST_URL="https://github.com/casey/just/releases/download/${JUST_TAG}/just-${JUST_TAG}-${JUST_TARGET}.tar.gz"
+    curl -fsSL "$JUST_URL" -o "$JUST_TMP/just.tar.gz"
+    tar -xzf "$JUST_TMP/just.tar.gz" -C "$JUST_TMP" just
+    mkdir -p "$LOCAL_BIN"
+    mv "$JUST_TMP/just" "$LOCAL_BIN/just"
+    rm -rf "$JUST_TMP"
     ajouter_au_path
     if ! outil_disponible just; then
         echo "ERREUR : l'installation de just a échoué"
