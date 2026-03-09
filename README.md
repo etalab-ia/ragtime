@@ -17,7 +17,7 @@ Build a RAG application for the French government in under 5 minutes, powered by
 ## Prerequisites
 
 - An **Albert API key** — [request one here](https://albert.sites.beta.gouv.fr/)
-- **curl** (pre-installed on macOS / Linux / WSL)
+- **curl** — pre-installed on macOS / Linux / WSL; not required on Windows (uses PowerShell)
 
 ## Install
 

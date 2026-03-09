@@ -7,7 +7,7 @@ This guide walks you through installing RAG Facile and running your first RAG ap
 ## Prerequisites
 
 - An **Albert API key** — [request one here](https://albert.sites.beta.gouv.fr/)
-- **curl** (pre-installed on macOS/Linux/WSL)
+- **curl** — pre-installed on macOS/Linux/WSL; not required on Windows (uses PowerShell)
 
 The installer handles everything else: it installs [uv](https://docs.astral.sh/uv/) (Python package manager) and [just](https://just.systems/) (command runner), then downloads and sets up a ready-to-run workspace.
 
@@ -37,7 +37,7 @@ Open a new PowerShell window after installation completes.
 4. Extracts it to `./my-rag-app/`
 5. Runs `uv sync` to install Python dependencies
 
-Total toolchain: just **curl + uv + just**. No proto, no moon, no global CLI tools.
+Total toolchain: just **uv + just**. No proto, no moon, no global CLI tools. (Linux/macOS/WSL also need **curl**, pre-installed on all three.)
 
 ## Your first app
 
