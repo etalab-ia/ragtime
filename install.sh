@@ -26,23 +26,9 @@ check_tool() {
 }
 
 read_secret() {
-    # Read a password-style input with '*' feedback per character.
-    # Handles backspace. Result stored in ALBERT_API_KEY.
-    ALBERT_API_KEY=""
-    local char
-    while IFS= read -r -s -n1 char </dev/tty; do
-        if [[ -z "$char" ]]; then          # Enter
-            break
-        elif [[ "$char" == $'\x7f' || "$char" == $'\b' ]]; then  # Backspace
-            if [[ -n "$ALBERT_API_KEY" ]]; then
-                ALBERT_API_KEY="${ALBERT_API_KEY%?}"
-                printf '\b \b' >/dev/tty
-            fi
-        else
-            ALBERT_API_KEY+="$char"
-            printf '*' >/dev/tty
-        fi
-    done
+    # Read silently from /dev/tty (works for both typing and paste).
+    # Result stored in ALBERT_API_KEY.
+    IFS= read -r -s ALBERT_API_KEY </dev/tty
     printf '\n' >/dev/tty
 }
 
@@ -61,7 +47,7 @@ if [[ -r /dev/tty ]]; then
     echo "   Obtenez votre clé sur : https://albert.api.etalab.gouv.fr/"
     echo "   (Appuyez sur Entrée pour ignorer et configurer plus tard)"
     echo ""
-    printf "   Entrez votre clé API : "
+    printf "   Entrez votre clé API (saisie masquée) : "
     read_secret
     if [[ -n "$ALBERT_API_KEY" ]]; then
         echo "✓ Clé API enregistrée"
