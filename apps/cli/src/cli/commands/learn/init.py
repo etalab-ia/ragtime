@@ -5,7 +5,6 @@ Creates the directory structure and profile file that the agent uses
 to personalise responses across sessions.
 """
 
-import locale
 import subprocess
 from datetime import date
 from pathlib import Path
@@ -47,17 +46,12 @@ _EXPERIENCE_CHOICES = [
 
 
 def _detect_language() -> str:
-    """Infer preferred language from the system locale.
+    """Return the default language for this tool.
 
-    Returns 'en' when the locale starts with 'en' (e.g. en_US, en_GB),
-    'fr' for everything else (French government default).
+    Always 'fr' — rag-facile targets French government users.
+    The locale is not used: a developer with an English-locale machine
+    should still get a French-speaking assistant by default.
     """
-    try:
-        lang, _ = locale.getlocale()
-        if lang and lang.lower().startswith("en"):
-            return "en"
-    except ValueError:
-        pass
     return "fr"
 
 

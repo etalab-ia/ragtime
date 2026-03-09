@@ -5,7 +5,7 @@ from unittest.mock import patch
 from typer.testing import CliRunner
 
 from cli.commands.learn.init import (
-    _detect_language,
+    _detect_language,  # noqa: F401 — imported to verify it exists and is callable
     _profile_template,
     needs_init,
     read_language,
@@ -38,27 +38,9 @@ class TestProfileTemplate:
 
 
 class TestDetectLanguage:
-    def test_returns_en_for_english_locale(self):
-        with patch(
-            "cli.commands.learn.init.locale.getlocale", return_value=("en_US", "UTF-8")
-        ):
-            assert _detect_language() == "en"
-
-    def test_returns_fr_for_french_locale(self):
-        with patch(
-            "cli.commands.learn.init.locale.getlocale", return_value=("fr_FR", "UTF-8")
-        ):
-            assert _detect_language() == "fr"
-
-    def test_returns_fr_for_unknown_locale(self):
-        with patch(
-            "cli.commands.learn.init.locale.getlocale", return_value=(None, None)
-        ):
-            assert _detect_language() == "fr"
-
-    def test_returns_fr_on_value_error(self):
-        with patch("cli.commands.learn.init.locale.getlocale", side_effect=ValueError):
-            assert _detect_language() == "fr"
+    def test_always_returns_fr(self):
+        """rag-facile targets French government users — always defaults to French."""
+        assert _detect_language() == "fr"
 
 
 class TestReadLanguage:
@@ -99,21 +81,17 @@ class TestRunInitWizard:
 
         assert (tmp_path / ".agent" / "profile.md").exists()
 
-    def test_returns_detected_language(self, tmp_path):
-        """Wizard returns language from locale detection, not from questionary."""
+    def test_returns_fr_language(self, tmp_path):
+        """Wizard always returns 'fr' — French is the default for this tool."""
         with (
             patch(
                 "cli.commands.learn.init.questionary.select",
                 side_effect=_exp_new(),
             ),
             patch("cli.commands.learn.init._git_add"),
-            patch(
-                "cli.commands.learn.init.locale.getlocale",
-                return_value=("en_US", "UTF-8"),
-            ),
         ):
             lang = run_init_wizard(tmp_path)
-        assert lang == "en"
+        assert lang == "fr"
 
     def test_creates_skills_directory(self, tmp_path):
         with (
