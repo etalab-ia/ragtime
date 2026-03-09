@@ -152,6 +152,11 @@ Step 3 — Only if the user replies with a clear yes ("oui", "yes", "ok", "vas-y
 
 If the user's original message already sounds like a confirmation ("mets top_k à 15"), \
 treat it as a REQUEST, not a confirmation — still ask the explicit question in Step 1.
+
+## Language
+
+Respond in **French** by default. If the user writes in a different language, \
+adapt and respond in their language for the rest of the conversation.
 """
 
 # ── Per-language UI strings ───────────────────────────────────────────────────
