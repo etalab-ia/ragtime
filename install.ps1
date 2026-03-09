@@ -37,6 +37,24 @@ function Test-Command($name) {
     return [bool](Get-Command $name -ErrorAction SilentlyContinue)
 }
 
+# -- 0. Cle API Albert ---------------------------------------------------------
+
+$AlbertKey = ""
+if (-not [Console]::IsInputRedirected) {
+    Write-Host "==> Configuration de la cle API Albert" -ForegroundColor Yellow
+    Write-Host "   Obtenez votre cle sur : https://albert.api.etalab.gouv.fr/"
+    Write-Host "   (Appuyez sur Entree pour ignorer et configurer plus tard)"
+    Write-Host ""
+    $SecureKey = Read-Host -Prompt "   Entrez votre cle API" -AsSecureString
+    $AlbertKey = [System.Net.NetworkCredential]::new('', $SecureKey).Password
+    if (-not [string]::IsNullOrEmpty($AlbertKey)) {
+        Write-Host "OK Cle API enregistree" -ForegroundColor Green
+    } else {
+        Write-Host "   (ignore - vous pourrez configurer la cle plus tard)"
+    }
+    Write-Host ""
+}
+
 # -- 1. Install uv -------------------------------------------------------------
 
 if (Test-Command "uv") {
@@ -140,6 +158,21 @@ if (-not $env:RAG_FACILE_LOCAL_ASSET) { Remove-Item $AssetPath -Force -ErrorActi
 
 Write-Host "OK Extracted to .\$WorkspaceDir\" -ForegroundColor Green
 
+# Write .env from stored API key (if provided and .env not already present)
+$EnvWritten = $false
+$EnvPath = "$WorkspaceDir\.env"
+if (-not [string]::IsNullOrEmpty($AlbertKey)) {
+    if (Test-Path $EnvPath) {
+        Write-Host "OK Fichier .env deja present - cle API conservee" -ForegroundColor Green
+    } else {
+        (Get-Content "$WorkspaceDir\.env.example") | ForEach-Object {
+            if ($_ -match '^OPENAI_API_KEY=') { "OPENAI_API_KEY=$AlbertKey" } else { $_ }
+        } | Set-Content $EnvPath -Encoding UTF8
+        Write-Host "OK Fichier .env cree avec votre cle API" -ForegroundColor Green
+        $EnvWritten = $true
+    }
+}
+
 # -- 5. Install dependencies ---------------------------------------------------
 
 Write-Host "==> Installing dependencies (this may take a minute on first run)..." -ForegroundColor Yellow
@@ -148,31 +181,6 @@ try {
     uv sync
 } finally {
     Pop-Location
-}
-
-# -- 5.5. Configure API key ----------------------------------------------------
-
-$EnvWritten = $false
-$EnvPath = "$WorkspaceDir\.env"
-
-if (Test-Path $EnvPath) {
-    Write-Host "OK Fichier .env deja present - cle API conservee" -ForegroundColor Green
-} elseif (-not [Console]::IsInputRedirected) {
-    Write-Host ""
-    Write-Host "==> Configuration de la cle API Albert" -ForegroundColor Yellow
-    Write-Host "   Obtenez votre cle sur : https://albert.api.etalab.gouv.fr/"
-    Write-Host ""
-    $SecureKey = Read-Host -Prompt "   Entrez votre cle API (ou appuyez sur Entree pour ignorer)" -AsSecureString
-    $AlbertKey = [System.Net.NetworkCredential]::new('', $SecureKey).Password
-    if (-not [string]::IsNullOrEmpty($AlbertKey)) {
-        (Get-Content "$WorkspaceDir\.env.example") | ForEach-Object {
-            if ($_ -match '^OPENAI_API_KEY=') { "OPENAI_API_KEY=$AlbertKey" } else { $_ }
-        } | Set-Content $EnvPath -Encoding UTF8
-        Write-Host "OK Fichier .env cree avec votre cle API" -ForegroundColor Green
-        $EnvWritten = $true
-    } else {
-        Write-Host "   (ignore - vous pourrez configurer la cle plus tard)"
-    }
 }
 
 # -- 6. Done -------------------------------------------------------------------

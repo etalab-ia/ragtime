@@ -32,7 +32,27 @@ ensure_bin_on_path() {
     fi
 }
 
-# ── 0. Ensure prerequisites ───────────────────────────────────────────────────
+# ── 0. Clé API Albert ─────────────────────────────────────────────────────────
+
+ALBERT_API_KEY=""
+if [[ -r /dev/tty ]]; then
+    echo "==> Configuration de la clé API Albert"
+    echo "   Obtenez votre clé sur : https://albert.api.etalab.gouv.fr/"
+    echo "   (Appuyez sur Entrée pour ignorer et configurer plus tard)"
+    echo ""
+    printf "   Entrez votre clé API : "
+    if read -r -s ALBERT_API_KEY </dev/tty 2>/dev/null; then
+        echo ""
+        if [[ -n "$ALBERT_API_KEY" ]]; then
+            echo "✓ Clé API enregistrée"
+        else
+            echo "   (ignoré — vous pourrez configurer la clé plus tard)"
+        fi
+    fi
+    echo ""
+fi
+
+# ── 1. Ensure prerequisites ───────────────────────────────────────────────────
 
 if ! check_tool unzip; then
     echo "==> Installing prerequisite: unzip"
@@ -151,37 +171,26 @@ rm -rf "$EXTRACT_TMP"
 
 echo "✓ Extracted to ./$WORKSPACE_DIR/"
 
+# Write .env from stored API key (if provided and .env not already present)
+ENV_WRITTEN=false
+if [[ -n "$ALBERT_API_KEY" ]]; then
+    if [[ -f "$WORKSPACE_DIR/.env" ]]; then
+        echo "✓ Fichier .env déjà présent — clé API conservée"
+    else
+        awk -v key="$ALBERT_API_KEY" \
+            '/^OPENAI_API_KEY=/ {print "OPENAI_API_KEY=" key; next} {print}' \
+            "$WORKSPACE_DIR/.env.example" > "$WORKSPACE_DIR/.env"
+        echo "✓ Fichier .env créé avec votre clé API"
+        ENV_WRITTEN=true
+    fi
+fi
+
 # ── 5. Install dependencies ───────────────────────────────────────────────────
 
 echo "==> Installing dependencies (this may take a minute on first run)..."
 cd "$WORKSPACE_DIR"
 uv sync
 cd - >/dev/null
-
-# ── 5.5. Configure API key ────────────────────────────────────────────────────
-
-ENV_WRITTEN=false
-if [[ -f "$WORKSPACE_DIR/.env" ]]; then
-    echo "✓ Fichier .env déjà présent — clé API conservée"
-elif [[ -r /dev/tty ]]; then
-    echo ""
-    echo "==> Configuration de la clé API Albert"
-    echo "   Obtenez votre clé sur : https://albert.api.etalab.gouv.fr/"
-    echo ""
-    printf "   Entrez votre clé API (ou appuyez sur Entrée pour ignorer) : "
-    if read -r -s ALBERT_API_KEY </dev/tty 2>/dev/null; then
-        echo ""
-        if [[ -n "$ALBERT_API_KEY" ]]; then
-            awk -v key="$ALBERT_API_KEY" \
-                '/^OPENAI_API_KEY=/ {print "OPENAI_API_KEY=" key; next} {print}' \
-                "$WORKSPACE_DIR/.env.example" > "$WORKSPACE_DIR/.env"
-            echo "✓ Fichier .env créé avec votre clé API"
-            ENV_WRITTEN=true
-        else
-            echo "   (ignoré — vous pourrez configurer la clé plus tard)"
-        fi
-    fi
-fi
 
 # ── 6. Terminé ────────────────────────────────────────────────────────────────
 
