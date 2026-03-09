@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.1](https://github.com/etalab-ia/rag-facile/compare/v0.19.0...v0.19.1) (2026-03-09)
+
+
+### Bug Fixes
+
+* always pin generated workspaces to latest GitHub release ([9b4e844](https://github.com/etalab-ia/rag-facile/commit/9b4e844e740981f924904459b1479770435c5ec5))
+* always pin generated workspaces to latest GitHub release ([5c04fda](https://github.com/etalab-ia/rag-facile/commit/5c04fdaac9a9d6e02db3ee9ab233440ebf2c8cf8))
+* remove language selection from learn init wizard — always French ([4aa699c](https://github.com/etalab-ia/rag-facile/commit/4aa699ccc91d3b9dcb9c9cda100de2d0c5b54e71))
+* remove language selection from learn init wizard — always French ([b3433e6](https://github.com/etalab-ia/rag-facile/commit/b3433e6329837e32676ec23d270dcc9df655629a))
+
 ## [0.19.0](https://github.com/etalab-ia/rag-facile/compare/v0.18.3...v0.19.0) (2026-03-09)
 
 

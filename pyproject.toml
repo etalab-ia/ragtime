@@ -1,6 +1,6 @@
 [project]
 name = "rag-facile"
-version = "0.19.0"
+version = "0.19.1"
 description = "RAG Starter Kit for French Government"
 readme = "README.md"
 requires-python = ">=3.13, <3.14"
