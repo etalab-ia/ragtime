@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0](https://github.com/etalab-ia/rag-facile/compare/v0.18.3...v0.19.0) (2026-03-09)
+
+
+### Features
+
+* /new session reset + structured checkpoint summaries ([#172](https://github.com/etalab-ia/rag-facile/issues/172)) ([6366d78](https://github.com/etalab-ia/rag-facile/commit/6366d785440fcb4f80ef5f577525d96e53d37410))
+* flat-file memory package with standard file-operation tools ([1af6a04](https://github.com/etalab-ia/rag-facile/commit/1af6a04769a4e0d6470dc0ca6f55e348d8624d59))
+* full French UI + dot spinner for uv install step ([7f87dd8](https://github.com/etalab-ia/rag-facile/commit/7f87dd8bacd0db48f596a6c4481ae7d2aa162f40))
+* memory compaction — 3-layer pruning for unbounded token growth ([#173](https://github.com/etalab-ia/rag-facile/issues/173)) ([a0bb6e3](https://github.com/etalab-ia/rag-facile/commit/a0bb6e3cf8a61bf40c9a0d639e74d834fa9baa72))
+* memory consolidation wiring + LLM fact extraction ([#174](https://github.com/etalab-ia/rag-facile/issues/174)) ([101fe9d](https://github.com/etalab-ia/rag-facile/commit/101fe9d19cd7d8bbc6ffbf1c48c639cbcf9de23d))
+* memory search — keyword + optional Albert semantic search ([1a8dace](https://github.com/etalab-ia/rag-facile/commit/1a8dace73a90cad3ef0fa1769a04e1f87a1268d2))
+* memory search — keyword + optional Albert semantic search ([9907666](https://github.com/etalab-ia/rag-facile/commit/99076669d5a5d211757d9798b65716299cc41455))
+* move API key prompt to start of install (before dependencies) ([126ec54](https://github.com/etalab-ia/rag-facile/commit/126ec54e080f580fa06770869589d8c702155ac3))
+* new memory package with flat-file tools and simplified directory layout ([2b8900d](https://github.com/etalab-ia/rag-facile/commit/2b8900dcc29b0a0c021170d344c7d98f26b44844))
+* prompt for Albert API key during install and write .env ([3a05f46](https://github.com/etalab-ia/rag-facile/commit/3a05f467e0741ed054c572b288107b61c21037a7))
+* prompt for Albert API key during install and write .env ([917b41b](https://github.com/etalab-ia/rag-facile/commit/917b41bf62a088094da208387dfeb8bbf085692f))
+* prompt for Albert API key in Windows installer (install.ps1) ([821e58c](https://github.com/etalab-ia/rag-facile/commit/821e58c7f46cab170d04e9905a1bc4dbd084540d))
+
+
+### Bug Fixes
+
+* address review comments — gitignore, dead code, robustness ([9bc804c](https://github.com/etalab-ia/rag-facile/commit/9bc804c4edc851a795a2202ec60689235795064f))
+* download just from GitHub Releases directly (bypass just.systems CDN) ([8270b8f](https://github.com/etalab-ia/rag-facile/commit/8270b8fe8bba3c6221868218eb1cf281e94e58f4))
+* install just via uv tool install rust-just ([cc2d73c](https://github.com/etalab-ia/rag-facile/commit/cc2d73c7e55efb6e6c644b24f40d8d63e425af6f))
+* replace char-by-char star loop with silent read for paste support ([ba7351c](https://github.com/etalab-ia/rag-facile/commit/ba7351ca7b1d8e8b28c33d76c92d95607b9ad5cc))
+* restore feat→minor version bumps (remove bump-patch-for-minor-pre-major) ([3b2849a](https://github.com/etalab-ia/rag-facile/commit/3b2849aee32e4ba91d2815497ed3028d057c46ae))
+* restore feat→minor version bumps (remove bump-patch-for-minor-pre-major) ([9326422](https://github.com/etalab-ia/rag-facile/commit/93264222ffe4263254644a80fe712fd051f1003e))
+* show * feedback per character when entering API key ([c2fdf20](https://github.com/etalab-ia/rag-facile/commit/c2fdf20be908ae5a3e8e25fbf927e96cd86af438))
+* suppress uv output for just install, add dot spinner ([de5b611](https://github.com/etalab-ia/rag-facile/commit/de5b611727a5561c52a6ae795b038810d6060766))
+* use awk/ForEach-Object for safe API key substitution in .env ([79d82c9](https://github.com/etalab-ia/rag-facile/commit/79d82c9448712eb2ccc43a6a1b87a366b38fae27))
+* wire Albert semantic search + RRF fusion into memory_search tool ([fc5ca93](https://github.com/etalab-ia/rag-facile/commit/fc5ca93849ad5697bb102d3f91e0925e64147fe4))
+
+
+### Documentation
+
+* remove PowerShell installer references, update Windows → Git Bash ([3608d6e](https://github.com/etalab-ia/rag-facile/commit/3608d6e2508c713f25773973c1b3aed8d31a33e7))
+
 ## [0.18.3](https://github.com/etalab-ia/rag-facile/compare/v0.18.2...v0.18.3) (2026-03-02)
 
 
