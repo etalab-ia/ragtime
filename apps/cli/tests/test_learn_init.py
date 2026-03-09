@@ -5,6 +5,7 @@ from unittest.mock import patch
 from typer.testing import CliRunner
 
 from cli.commands.learn.init import (
+    _detect_language,
     _profile_template,
     needs_init,
     read_language,
@@ -36,6 +37,30 @@ class TestProfileTemplate:
         assert "0" in result
 
 
+class TestDetectLanguage:
+    def test_returns_en_for_english_locale(self):
+        with patch(
+            "cli.commands.learn.init.locale.getlocale", return_value=("en_US", "UTF-8")
+        ):
+            assert _detect_language() == "en"
+
+    def test_returns_fr_for_french_locale(self):
+        with patch(
+            "cli.commands.learn.init.locale.getlocale", return_value=("fr_FR", "UTF-8")
+        ):
+            assert _detect_language() == "fr"
+
+    def test_returns_fr_for_unknown_locale(self):
+        with patch(
+            "cli.commands.learn.init.locale.getlocale", return_value=(None, None)
+        ):
+            assert _detect_language() == "fr"
+
+    def test_returns_fr_on_value_error(self):
+        with patch("cli.commands.learn.init.locale.getlocale", side_effect=ValueError):
+            assert _detect_language() == "fr"
+
+
 class TestReadLanguage:
     def test_returns_fr_when_no_profile(self, tmp_path):
         assert read_language(tmp_path) == "fr"
@@ -55,19 +80,9 @@ class TestReadLanguage:
         assert read_language(tmp_path) == "fr"
 
 
-# questionary.select mock helpers (language first, then experience)
-def _lang_fr_exp_new():
-    return [
-        type("Q", (), {"ask": lambda self: "fr"})(),
-        type("Q", (), {"ask": lambda self: "new"})(),
-    ]
-
-
-def _lang_en_exp_intermediate():
-    return [
-        type("Q", (), {"ask": lambda self: "en"})(),
-        type("Q", (), {"ask": lambda self: "intermediate"})(),
-    ]
+# questionary.select mock helper — one question only (experience)
+def _exp_new():
+    return [type("Q", (), {"ask": lambda self: "new"})()]
 
 
 class TestRunInitWizard:
@@ -76,7 +91,7 @@ class TestRunInitWizard:
         with (
             patch(
                 "cli.commands.learn.init.questionary.select",
-                side_effect=_lang_fr_exp_new(),
+                side_effect=_exp_new(),
             ),
             patch("cli.commands.learn.init._git_add"),
         ):
@@ -84,13 +99,18 @@ class TestRunInitWizard:
 
         assert (tmp_path / ".agent" / "profile.md").exists()
 
-    def test_returns_selected_language(self, tmp_path):
+    def test_returns_detected_language(self, tmp_path):
+        """Wizard returns language from locale detection, not from questionary."""
         with (
             patch(
                 "cli.commands.learn.init.questionary.select",
-                side_effect=_lang_en_exp_intermediate(),
+                side_effect=_exp_new(),
             ),
             patch("cli.commands.learn.init._git_add"),
+            patch(
+                "cli.commands.learn.init.locale.getlocale",
+                return_value=("en_US", "UTF-8"),
+            ),
         ):
             lang = run_init_wizard(tmp_path)
         assert lang == "en"
@@ -99,7 +119,7 @@ class TestRunInitWizard:
         with (
             patch(
                 "cli.commands.learn.init.questionary.select",
-                side_effect=_lang_en_exp_intermediate(),
+                side_effect=_exp_new(),
             ),
             patch("cli.commands.learn.init._git_add"),
         ):
@@ -111,10 +131,7 @@ class TestRunInitWizard:
         with (
             patch(
                 "cli.commands.learn.init.questionary.select",
-                side_effect=[
-                    type("Q", (), {"ask": lambda self: "en"})(),
-                    type("Q", (), {"ask": lambda self: "expert"})(),
-                ],
+                side_effect=[type("Q", (), {"ask": lambda self: "expert"})()],
             ),
             patch("cli.commands.learn.init._git_add"),
         ):
@@ -140,7 +157,7 @@ class TestRunInitWizard:
         with (
             patch(
                 "cli.commands.learn.init.questionary.select",
-                side_effect=_lang_fr_exp_new(),
+                side_effect=_exp_new(),
             ),
             patch("cli.commands.learn.init._git_add") as mock_git,
         ):
@@ -154,7 +171,7 @@ class TestRunInitWizard:
             with (
                 patch(
                     "cli.commands.learn.init.questionary.select",
-                    side_effect=_lang_fr_exp_new(),
+                    side_effect=_exp_new(),
                 ),
                 patch("cli.commands.learn.init._git_add"),
             ):

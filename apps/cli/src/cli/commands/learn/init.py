@@ -5,6 +5,7 @@ Creates the directory structure and profile file that the agent uses
 to personalise responses across sessions.
 """
 
+import locale
 import subprocess
 from datetime import date
 from pathlib import Path
@@ -41,10 +42,23 @@ _EXPERIENCE_CHOICES = [
     questionary.Choice("Expert — minimal guidance", value="expert"),
 ]
 
-_LANGUAGE_CHOICES = [
-    questionary.Choice("Français 🇫🇷", value="fr"),
-    questionary.Choice("English 🇬🇧", value="en"),
-]
+
+# ── Language detection ────────────────────────────────────────────────────────
+
+
+def _detect_language() -> str:
+    """Infer preferred language from the system locale.
+
+    Returns 'en' when the locale starts with 'en' (e.g. en_US, en_GB),
+    'fr' for everything else (French government default).
+    """
+    try:
+        lang, _ = locale.getlocale()
+        if lang and lang.lower().startswith("en"):
+            return "en"
+    except ValueError:
+        pass
+    return "fr"
 
 
 # ── Template generators ───────────────────────────────────────────────────────
@@ -117,8 +131,10 @@ def run_init_wizard(workspace: Path) -> str:
     Uses questionary for interactive prompts; falls back to defaults in
     non-interactive environments (CI, pipe).
 
+    Language is inferred from the system locale (no question asked).
+
     Returns:
-        The selected language code ('fr' or 'en').
+        The detected language code ('fr' or 'en').
     """
     console.print(
         Panel(
@@ -131,26 +147,20 @@ def run_init_wizard(workspace: Path) -> str:
     )
     console.print()
 
-    # ── Ask 2 questions (language first so the rest adapts) ──────────────────
-    # questionary returns None on Ctrl+C — check after each question so we
-    # don't fall through to the next one when the user cancels.
-    language = "fr"
+    # Language is detected from the system locale — no need to ask.
+    language = _detect_language()
+
+    # ── Ask one question ──────────────────────────────────────────────────────
+    # questionary returns None on Ctrl+C — fall back to default.
     experience = "new"
     try:
         result = questionary.select(
-            "Preferred language for our conversations?",
-            choices=_LANGUAGE_CHOICES,
+            "Your experience with RAG?",
+            choices=_EXPERIENCE_CHOICES,
             style=_STYLE,
         ).ask()
         if result is not None:
-            language = result
-            result = questionary.select(
-                "Your experience with RAG?",
-                choices=_EXPERIENCE_CHOICES,
-                style=_STYLE,
-            ).ask()
-            if result is not None:
-                experience = result
+            experience = result
     except (EOFError, OSError):
         pass  # non-interactive terminal (pipe, CI) — keep defaults
 
