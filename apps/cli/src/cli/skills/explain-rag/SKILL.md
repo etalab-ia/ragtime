@@ -19,7 +19,7 @@ Use this exact structure, nothing else:
 1. One plain sentence answering the question — zero jargon.
 2. A numbered list of 3–5 steps or ideas in plain language.
 3. "Voulez-vous que j'explique l'une de ces étapes en détail ?"
-4. A `## Glossaire` section — one plain sentence per technical term.
+4. A `## Glossaire` section — each term on its own line prefixed with `- `, one plain sentence per entry.
 
 Forbidden: tables, ASCII diagrams, sub-sections, inline definitions.
 
@@ -37,9 +37,9 @@ Les grandes étapes :
 Voulez-vous que j'explique l'une de ces étapes en détail ?
 
 ## Glossaire
-**Chunk** : un extrait de texte découpé depuis un document.
-**Indexation** : l'opération qui rend les extraits recherchables rapidement.
-**Modèle de langage (LLM)** : le programme qui rédige la réponse finale.
+- **Chunk** : un extrait de texte découpé depuis un document.
+- **Indexation** : l'opération qui rend les extraits recherchables rapidement.
+- **Modèle de langage (LLM)** : le programme qui rédige la réponse finale.
 ---
 
 ## For intermediate users
