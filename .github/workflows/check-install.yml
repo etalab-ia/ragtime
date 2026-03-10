@@ -42,6 +42,8 @@ jobs:
 
       - name: Run installer
         run: bash install.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify tools are available
         run: |
@@ -64,6 +66,8 @@ jobs:
 
       - name: Run installer
         run: bash install.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify tools are available
         run: |
@@ -87,6 +91,8 @@ jobs:
       - name: Run installer (Git Bash)
         shell: bash
         run: bash install.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify tools are available
         shell: bash

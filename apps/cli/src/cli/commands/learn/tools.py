@@ -32,6 +32,8 @@ _DOCS_INDEX: dict[str, str] = {
     "ragfacile.toml": "reference/ragfacile-toml.md",
     "toml": "reference/ragfacile-toml.md",
     "preset": "reference/ragfacile-toml.md",
+    "collection": "reference/ragfacile-toml.md",
+    "collections": "reference/ragfacile-toml.md",
     "components": "reference/components.md",
     "packages": "reference/components.md",
     "science": "reference/rag-science.md",
@@ -131,13 +133,20 @@ def _get_docs_dir() -> Path | None:
 def get_docs(topic: str) -> str:
     """Read rag-facile documentation on a given topic.
 
-    Use this when the user asks about RAG concepts, configuration, setup,
-    evaluation, or any rag-facile feature. Pass an empty string to list
-    all available documents.
+    Use this for rag-facile product questions: installation, setup workflow,
+    evaluation, presets, CLI commands, or how a specific rag-facile feature
+    works.  Pass an empty string to list all available documents.
+
+    DO NOT use for abstract RAG concept questions (what is chunking, what is
+    an embedding, how does retrieval work in general) — answer those from
+    your knowledge instead.
+
+    For current config values, prefer run_rag_facile('config show') — it
+    returns live data instead of static documentation.
 
     Args:
-        topic: Keyword to look up, e.g. 'rag', 'preset', 'evaluation',
-               'chunking', 'getting started', 'pipeline'. Empty string
+        topic: Keyword to look up, e.g. 'preset', 'evaluation',
+               'getting started', 'pipeline', 'config'. Empty string
                returns the full index of available docs.
     """
     docs_dir = _get_docs_dir()

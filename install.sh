@@ -99,7 +99,13 @@ if [[ -n "${RAG_FACILE_VERSION:-}" ]]; then
     echo "==> Utilisation de la version : $LATEST_TAG"
 else
     echo "==> Récupération de la dernière version..."
-    LATEST_TAG=$(curl -fsSL "https://api.github.com/repos/etalab-ia/rag-facile/releases/latest" \
+    # Pass GITHUB_TOKEN if available to avoid API rate limits (60 req/h unauthenticated).
+    _CURL_AUTH=()
+    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        _CURL_AUTH=(-H "Authorization: Bearer $GITHUB_TOKEN")
+    fi
+    LATEST_TAG=$(curl -fsSL "${_CURL_AUTH[@]}" \
+        "https://api.github.com/repos/etalab-ia/rag-facile/releases/latest" \
         2>/dev/null | sed -n -E 's/.*"tag_name": *"([^"]+)".*/\1/p')
 
     if [[ -z "$LATEST_TAG" ]]; then
