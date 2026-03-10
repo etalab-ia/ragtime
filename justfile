@@ -23,7 +23,7 @@ upgrade:
 
 # Upgrade a single third-party package to latest (e.g.: just upgrade-pkg httpx)
 upgrade-pkg pkg:
-    uv add "{{pkg}}@latest"
+    uv lock --upgrade-package {{pkg}}
 
 # Format code (write changes)
 format:
