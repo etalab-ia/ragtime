@@ -75,6 +75,37 @@ connection_string = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 
 Open Supabase Studio at http://localhost:54323 to browse tables.
 
+## Colima Users (macOS)
+
+If you use [Colima](https://github.com/abiosoft/colima) instead of Docker Desktop, you may hit permission errors on `supabase start`:
+
+**`chown ... permission denied`** — Colima's default mount type blocks ownership changes.
+
+Switch to macOS Virtualization.framework:
+
+```bash
+colima stop
+colima delete
+colima start --vm-type=vz
+```
+
+**`mkdir .../docker.sock: operation not supported`** — `virtiofs` can't handle bind-mounting Unix sockets.
+
+Export `DOCKER_HOST` so the Supabase CLI uses the standard socket path:
+
+```bash
+export DOCKER_HOST="unix:///var/run/docker.sock"
+sudo ln -sf "$HOME/.colima/default/docker.sock" /var/run/docker.sock
+```
+
+To make this permanent, add the export to your shell config:
+
+```bash
+echo 'export DOCKER_HOST="unix:///var/run/docker.sock"' >> ~/.zshrc
+```
+
+See [colima#1067](https://github.com/abiosoft/colima/issues/1067) and [colima#997](https://github.com/abiosoft/colima/issues/997) for details.
+
 ## Self-Hosted Production
 
 The Supabase CLI works with **any** PostgreSQL instance — no Supabase Cloud account required.
