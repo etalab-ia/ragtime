@@ -75,6 +75,7 @@ spell_check = false
 # RETRIEVAL
 # ==============================================================================
 [retrieval]
+provider = "albert"
 strategy = "hybrid"
 top_k = 10
 score_threshold = 0.0
@@ -86,6 +87,7 @@ alpha = 0.5  # Balanced semantic/lexical
 # RERANKING
 # ==============================================================================
 [reranking]
+provider = "albert"
 enabled = true
 model = "openweight-rerank"
 top_n = 5

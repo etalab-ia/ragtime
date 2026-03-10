@@ -54,6 +54,7 @@ expand_enabled = true
 spell_check = true
 
 [retrieval]
+provider = "albert"
 strategy = "hybrid"  # Best of both worlds
 top_k = 10  # More candidates for reranking
 score_threshold = 0.5  # Only high-quality results
@@ -62,6 +63,7 @@ score_threshold = 0.5  # Only high-quality results
 alpha = 0.5  # Balanced semantic/lexical
 
 [reranking]
+provider = "albert"
 enabled = true  # Essential for accuracy
 model = "openweight-rerank"
 top_n = 5  # More final results

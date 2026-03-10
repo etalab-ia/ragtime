@@ -54,6 +54,7 @@ expand_enabled = true
 spell_check = true
 
 [retrieval]
+provider = "albert"
 strategy = "hybrid"  # Balance semantic understanding with keyword matching
 top_k = 10
 score_threshold = 0.3  # Lower threshold for broader policy coverage
@@ -62,6 +63,7 @@ score_threshold = 0.3  # Lower threshold for broader policy coverage
 alpha = 0.7  # Weight semantic more (natural language queries)
 
 [reranking]
+provider = "albert"
 enabled = true
 model = "openweight-rerank"
 top_n = 5

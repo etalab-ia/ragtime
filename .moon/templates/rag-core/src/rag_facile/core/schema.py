@@ -324,6 +324,10 @@ class HybridRetrievalConfig(BaseModel):
 class RetrievalConfig(BaseModel):
     """Configuration for retrieval."""
 
+    provider: Literal["albert", "none"] = Field(
+        default="albert",
+        description='Retrieval provider ("albert" or "none" to skip retrieval)',
+    )
     strategy: Literal["hybrid", "semantic", "lexical"] = Field(
         default="hybrid",
         description="Retrieval strategy",
@@ -354,6 +358,10 @@ class RetrievalConfig(BaseModel):
 class RerankingConfig(BaseModel):
     """Configuration for result reranking."""
 
+    provider: Literal["albert"] = Field(
+        default="albert",
+        description="Reranking provider (currently only 'albert' supported)",
+    )
     enabled: bool = Field(
         default=True,
         description="Enable reranking (improves precision at cost of latency)",

@@ -36,19 +36,23 @@ class AlbertApiProvider:
         """Initialize the Albert API provider."""
         from rag_facile.core import get_config
         from rag_facile.ingestion import get_provider as get_ingestion_provider
+        from rag_facile.reranking import get_provider as get_reranking_provider
+        from rag_facile.retrieval import get_provider as get_retrieval_provider
         from rag_facile.storage import get_provider as get_storage_provider
 
         self.config = get_config()
         self._ingestion = get_ingestion_provider(self.config)
         self._storage = get_storage_provider(self.config)
+        self._retrieval = get_retrieval_provider(self.config)
+        self._reranking = get_reranking_provider(self.config)
 
-        # Lazily initialized on first use
+        # Lazily initialized on first use (used for storage operations only)
         self._client = None
         self.collection_id: int | None = None
 
     @property
     def client(self):
-        """Lazily create Albert client on first use."""
+        """Lazily create Albert client on first use (used for storage operations)."""
         if self._client is None:
             from albert import AlbertClient
 
@@ -226,22 +230,11 @@ class AlbertApiProvider:
             return [], [], []
 
         try:
-            from rag_facile.core import get_config
-            from rag_facile.retrieval import search_chunks
-            from rag_facile.reranking import rerank_chunks
+            if not self._retrieval:
+                return [], [], []
 
-            # Load config — same settings as eval time
-            config = get_config()
-
-            # Search using configured strategy (top_k candidates)
-            search_results = search_chunks(
-                self.client,
-                question,
-                [self.collection_id],
-                limit=config.retrieval.top_k,
-                method=config.retrieval.strategy,
-                score_threshold=config.retrieval.score_threshold,
-            )
+            # Search using configured provider (top_k candidates baked in at init)
+            search_results = self._retrieval.search(question, [self.collection_id])
 
             if not search_results:
                 return [], [], []
@@ -252,16 +245,10 @@ class AlbertApiProvider:
                 if chunk.get("chunk_id")
             ]
 
-            # Apply reranking if enabled (filter to top_n)
+            # Apply reranking if provider is configured
             final_chunks = search_results
-            if config.reranking.enabled:
-                final_chunks = rerank_chunks(
-                    self.client,
-                    question,
-                    search_results,
-                    model=config.reranking.model,
-                    top_n=config.reranking.top_n,
-                )
+            if self._reranking is not None:
+                final_chunks = self._reranking.rerank(question, search_results)
 
             reranked_chunk_ids = [
                 chunk.get("chunk_id", 0)
@@ -341,7 +328,8 @@ class AlbertApiProvider:
             return "[Document context not available]", []
 
         try:
-            from rag_facile.retrieval import search_chunks
+            if not self._retrieval:
+                return "[Document context not available]", []
 
             # Delay to allow document indexing in Albert (PDF parsing takes ~5s)
             time.sleep(5.0)
@@ -359,15 +347,8 @@ class AlbertApiProvider:
             chunk_ids = []
             for query in search_queries:
                 try:
-                    # Use the retrieval package with configured strategy
-                    chunks = search_chunks(
-                        self.client,
-                        query,
-                        [self.collection_id],
-                        limit=2,
-                        method=self.config.retrieval.strategy,
-                        score_threshold=self.config.retrieval.score_threshold,
-                    )
+                    # Use the retrieval provider (strategy baked in at init)
+                    chunks = self._retrieval.search(query, [self.collection_id])
 
                     if chunks:
                         for chunk in chunks:

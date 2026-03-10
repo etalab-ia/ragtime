@@ -54,6 +54,7 @@ expand_enabled = false
 spell_check = true
 
 [retrieval]
+provider = "albert"
 strategy = "hybrid"  # Lexical important for exact legal terms
 top_k = 10
 score_threshold = 0.6  # Higher threshold for relevance
@@ -62,6 +63,7 @@ score_threshold = 0.6  # Higher threshold for relevance
 alpha = 0.3  # Weight lexical more (legal terminology is precise)
 
 [reranking]
+provider = "albert"
 enabled = true  # Critical for legal accuracy
 model = "openweight-rerank"
 top_n = 5

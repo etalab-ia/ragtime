@@ -54,6 +54,7 @@ expand_enabled = false
 spell_check = false
 
 [retrieval]
+provider = "albert"
 strategy = "semantic"  # Skip lexical component for speed
 top_k = 5  # Fewer results
 score_threshold = 0.0
@@ -62,6 +63,7 @@ score_threshold = 0.0
 alpha = 1.0  # Pure semantic (not used since method=semantic)
 
 [reranking]
+provider = "albert"
 enabled = false  # Skip reranking for speed
 model = "openweight-rerank"
 top_n = 3

@@ -12,17 +12,13 @@ Relevance Labels" — https://arxiv.org/abs/2212.10496
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import openai
 from instructor.core import InstructorRetryException
 
 from rag_facile.query._base import QueryExpander
 from rag_facile.query._models import HypotheticalDocument
-
-
-if TYPE_CHECKING:
-    from albert import AlbertClient
 
 
 logger = logging.getLogger(__name__)
@@ -55,21 +51,31 @@ class HyDEExpander(QueryExpander):
     topic, then uses its formal text as the search string.  This bridges
     the colloquial→formal vocabulary gap at embedding time rather than at
     query formulation time.
+    The Albert client is created lazily on first use.
 
     Args:
-        client: Authenticated Albert client.
         config: RAG configuration (reads ``query.*`` fields).
+            If ``None``, loads from ``ragfacile.toml``.
     """
 
-    def __init__(self, client: AlbertClient, config: Any | None = None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         if config is None:
             from rag_facile.core import get_config
 
             config = get_config()
 
-        self._instructor = client.as_instructor()
         self._model: str = config.query.model
         self._include_original: bool = config.query.include_original
+        self._instructor_client: object | None = None
+
+    @property
+    def _instructor(self) -> object:
+        """Lazily create the instructor-wrapped Albert client on first use."""
+        if self._instructor_client is None:
+            from albert import AlbertClient
+
+            self._instructor_client = AlbertClient().as_instructor()
+        return self._instructor_client
 
     def expand(self, query: str) -> list[str]:
         """Generate a hypothetical administrative document and return its content.
@@ -87,7 +93,7 @@ class HyDEExpander(QueryExpander):
         prompt = _USER_PROMPT.format(query=query)
 
         try:
-            result: HypotheticalDocument = self._instructor.chat.completions.create(
+            result: HypotheticalDocument = self._instructor.chat.completions.create(  # type: ignore[attr-defined]
                 model=self._model,
                 response_model=HypotheticalDocument,
                 messages=[

@@ -13,11 +13,9 @@ Selected strategy is configured via ``ragfacile.toml``::
 
 Example usage::
 
-    from albert import AlbertClient
     from rag_facile.query import get_expander
 
-    client = AlbertClient()
-    expander = get_expander(client)
+    expander = get_expander()
     queries = expander.expand("comment toucher les APL ?")
     # → ["comment toucher les APL ?",
     #    "conditions d'attribution de l'Aide Personnalisée au Logement",
@@ -30,27 +28,19 @@ Example usage::
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from rag_facile.query._base import QueryExpander
 
 
-if TYPE_CHECKING:
-    from albert import AlbertClient
-
-
-def get_expander(
-    client: AlbertClient,
-    config: Any | None = None,
-) -> QueryExpander:
+def get_expander(config: Any | None = None) -> QueryExpander:
     """Return the configured query expander.
 
     Reads ``ragfacile.toml`` (or the supplied *config*) to determine which
-    expansion strategy to instantiate.
+    expansion strategy to instantiate.  The Albert client is created lazily
+    by the expander on first :meth:`~QueryExpander.expand` call.
 
     Args:
-        client: Authenticated Albert client.  The expander uses
-            ``client.as_instructor()`` for structured LLM calls.
         config: Optional :class:`~rag_facile.core.RAGConfig` instance.
             If ``None``, loads configuration from ``ragfacile.toml``.
 
@@ -71,11 +61,11 @@ def get_expander(
         case "multi_query":
             from rag_facile.query.multi_query import MultiQueryExpander
 
-            return MultiQueryExpander(client, config)
+            return MultiQueryExpander(config)
         case "hyde":
             from rag_facile.query.hyde import HyDEExpander
 
-            return HyDEExpander(client, config)
+            return HyDEExpander(config)
         case _:
             msg = (
                 f"Unknown query expansion strategy: {strategy!r}. "

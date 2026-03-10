@@ -1,14 +1,26 @@
 """Pipelines - RAG pipeline coordination for chat applications.
 
-Provides a unified :class:`RAGPipeline` interface that coordinates
-document ingestion and retrieval.  Chat apps depend on this package
-instead of importing from rag_facile.ingestion or rag_facile.retrieval directly.
+Provides a unified :class:`RAGPipeline` that coordinates all pipeline phases
+via injected providers.  Each phase (ingestion, storage, retrieval, reranking,
+query expansion) is independently configurable via ``ragfacile.toml``.
 
-Pipeline selection is driven by ``ragfacile.toml``::
+Pipeline construction is driven by per-phase provider settings::
+
+    [ingestion]
+    provider = "albert"        # or "local"
 
     [storage]
-    provider = "local-sqlite"          # → BasicPipeline
-    provider = "albert-collections"    # → AlbertPipeline
+    provider = "albert-collections"
+
+    [retrieval]
+    provider = "albert"        # or "none" to skip retrieval
+
+    [reranking]
+    provider = "albert"
+    enabled = true
+
+    [query]
+    strategy = "none"          # or "multi_query" / "hyde"
 
 Example usage::
 
@@ -17,7 +29,7 @@ Example usage::
     pipeline = get_pipeline()
     context = pipeline.process_file("document.pdf")
 
-Convenience functions are also available for simpler call sites::
+Convenience functions are also available for simpler call-sites::
 
     from rag_facile.pipelines import process_file, process_bytes, get_accepted_mime_types
 """
@@ -54,40 +66,58 @@ def _get_or_create_pipeline() -> RAGPipeline:
 def get_pipeline(config: Any | None = None) -> RAGPipeline:
     """Get a configured RAG pipeline.
 
-    Reads ``ragfacile.toml`` to determine which pipeline to instantiate.
+    Reads ``ragfacile.toml`` to instantiate and wire the phase providers.
+    Each phase independently selects its backend via its own ``provider``
+    (or ``enabled``) config field.
 
     Args:
         config: Optional RAGConfig instance.  If *None*, loads from
             ragfacile.toml.
 
     Returns:
-        A :class:`RAGPipeline` instance for the configured backend.
-
-    Raises:
-        ValueError: If the configured storage provider is not recognized.
+        A :class:`RAGPipeline` instance wired with the configured providers.
     """
     if config is None:
         from rag_facile.core import get_config
 
         config = get_config()
 
-    backend = config.storage.provider
+    # Ingestion — always required
+    from rag_facile.ingestion import get_provider as get_ingestion_provider
 
-    match backend:
-        case "local-sqlite":
-            from rag_facile.pipelines.basic import BasicPipeline
+    ingestion = get_ingestion_provider(config)
 
-            return BasicPipeline(config)
-        case "albert-collections":
-            from rag_facile.pipelines.albert import AlbertPipeline
+    # Storage — None for local-sqlite (being retired in favour of Supabase)
+    storage = None
+    if config.storage.provider != "local-sqlite":
+        from rag_facile.storage import get_provider as get_storage_provider
 
-            return AlbertPipeline(config)
-        case _:
-            msg = (
-                f"Unknown storage backend: {backend!r}. "
-                "Expected 'local-sqlite' or 'albert-collections'."
-            )
-            raise ValueError(msg)
+        storage = get_storage_provider(config)
+
+    # Retrieval — None when provider = "none"
+    from rag_facile.retrieval import get_provider as get_retrieval_provider
+
+    retrieval = get_retrieval_provider(config)
+
+    # Reranking — None when disabled
+    from rag_facile.reranking import get_provider as get_reranking_provider
+
+    reranking = get_reranking_provider(config)
+
+    # Query expansion — None when strategy = "none"
+    query_expander = None
+    if config.query.strategy != "none":
+        from rag_facile.query import get_expander
+
+        query_expander = get_expander(config)
+
+    return RAGPipeline(
+        ingestion=ingestion,
+        storage=storage,
+        retrieval=retrieval,
+        reranking=reranking,
+        query=query_expander,
+    )
 
 
 # ── Convenience functions ──
@@ -131,14 +161,16 @@ def process_query(query: str, **kwargs: object) -> str:
     """Retrieve relevant context for a user query.
 
     Uses the singleton pipeline (created on first call from config).
-    For the Albert pipeline, this performs search -> rerank -> format.
+    When a retrieval provider is configured, performs
+    expand (optional) → search → rerank (optional) → format.
 
     Args:
         query: User query to retrieve context for.
         **kwargs: Pipeline-specific options (e.g., ``collection_ids``).
 
     Returns:
-        Formatted context string. Empty string when not applicable.
+        Formatted context string. Empty string when retrieval is not
+        configured or no results found.
     """
     return _get_or_create_pipeline().process_query(query, **kwargs)
 
