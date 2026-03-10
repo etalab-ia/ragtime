@@ -16,9 +16,14 @@ sync:
     uv sync
     uv run pre-commit install
 
-# Interactively upgrade dependencies in pyproject.toml (uses uv-upx)
+# TODO: restore uv-upx --interactive once Alirex/uv_upgrade#6 is fixed (workspace members flood the prompt)
+# Upgrade all third-party deps: refreshes uv.lock without touching pyproject.toml (workspace-safe)
 upgrade:
-    uvx --from uv-upx uv-upgrade --interactive
+    uv lock --upgrade
+
+# Upgrade a single third-party package to latest (e.g.: just upgrade-pkg httpx)
+upgrade-pkg pkg:
+    uv add "{{pkg}}@latest"
 
 # Format code (write changes)
 format:
