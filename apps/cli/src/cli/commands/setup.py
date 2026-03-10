@@ -516,9 +516,9 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
     (target_path / ".python-version").write_text("3.13\n")
     console.print("[dim]  ✓ .python-version[/dim]")
 
-    # Done with generation!
+    # Done with setup!
     console.print()
-    console.print("[bold green]✨ Project generation complete![/bold green]")
+    console.print("[bold green]✨ Project setup complete![/bold green]")
 
     # Step 4: Install dependencies
     console.print()

@@ -617,7 +617,7 @@ class TestStandaloneWorkspaceCommand:
         result = runner.invoke(main_app, ["setup", str(target)])
 
         assert result.exit_code == 0, f"Failed with: {result.output}"
-        assert "Project generation complete" in result.output
+        assert "Project setup complete" in result.output
 
     def test_standalone_creates_flat_structure(self, mock_standalone_cli, tmp_path):
         """Should create files at root, not in apps/ subdirectory."""
@@ -660,17 +660,15 @@ class TestStandaloneWorkspaceCommand:
         uv_calls = [c for c in calls if "uv" in str(c[0][0])]
         assert len(uv_calls) >= 1
 
-    def test_standalone_shows_project_generation_complete(
+    def test_standalone_shows_project_setup_complete(
         self, mock_standalone_cli, tmp_path
     ):
-        """Should show 'Project generation complete' (standalone-specific message)."""
+        """Should show 'Project setup complete' (standalone-specific message)."""
         target = tmp_path / "standalone-app"
 
         result = runner.invoke(main_app, ["setup", str(target)])
 
-        # Standalone mode shows "Project generation complete"
-        # Monorepo mode shows "Workspace generation complete"
-        assert "Project generation complete" in result.output
+        assert "Project setup complete" in result.output
 
 
 class TestPathNormalization:
