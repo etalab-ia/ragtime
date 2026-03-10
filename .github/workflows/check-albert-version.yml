@@ -37,9 +37,13 @@ jobs:
           LOCAL="${{ steps.local_version.outputs.version }}"
           REMOTE="${{ steps.remote_version.outputs.version }}"
 
-          if [ "$LOCAL" != "$REMOTE" ]; then
-            echo "::error::Version mismatch! Local: $LOCAL, Remote (OpenAPI): $REMOTE"
-            exit 1
+          # Strip PEP 440 suffixes (post, dev, rc, a, b) from the remote
+          # version so that e.g. 0.4.1post2 matches local 0.4.1.
+          REMOTE_BASE=$(echo "$REMOTE" | sed -E 's/(post|dev|rc|a|b)[0-9]*$//')
+
+          if [ "$LOCAL" = "$REMOTE" ] || [ "$LOCAL" = "$REMOTE_BASE" ]; then
+            echo "::notice::Versions match: Local=$LOCAL, Remote=$REMOTE"
           else
-            echo "::notice::Versions match: $LOCAL"
+            echo "::error::Version mismatch! Local: $LOCAL, Remote (OpenAPI): $REMOTE (base: $REMOTE_BASE)"
+            exit 1
           fi
