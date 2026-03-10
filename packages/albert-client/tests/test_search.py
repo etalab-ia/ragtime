@@ -68,7 +68,7 @@ class TestSearch:
         )
 
         # Make request
-        result = client.search(prompt="Loi Énergie Climat", collections=["col_123"])
+        result = client.search(query="Loi Énergie Climat", collection_ids=[1])
 
         # Verify result type
         assert isinstance(result, SearchResponse)
@@ -101,8 +101,8 @@ class TestSearch:
 
         # Make request with all parameters
         result = client.search(
-            prompt="transition énergétique",
-            collections=[123, 456],
+            query="transition énergétique",
+            collection_ids=[123, 456],
             limit=20,
             offset=10,
             method="semantic",
@@ -130,7 +130,7 @@ class TestSearch:
             return_value=Response(200, json=empty_response)
         )
 
-        result = client.search(prompt="nonexistent query")
+        result = client.search(query="nonexistent query")
 
         assert isinstance(result, SearchResponse)
         assert len(result.data) == 0
@@ -142,11 +142,14 @@ class TestSearch:
             return_value=Response(200, json=mock_search_response)
         )
 
-        result = client.search(prompt="test query")
+        result = client.search(query="test query")
 
-        # Verify collections defaults to empty list
+        # Verify collection_ids defaults to empty list
         request_body = mock_route.calls.last.request.content.decode()
-        assert '"collections":[]' in request_body or '"collections": []' in request_body
+        assert (
+            '"collection_ids":[]' in request_body
+            or '"collection_ids": []' in request_body
+        )
 
         assert isinstance(result, SearchResponse)
 
@@ -176,7 +179,7 @@ class TestSearch:
             return_value=Response(200, json=response_no_usage)
         )
 
-        result = client.search(prompt="test")
+        result = client.search(query="test")
 
         assert isinstance(result, SearchResponse)
         assert result.usage is None
@@ -191,7 +194,7 @@ class TestSearch:
         )
 
         with pytest.raises(Exception):  # httpx.HTTPStatusError
-            client.search(prompt="test", collections=["nonexistent"])
+            client.search(query="test", collection_ids=[999])
 
     @respx.mock
     def test_search_pydantic_helpers(self, client, base_url, mock_search_response):
@@ -200,7 +203,7 @@ class TestSearch:
             return_value=Response(200, json=mock_search_response)
         )
 
-        result = client.search(prompt="test")
+        result = client.search(query="test")
 
         # Test .to_dict()
         result_dict = result.to_dict()
@@ -233,7 +236,7 @@ class TestSearchMethods:
             return_value=Response(200, json=mock_search_response)
         )
 
-        result = client.search(prompt="test", method=method)
+        result = client.search(query="test", method=method)
 
         # Verify method was sent in request
         request_body = mock_route.calls.last.request.content.decode()
@@ -252,7 +255,7 @@ class TestSearchPagination:
             return_value=Response(200, json=mock_search_response)
         )
 
-        result = client.search(prompt="test", limit=50, offset=100)
+        result = client.search(query="test", limit=50, offset=100)
 
         # Verify pagination params in request
         request_body = mock_route.calls.last.request.content.decode()

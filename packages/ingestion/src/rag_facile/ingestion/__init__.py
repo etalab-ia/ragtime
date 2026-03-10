@@ -1,12 +1,11 @@
 """Ingestion - Document parsing with pluggable providers.
 
-Extract text from documents (PDF, Markdown, HTML) using either local
-parsing (pypdf) or server-side parsing (Albert API).
+Extract text from documents (PDF, Markdown, HTML) using local parsing (pypdf).
 
 The provider is selected via ``ragfacile.toml``:
 
     [ingestion]
-    provider = "local"   # or "albert"
+    provider = "local"
 
 Example usage::
 
@@ -15,6 +14,14 @@ Example usage::
     provider = get_provider()
     text = provider.extract_text("document.pdf")
     context = provider.process_file("document.pdf", filename="My Doc")
+
+.. note::
+
+    The ``"albert"`` ingestion provider has been removed in albert-client 0.4.1.
+    The ``/parse-beta`` endpoint it relied on is deprecated and will be removed
+    in Albert API 0.5.0. Use the default ``"local"`` provider for text extraction,
+    or rely on ``AlbertPipeline.process_file()`` which uploads documents directly
+    to Albert for server-side parsing, chunking, and embedding.
 """
 
 from __future__ import annotations
@@ -51,11 +58,14 @@ def get_provider(config: Any | None = None) -> IngestionProvider:
 
             return LocalProvider()
         case "albert":
-            from rag_facile.ingestion.albert import AlbertProvider
-
-            return AlbertProvider()
+            raise ValueError(
+                "The 'albert' ingestion provider has been removed in albert-client 0.4.1. "
+                "The /parse-beta endpoint it used is deprecated in Albert API 0.4.1 and "
+                'will be removed in 0.5.0. Use provider = "local" in ragfacile.toml, '
+                "or let AlbertPipeline handle document upload directly."
+            )
         case _:
-            msg = f"Unknown ingestion provider: {backend!r}. Expected 'local' or 'albert'."
+            msg = f"Unknown ingestion provider: {backend!r}. Expected 'local'."
             raise ValueError(msg)
 
 

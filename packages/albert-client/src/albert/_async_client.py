@@ -15,16 +15,17 @@ if TYPE_CHECKING:
 
     from albert.types import (
         Chunk,
+        ChunkInput,
         ChunkList,
         Collection,
         CollectionList,
         CollectionVisibility,
+        CompoundMetadataFilter,
         Document,
         DocumentList,
         DocumentResponse,
-        FileResponse,
+        MetadataFilter,
         OCRResponse,
-        ParsedDocument,
         RerankResponse,
         SearchResponse,
         UsageList,
@@ -49,12 +50,12 @@ class AsyncAlbertClient:
 
         # OpenAI-compatible endpoints
         response = await client.chat.completions.create(
-            model="AgentPublic/llama3-instruct-8b",
+            model="openweight-large",
             messages=[{"role": "user", "content": "Hello!"}]
         )
 
         # Albert-specific endpoints
-        # results = await client.search(prompt="...", collections=["..."])
+        results = await client.search(query="Code civil", collection_ids=[785])
         ```
     """
 
@@ -71,7 +72,6 @@ class AsyncAlbertClient:
             base_url: Base URL for Albert API (includes /v1 suffix).
             **kwargs: Additional arguments passed to OpenAI client.
         """
-        # Get API key from env if not provided
         if api_key is None:
             api_key = os.environ.get("ALBERT_API_KEY") or os.environ.get(
                 "OPENAI_API_KEY"
@@ -83,7 +83,6 @@ class AsyncAlbertClient:
                 "ALBERT_API_KEY/OPENAI_API_KEY environment variable."
             )
 
-        # Initialize wrapped OpenAI client
         self._client = AsyncOpenAI(api_key=api_key, base_url=base_url, **kwargs)
 
         # OpenAI-Compatible Passthrough
@@ -165,27 +164,34 @@ class AsyncAlbertClient:
 
     async def search(
         self,
-        prompt: str,
-        collections: list[str | int] | None = None,
+        query: str,
+        collection_ids: list[int] | None = None,
+        document_ids: list[int] | None = None,
         limit: int = 10,
         offset: int = 0,
         method: str = "semantic",
         score_threshold: float | None = None,
         rff_k: int = 20,
-    ) -> SearchResponse:
-        """Hybrid RAG search across collections.
+        metadata_filters: "MetadataFilter | CompoundMetadataFilter | None" = None,
+    ) -> "SearchResponse":
+        """Search for relevant chunks across collections.
 
-        Searches for relevant chunks in the specified collections using the given prompt.
-        Supports semantic, lexical, or hybrid search methods.
+        Supports semantic, lexical, or hybrid search methods with optional
+        metadata filtering and document-level scoping.
 
         Args:
-            prompt: Search query to find relevant chunks.
-            collections: List of collection IDs to search in. Defaults to all collections.
+            query: Search query text.
+            collection_ids: Collection IDs to search in. Pass empty list to search
+                all collections. Defaults to all collections.
+            document_ids: Document IDs to scope the search. Defaults to all documents.
             limit: Maximum number of results to return (1-200). Defaults to 10.
             offset: Pagination offset. Defaults to 0.
-            method: Search method - "semantic", "lexical", or "hybrid". Defaults to "semantic".
-            score_threshold: Minimum cosine similarity score (0.0-1.0). Only for semantic search.
-            rff_k: RFF algorithm constant. Defaults to 20.
+            method: Search method - ``"semantic"``, ``"lexical"``, or ``"hybrid"``.
+                Defaults to ``"semantic"``.
+            score_threshold: Minimum cosine similarity score (0.0-1.0).
+                Only valid for ``method="semantic"``.
+            rff_k: RFF algorithm constant for hybrid search. Defaults to 20.
+            metadata_filters: Optional metadata filter or compound filter.
 
         Returns:
             SearchResponse with results, usage info, and metadata.
@@ -196,27 +202,31 @@ class AsyncAlbertClient:
         Example:
             ```python
             results = await client.search(
-                prompt="Code civil",
-                collections=["legal_docs"],
+                query="Code civil",
+                collection_ids=[785],
                 limit=5,
                 method="hybrid"
             )
-            for chunk in results.data:
-                print(chunk.score, chunk.chunk.content)
+            for result in results.data:
+                print(result.score, result.chunk.content)
             ```
         """
         from albert.types import SearchResponse
 
-        body = {
-            "prompt": prompt,
-            "collections": collections or [],
+        body: dict[str, Any] = {
+            "query": query,
+            "collection_ids": collection_ids if collection_ids is not None else [],
             "limit": limit,
             "offset": offset,
             "method": method,
             "rff_k": rff_k,
         }
+        if document_ids is not None:
+            body["document_ids"] = document_ids
         if score_threshold is not None:
             body["score_threshold"] = score_threshold
+        if metadata_filters is not None:
+            body["metadata_filters"] = metadata_filters.model_dump()
 
         response = await self._make_request("post", "/search", json=body)
         response.raise_for_status()
@@ -229,11 +239,11 @@ class AsyncAlbertClient:
         documents: list[str],
         model: str,
         top_n: int | None = None,
-    ) -> RerankResponse:
+    ) -> "RerankResponse":
         """Rerank documents by relevance to a query."""
         from albert.types import RerankResponse
 
-        body = {
+        body: dict[str, Any] = {
             "query": query,
             "documents": documents,
             "model": model,
@@ -252,12 +262,12 @@ class AsyncAlbertClient:
         self,
         name: str,
         description: str | None = None,
-        visibility: CollectionVisibility = "private",
-    ) -> Collection:
+        visibility: "CollectionVisibility" = "private",
+    ) -> "Collection":
         """Create a new RAG collection."""
         from albert.types import Collection
 
-        body = {"name": name, "visibility": visibility}
+        body: dict[str, Any] = {"name": name, "visibility": visibility}
         if description is not None:
             body["description"] = description
 
@@ -269,25 +279,31 @@ class AsyncAlbertClient:
     async def list_collections(
         self,
         name: str | None = None,
-        visibility: CollectionVisibility | None = None,
+        visibility: "CollectionVisibility | None" = None,
         limit: int = 10,
         offset: int = 0,
-    ) -> CollectionList:
+        order_by: str | None = None,
+        order_direction: str | None = None,
+    ) -> "CollectionList":
         """List all accessible collections."""
         from albert.types import CollectionList
 
-        params = {"limit": limit, "offset": offset}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         if name is not None:
             params["name"] = name
         if visibility is not None:
             params["visibility"] = visibility
+        if order_by is not None:
+            params["order_by"] = order_by
+        if order_direction is not None:
+            params["order_direction"] = order_direction
 
         response = await self._make_request("get", "/collections", params=params)
         response.raise_for_status()
 
         return CollectionList(**response.json())
 
-    async def get_collection(self, collection_id: int) -> Collection:
+    async def get_collection(self, collection_id: int) -> "Collection":
         """Get a specific collection by ID."""
         from albert.types import Collection
 
@@ -301,10 +317,10 @@ class AsyncAlbertClient:
         collection_id: int,
         name: str | None = None,
         description: str | None = None,
-        visibility: CollectionVisibility | None = None,
+        visibility: "CollectionVisibility | None" = None,
     ) -> None:
         """Update a collection's metadata."""
-        body = {}
+        body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
         if description is not None:
@@ -326,36 +342,38 @@ class AsyncAlbertClient:
 
     async def upload_document(
         self,
-        file_path: str | Path,
+        file_path: "str | Path",
         collection_id: int,
+        name: str | None = None,
         chunk_size: int = 2048,
         chunk_overlap: int = 0,
-        chunker: str = "RecursiveCharacterTextSplitter",
         chunk_min_size: int = 0,
         separators: list[str] | None = None,
         preset_separators: str | None = None,
         is_separator_regex: bool = False,
+        disable_chunking: bool = False,
         metadata: str | None = None,
-    ) -> DocumentResponse:
+    ) -> "DocumentResponse":
         """Upload a document to a collection.
 
-        The document will be parsed, chunked, and embedded according to the collection's
-        settings.
+        The document will be parsed, chunked, and embedded by Albert server-side.
 
         Args:
             file_path: Path to the file to upload.
             collection_id: The collection ID to add the document to.
+            name: Optional display name for the document.
             chunk_size: Size of text chunks for embedding (default: 2048).
             chunk_overlap: Overlap between chunks (default: 0).
-            chunker: Chunker strategy (default: "RecursiveCharacterTextSplitter").
-            chunk_min_size: Minimum chunk size (default: 0).
-            separators: List of custom separators.
-            preset_separators: Preset generic separators (e.g. "markdown").
-            is_separator_regex: Treat separators as regex? (default: False).
-            metadata: Stringified JSON object matching the Metadata schema.
+            chunk_min_size: Minimum chunk size to keep (default: 0).
+            separators: List of custom separators for splitting.
+            preset_separators: Preset separator profile (e.g. ``"markdown"``).
+            is_separator_regex: Treat separators as regex patterns (default: False).
+            disable_chunking: Store without chunking; use :meth:`add_chunks` to supply
+                chunks manually (default: False).
+            metadata: Stringified JSON object with custom document metadata.
 
         Returns:
-            DocumentResponse with document ID.
+            DocumentResponse with the new document ID.
 
         Raises:
             httpx.HTTPStatusError: If the upload fails.
@@ -377,14 +395,16 @@ class AsyncAlbertClient:
 
         file_path = Path(file_path)
 
-        form_data = {
-            "collection": collection_id,
+        form_data: dict[str, Any] = {
+            "collection_id": collection_id,
             "chunk_size": chunk_size,
             "chunk_overlap": chunk_overlap,
-            "chunker": chunker,
             "chunk_min_size": chunk_min_size,
             "is_separator_regex": is_separator_regex,
+            "disable_chunking": disable_chunking,
         }
+        if name is not None:
+            form_data["name"] = name
         if separators is not None:
             form_data["separators"] = separators
         if preset_separators is not None:
@@ -407,26 +427,32 @@ class AsyncAlbertClient:
         name: str | None = None,
         limit: int | None = 10,
         offset: int | str = 0,
-    ) -> DocumentList:
+        order_by: str | None = None,
+        order_direction: str | None = None,
+    ) -> "DocumentList":
         """List documents in a collection or all accessible documents."""
         from albert.types import DocumentList
 
-        params = {}
+        params: dict[str, Any] = {}
         if collection_id is not None:
-            params["collection"] = collection_id
+            params["collection_id"] = collection_id
         if name is not None:
             params["name"] = name
         if limit is not None:
             params["limit"] = limit
         if offset is not None:
             params["offset"] = offset
+        if order_by is not None:
+            params["order_by"] = order_by
+        if order_direction is not None:
+            params["order_direction"] = order_direction
 
         response = await self._make_request("get", "/documents", params=params)
         response.raise_for_status()
 
         return DocumentList(**response.json())
 
-    async def get_document(self, document_id: int) -> Document:
+    async def get_document(self, document_id: int) -> "Document":
         """Get a specific document by ID."""
         from albert.types import Document
 
@@ -447,26 +473,88 @@ class AsyncAlbertClient:
         document_id: int,
         limit: int = 10,
         offset: int | str = 0,
-    ) -> ChunkList:
+    ) -> "ChunkList":
         """List chunks for a specific document."""
         from albert.types import ChunkList
 
-        params = {"limit": limit, "offset": offset}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         response = await self._make_request(
-            "get", f"/chunks/{document_id}", params=params
+            "get", f"/documents/{document_id}/chunks", params=params
         )
         response.raise_for_status()
 
         return ChunkList(**response.json())
 
-    async def get_chunk(self, document_id: int, chunk_id: int) -> Chunk:
+    async def get_chunk(self, document_id: int, chunk_id: int) -> "Chunk":
         """Get a specific chunk by document and chunk ID."""
         from albert.types import Chunk
 
-        response = await self._make_request("get", f"/chunks/{document_id}/{chunk_id}")
+        response = await self._make_request(
+            "get", f"/documents/{document_id}/chunks/{chunk_id}"
+        )
         response.raise_for_status()
 
         return Chunk(**response.json())
+
+    async def add_chunks(
+        self,
+        document_id: int,
+        chunks: "list[ChunkInput]",
+    ) -> None:
+        """Add chunks directly to a document.
+
+        Use this when you want full control over chunking — upload the document
+        with ``disable_chunking=True``, then call this method to supply your
+        own chunks with optional per-chunk metadata.
+
+        Args:
+            document_id: The document ID to add chunks to.
+            chunks: List of :class:`~albert.types.ChunkInput` objects.
+
+        Raises:
+            httpx.HTTPStatusError: If the request fails.
+
+        Example:
+            ```python
+            from albert.types import ChunkInput
+
+            doc = await client.upload_document(
+                file_path="doc.pdf",
+                collection_id=123,
+                disable_chunking=True,
+            )
+            await client.add_chunks(doc.id, [
+                ChunkInput(content="First chunk.", metadata={"page": 1}),
+                ChunkInput(content="Second chunk.", metadata={"page": 2}),
+            ])
+            ```
+        """
+        body = [chunk.model_dump(exclude_none=True) for chunk in chunks]
+        response = await self._make_request(
+            "post", f"/documents/{document_id}/chunks", json=body
+        )
+        response.raise_for_status()
+
+    async def delete_chunk(self, document_id: int, chunk_id: int) -> None:
+        """Delete a specific chunk from a document.
+
+        Args:
+            document_id: The document ID.
+            chunk_id: The chunk ID to delete.
+
+        Raises:
+            httpx.HTTPStatusError: If the chunk doesn't exist or deletion fails.
+
+        Example:
+            ```python
+            await client.delete_chunk(document_id=456, chunk_id=789)
+            print("Chunk 789 from document 456 deleted.")
+            ```
+        """
+        response = await self._make_request(
+            "delete", f"/documents/{document_id}/chunks/{chunk_id}"
+        )
+        response.raise_for_status()
 
     # Usage tracking
 
@@ -477,10 +565,8 @@ class AsyncAlbertClient:
         limit: int = 10,
         offset: int = 0,
         endpoint: str | None = None,
-    ) -> UsageList:
+    ) -> "UsageList":
         """Get API usage statistics.
-
-        Returns usage data aggregated by request.
 
         Args:
             start_time: Filter from this timestamp (Unix seconds). Optional.
@@ -497,7 +583,6 @@ class AsyncAlbertClient:
 
         Example:
             ```python
-            # Get usage for the last 24 hours
             import time
             now = int(time.time())
             usage = await client.get_usage(
@@ -510,7 +595,7 @@ class AsyncAlbertClient:
         """
         from albert.types import UsageList
 
-        params = {"limit": limit, "offset": offset}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         if start_time is not None:
             params["start_time"] = start_time
         if end_time is not None:
@@ -523,7 +608,7 @@ class AsyncAlbertClient:
 
         return UsageList(**response.json())
 
-    # OCR & Parsing methods
+    # OCR methods
 
     async def ocr(
         self,
@@ -534,11 +619,11 @@ class AsyncAlbertClient:
         image_limit: int | None = None,
         image_min_size: int | None = None,
         **kwargs,
-    ) -> OCRResponse:
+    ) -> "OCRResponse":
         """Perform OCR on a document with advanced options."""
         from albert.types import OCRResponse
 
-        body = {}
+        body: dict[str, Any] = {}
         if isinstance(document, str):
             body["document"] = {"document_url": document}
         else:
@@ -561,85 +646,6 @@ class AsyncAlbertClient:
         response.raise_for_status()
 
         return OCRResponse(**response.json())
-
-    async def ocr_beta(
-        self,
-        file_path: str | Path,
-        model: str,
-        dpi: int = 150,
-        prompt: str | None = None,
-    ) -> ParsedDocument:
-        """Perform simple file-based OCR (beta)."""
-        from pathlib import Path
-
-        from albert.types import ParsedDocument
-
-        file_path = Path(file_path)
-
-        form_data = {"model": model, "dpi": dpi}
-        if prompt is not None:
-            form_data["prompt"] = prompt
-
-        with open(file_path, "rb") as f:
-            files = {"file": (file_path.name, f, "application/octet-stream")}
-            response = await self._make_request(
-                "post", "/ocr-beta", data=form_data, files=files
-            )
-            response.raise_for_status()
-
-        return ParsedDocument(**response.json())
-
-    async def parse(
-        self,
-        file_path: str | Path,
-        force_ocr: bool = False,
-        page_range: str = "",
-    ) -> ParsedDocument:
-        """Parse a document to markdown."""
-        from pathlib import Path
-
-        from albert.types import ParsedDocument
-
-        file_path = Path(file_path)
-
-        form_data = {
-            "force_ocr": force_ocr,
-            "page_range": page_range,
-        }
-
-        with open(file_path, "rb") as f:
-            files = {"file": (file_path.name, f, "application/octet-stream")}
-            response = await self._make_request(
-                "post", "/parse-beta", data=form_data, files=files
-            )
-            response.raise_for_status()
-
-        return ParsedDocument(**response.json())
-
-    # File management (Deprecated)
-
-    async def upload_file(
-        self, file_path: str | Path, purpose: str | None = None
-    ) -> FileResponse:
-        """[DEPRECATED] Upload a file to Albert API."""
-        from pathlib import Path
-
-        from albert.types import FileResponse
-
-        file_path = Path(file_path)
-        form_data = {}
-
-        with open(file_path, "rb") as f:
-            files = {"file": (file_path.name, f, "application/octet-stream")}
-            if purpose:
-                form_data["purpose"] = purpose
-
-            response = await self._make_request(
-                "post", "/files", data=form_data, files=files
-            )
-            response.raise_for_status()
-
-        return FileResponse(**response.json())
 
     # Health & Monitoring
 

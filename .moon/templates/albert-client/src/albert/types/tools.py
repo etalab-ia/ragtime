@@ -1,4 +1,4 @@
-"""Types for Albert API Tools, OCR, Parse, Files, and Usage endpoints."""
+"""Types for Albert API OCR and Usage endpoints."""
 
 from __future__ import annotations
 
@@ -56,50 +56,22 @@ class OCRResponse(BaseModel):
     usage_info: OCRUsage | None = None
 
 
-# --- Parse Types ---
+# --- Chunk Input (for adding chunks to a document) ---
 
 
-class ParsedDocumentMetadata(BaseModel):
-    """Metadata for a parsed document page."""
+class ChunkInput(BaseModel):
+    """A chunk to add to a document via POST /documents/{id}/chunks.
 
-    document_name: str
-    page: int = 0
+    Args:
+        content: Text content of the chunk.
+        metadata: Optional metadata dict for the chunk.
+    """
 
-
-class ParsedDocumentPage(BaseModel):
-    """A single page from a parsed document."""
-
-    object: str = "documentPage"
     content: str
-    images: dict[str, str] = {}
-    metadata: ParsedDocumentMetadata | None = None
-
-
-class ParsedDocument(BaseModel):
-    """Response from the parse endpoint."""
-
-    object: str = "list"
-    data: list[ParsedDocumentPage] = []
-    usage: Usage | None = None
-
-
-# --- File Types ---
-
-
-class FileResponse(BaseModel):
-    """Response from the (deprecated) file upload endpoint."""
-
-    id: int
+    metadata: dict | None = None
 
 
 # --- Usage Types (Me/Usage endpoint) ---
-
-
-class CarbonFootprintUsageDetail(BaseModel):
-    """Carbon footprint detail for usage records (nullable fields)."""
-
-    kWh: CarbonFootprintUsageKWhDetail | None = None
-    kgCO2eq: CarbonFootprintUsageKgCO2eqDetail | None = None
 
 
 class CarbonFootprintUsageKWhDetail(BaseModel):
@@ -152,7 +124,3 @@ class UsageList(BaseModel):
 
     object: str = "list"
     data: list[UsageRecord] = []
-
-
-# Backward compatibility aliases
-FileUploadResponse = FileResponse

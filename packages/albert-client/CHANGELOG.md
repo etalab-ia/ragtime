@@ -5,6 +5,34 @@ All notable changes to albert-client will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses independent versioning (matches Albert API spec, not monorepo releases).
 
+## [0.4.1] - 2026-02-27
+
+### Breaking Changes
+
+- **`search()`**: `prompt` parameter renamed to `query`; `collections` parameter renamed to `collection_ids` (now takes `list[int]` instead of `list[str | int]`)
+- **`upload_document()`**: `collection` form field renamed to `collection_id`; `chunker` parameter removed (API uses `RecursiveCharacterTextSplitter` by default — use `disable_chunking=True` + `add_chunks()` for custom chunking)
+- **`list_documents()`**: `collection` query parameter renamed to `collection_id`
+- **`list_chunks()`**: endpoint changed from `GET /chunks/{document_id}` to `GET /documents/{document_id}/chunks`
+- **`get_chunk()`**: endpoint changed from `GET /chunks/{document_id}/{chunk_id}` to `GET /documents/{document_id}/chunks/{chunk_id}`
+- **Removed methods**: `parse()` (`/parse-beta` deprecated, removed in 0.5.0), `ocr_beta()` (`/ocr-beta` removed), `upload_file()` (`/files` removed)
+- **Ingestion**: `AlbertProvider` removed from `rag_facile.ingestion` (relied on `parse()`). Use `provider = "local"` in `ragfacile.toml`.
+
+### Added
+
+- **`search()`**: new `document_ids` parameter to scope search to specific documents
+- **`search()`**: new `metadata_filters` parameter (`MetadataFilter` / `CompoundMetadataFilter`) for chunk metadata filtering
+- **`upload_document()`**: new `name` parameter (display name overrides filename); new `disable_chunking` parameter
+- **`list_collections()`** and **`list_documents()`**: new `order_by` and `order_direction` parameters
+- **`add_chunks(document_id, chunks)`**: POST `/documents/{id}/chunks` — add chunks with full control over content and metadata
+- **`delete_chunk(document_id, chunk_id)`**: DELETE `/documents/{id}/chunks/{chunk_id}`
+- New types: `MetadataFilter`, `CompoundMetadataFilter`, `MetadataFilterType`, `MetadataCompoundOperator`, `ChunkInput`
+
+### Removed Types
+
+- `ParsedDocument`, `ParsedDocumentPage`, `ParsedDocumentMetadata` (used only by removed `parse()`/`ocr_beta()`)
+- `FileResponse`, `FileUploadResponse` (used only by removed `upload_file()`)
+
+
 ## [0.4.0](https://github.com/etalab-ia/rag-facile/compare/albert-client-v0.3.7...albert-client-v0.4.0) (2026-02-13)
 
 

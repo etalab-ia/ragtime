@@ -2,12 +2,46 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from albert._models import BaseModel
 
 # Search method types
 SearchMethod = Literal["hybrid", "semantic", "lexical"]
+
+# Metadata filter operator types
+MetadataFilterType = Literal["eq", "sw", "ew", "co"]
+MetadataCompoundOperator = Literal["and", "or"]
+
+
+# --- Metadata Filters ---
+
+
+class MetadataFilter(BaseModel):
+    """A single metadata filter for search results.
+
+    Args:
+        key: The metadata key to filter by.
+        type: Filter operator: ``eq`` (equal), ``sw`` (starts with),
+              ``ew`` (ends with), ``co`` (contains).
+        value: The value to compare against.
+    """
+
+    key: str
+    type: MetadataFilterType
+    value: Any
+
+
+class CompoundMetadataFilter(BaseModel):
+    """A compound metadata filter combining multiple filters.
+
+    Args:
+        filters: List of filters to combine.
+        operator: ``and`` (all must match) or ``or`` (any must match).
+    """
+
+    filters: list[MetadataFilter | CompoundMetadataFilter]
+    operator: MetadataCompoundOperator = "and"
 
 
 # --- Usage (inline, used in search/rerank responses) ---

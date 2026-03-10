@@ -100,13 +100,12 @@ class TestGetProvider:
         provider = get_provider(config)
         assert isinstance(provider, LocalProvider)
 
-    def test_albert_provider(self):
-        from rag_facile.ingestion.albert import AlbertProvider
-
+    def test_albert_provider_removed(self):
+        """AlbertProvider was removed in 0.4.1 — should raise a clear error."""
         config = MagicMock()
         config.ingestion.provider = "albert"
-        provider = get_provider(config)
-        assert isinstance(provider, AlbertProvider)
+        with pytest.raises(ValueError, match="albert.*provider has been removed"):
+            get_provider(config)
 
     def test_unknown_provider_raises(self):
         config = MagicMock()

@@ -94,9 +94,13 @@ class AlbertRetrievalProvider(RetrievalProvider):
             self._score_threshold if self._method == "semantic" else None
         )
 
+        # Albert API requires integer collection IDs; coerce from str if needed
+        # (e.g. when IDs are read from env vars or mixed-type config sources).
+        collection_ids_int: list[int] = [int(c) for c in collection_ids]
+
         response = self._albert_client.search(
-            prompt=query,
-            collections=collection_ids,
+            query=query,
+            collection_ids=collection_ids_int,
             limit=self._top_k,
             method=self._method,
             score_threshold=effective_threshold,

@@ -1,4 +1,4 @@
-"""Tests for tools, parsing, and monitoring functionality."""
+"""Tests for OCR, usage tracking, and monitoring functionality."""
 
 import pytest
 import respx
@@ -6,9 +6,7 @@ from httpx import Response
 
 from albert import (
     AlbertClient,
-    FileResponse,
     OCRResponse,
-    ParsedDocument,
     UsageList,
 )
 
@@ -23,7 +21,7 @@ def client(api_key, base_url):
 def temp_file(tmp_path):
     """Create a temporary test file."""
     f = tmp_path / "test.txt"
-    f.write_text("Test document content for parsing.")
+    f.write_text("Test document content.")
     return f
 
 
@@ -164,114 +162,6 @@ class TestOCR:
         assert "doctr" in request_body
 
         assert isinstance(result, OCRResponse)
-
-    @respx.mock
-    def test_ocr_beta(self, client, base_url, temp_file):
-        """Test simple OCR beta method."""
-        mock_response = {
-            "object": "list",
-            "data": [{"content": "Extracted text from OCR beta", "page": 0}],
-        }
-
-        respx.post(f"{base_url.rstrip('/')}/ocr-beta").mock(
-            return_value=Response(200, json=mock_response)
-        )
-
-        result = client.ocr_beta(file_path=temp_file, model="gpt-4o-mini", dpi=200)
-
-        assert isinstance(result, ParsedDocument)
-        assert len(result.data) == 1
-        assert result.data[0].content == "Extracted text from OCR beta"
-
-
-class TestParsing:
-    """Test document parsing method."""
-
-    @pytest.fixture
-    def mock_parsed_document(self):
-        """Mock parsed document data."""
-        return {
-            "object": "list",
-            "data": [
-                {
-                    "content": "# Page 1\n\nThis is the first page.",
-                    "metadata": {"document_name": "test.txt", "page": 0},
-                },
-                {
-                    "content": "# Page 2\n\nThis is the second page.",
-                    "metadata": {"document_name": "test.txt", "page": 1},
-                },
-            ],
-        }
-
-    @respx.mock
-    def test_parse_default_markdown(
-        self, client, base_url, temp_file, mock_parsed_document
-    ):
-        """Test parsing document to markdown."""
-        respx.post(f"{base_url.rstrip('/')}/parse-beta").mock(
-            return_value=Response(200, json=mock_parsed_document)
-        )
-
-        result = client.parse(file_path=temp_file)
-
-        assert isinstance(result, ParsedDocument)
-        assert len(result.data) == 2
-        assert result.data[0].content.startswith("# Page 1")
-
-    @respx.mock
-    def test_parse_with_options(
-        self, client, base_url, temp_file, mock_parsed_document
-    ):
-        """Test parsing with custom options."""
-        mock_route = respx.post(f"{base_url.rstrip('/')}/parse-beta").mock(
-            return_value=Response(200, json=mock_parsed_document)
-        )
-
-        result = client.parse(
-            file_path=temp_file,
-            force_ocr=True,
-            page_range="0-5",
-        )
-
-        # Verify form data
-        request = mock_route.calls.last.request
-        assert b"True" in request.content or b"true" in request.content
-        assert b"0-5" in request.content
-
-        assert isinstance(result, ParsedDocument)
-
-
-class TestFileUpload:
-    """Test file upload method."""
-
-    @respx.mock
-    def test_upload_file(self, client, base_url, temp_file):
-        """Test uploading a file."""
-        mock_response = {"id": 123}
-
-        respx.post(f"{base_url.rstrip('/')}/files").mock(
-            return_value=Response(200, json=mock_response)
-        )
-
-        result = client.upload_file(file_path=temp_file, purpose="analysis")
-
-        assert isinstance(result, FileResponse)
-        assert result.id == 123
-
-    @respx.mock
-    def test_upload_file_without_purpose(self, client, base_url, temp_file):
-        """Test uploading a file without purpose."""
-        mock_response = {"id": 789}
-
-        respx.post(f"{base_url.rstrip('/')}/files").mock(
-            return_value=Response(200, json=mock_response)
-        )
-
-        result = client.upload_file(file_path=temp_file)
-
-        assert isinstance(result, FileResponse)
-        assert result.id == 789
 
 
 class TestHealthMonitoring:

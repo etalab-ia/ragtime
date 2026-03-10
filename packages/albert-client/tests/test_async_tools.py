@@ -1,4 +1,4 @@
-"""Tests for async tools, parsing, and monitoring functionality."""
+"""Tests for async OCR, usage tracking, and monitoring functionality."""
 
 import pytest
 import respx
@@ -6,9 +6,7 @@ from httpx import Response
 
 from albert import (
     AsyncAlbertClient,
-    FileResponse,
     OCRResponse,
-    ParsedDocument,
     UsageList,
 )
 
@@ -23,7 +21,7 @@ def client(api_key, base_url):
 def temp_file(tmp_path):
     """Create a temporary test file."""
     f = tmp_path / "test.txt"
-    f.write_text("Test document content for parsing.")
+    f.write_text("Test document content.")
     return f
 
 
@@ -125,132 +123,6 @@ class TestAsyncOCR:
         )
 
         assert isinstance(result, OCRResponse)
-
-    @respx.mock
-    async def test_ocr_beta(self, client, base_url, temp_file):
-        """Test async OCR beta."""
-        mock_response = {
-            "object": "list",
-            "data": [
-                {
-                    "content": "OCR beta result",
-                    "metadata": {"page": 0, "document_name": "test.txt"},
-                }
-            ],
-        }
-
-        respx.post(f"{base_url.rstrip('/')}/ocr-beta").mock(
-            return_value=Response(200, json=mock_response)
-        )
-
-        result = await client.ocr_beta(file_path=temp_file, model="gpt-4o-mini")
-
-        assert isinstance(result, ParsedDocument)
-        assert result.data[0].content == "OCR beta result"
-
-
-class TestAsyncParsing:
-    """Test async parsing methods."""
-
-    @respx.mock
-    async def test_parse(self, client, base_url, temp_file):
-        """Test async parse."""
-        mock_parsed = {
-            "object": "list",
-            "data": [
-                {
-                    "content": "# Parsed content",
-                    "metadata": {"page": 0, "document_name": "test.txt"},
-                }
-            ],
-        }
-
-        respx.post(f"{base_url.rstrip('/')}/parse-beta").mock(
-            return_value=Response(200, json=mock_parsed)
-        )
-
-        result = await client.parse(file_path=temp_file)
-
-        assert isinstance(result, ParsedDocument)
-        assert len(result.data) == 1
-
-    @respx.mock
-    async def test_parse_with_options(self, client, base_url, temp_file):
-        """Test async parse with options."""
-        mock_parsed = {
-            "object": "list",
-            "data": [
-                {
-                    "content": '{"key": "value"}',
-                    "metadata": {"page": 0, "document_name": "test.txt"},
-                }
-            ],
-        }
-
-        respx.post(f"{base_url.rstrip('/')}/parse-beta").mock(
-            return_value=Response(200, json=mock_parsed)
-        )
-
-        result = await client.parse(
-            file_path=temp_file,
-            force_ocr=True,
-            page_range="0-10",
-        )
-
-        assert isinstance(result, ParsedDocument)
-
-    @respx.mock
-    async def test_parse_context_manager(self, api_key, base_url, temp_file):
-        """Test async parse with context manager."""
-        mock_parsed = {
-            "object": "list",
-            "data": [
-                {
-                    "content": "Content",
-                    "metadata": {"page": 0, "document_name": "test.txt"},
-                }
-            ],
-        }
-
-        respx.post(f"{base_url.rstrip('/')}/parse-beta").mock(
-            return_value=Response(200, json=mock_parsed)
-        )
-
-        async with AsyncAlbertClient(api_key=api_key, base_url=base_url) as client:
-            result = await client.parse(file_path=temp_file)
-            assert isinstance(result, ParsedDocument)
-
-
-class TestAsyncFileUpload:
-    """Test async file upload."""
-
-    @respx.mock
-    async def test_upload_file(self, client, base_url, temp_file):
-        """Test async file upload."""
-        mock_response = {"id": 123}
-
-        respx.post(f"{base_url.rstrip('/')}/files").mock(
-            return_value=Response(200, json=mock_response)
-        )
-
-        result = await client.upload_file(file_path=temp_file)
-
-        assert isinstance(result, FileResponse)
-        assert result.id == 123
-
-    @respx.mock
-    async def test_upload_file_with_purpose(self, client, base_url, temp_file):
-        """Test async file upload with purpose."""
-        mock_response = {"id": 456}
-
-        respx.post(f"{base_url.rstrip('/')}/files").mock(
-            return_value=Response(200, json=mock_response)
-        )
-
-        result = await client.upload_file(file_path=temp_file, purpose="training")
-        # No assertions on result.purpose returned as it's not in FileResponse anymore
-        assert isinstance(result, FileResponse)
-        assert result.id == 456
 
 
 class TestAsyncHealthMonitoring:

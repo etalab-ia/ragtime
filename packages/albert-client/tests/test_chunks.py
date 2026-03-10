@@ -1,10 +1,12 @@
 """Tests for chunks functionality."""
 
+import json
+
 import pytest
 import respx
 from httpx import Response
 
-from albert import AlbertClient, Chunk, ChunkList
+from albert import AlbertClient, Chunk, ChunkInput, ChunkList
 
 
 @pytest.fixture
@@ -50,7 +52,7 @@ class TestListChunks:
     @respx.mock
     def test_list_chunks(self, client, base_url, mock_chunk_list):
         """Test listing all chunks for a document."""
-        respx.get(f"{base_url.rstrip('/')}/chunks/456").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/456/chunks").mock(
             return_value=Response(200, json=mock_chunk_list)
         )
 
@@ -66,7 +68,7 @@ class TestListChunks:
     @respx.mock
     def test_list_chunks_empty(self, client, base_url):
         """Test listing chunks when none exist."""
-        respx.get(f"{base_url.rstrip('/')}/chunks/456").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/456/chunks").mock(
             return_value=Response(200, json={"object": "list", "data": []})
         )
 
@@ -78,7 +80,7 @@ class TestListChunks:
     @respx.mock
     def test_list_chunks_http_error(self, client, base_url):
         """Test list chunks with HTTP error."""
-        respx.get(f"{base_url.rstrip('/')}/chunks/999").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/999/chunks").mock(
             return_value=Response(
                 404, json={"error": {"message": "Document not found"}}
             )
@@ -94,7 +96,7 @@ class TestGetChunk:
     @respx.mock
     def test_get_chunk(self, client, base_url, mock_chunk):
         """Test getting a specific chunk."""
-        respx.get(f"{base_url.rstrip('/')}/chunks/456/789").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/456/chunks/789").mock(
             return_value=Response(200, json=mock_chunk)
         )
 
@@ -123,7 +125,7 @@ class TestGetChunk:
             "created": 1700000000,
         }
 
-        respx.get(f"{base_url.rstrip('/')}/chunks/456/789").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/456/chunks/789").mock(
             return_value=Response(200, json=chunk_with_metadata)
         )
 
@@ -135,7 +137,7 @@ class TestGetChunk:
     @respx.mock
     def test_get_chunk_not_found(self, client, base_url):
         """Test getting non-existent chunk."""
-        respx.get(f"{base_url.rstrip('/')}/chunks/456/999").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/456/chunks/999").mock(
             return_value=Response(404, json={"error": {"message": "Chunk not found"}})
         )
 
@@ -145,7 +147,7 @@ class TestGetChunk:
     @respx.mock
     def test_get_chunk_pydantic_helpers(self, client, base_url, mock_chunk):
         """Test chunk Pydantic model helper methods."""
-        respx.get(f"{base_url.rstrip('/')}/chunks/456/789").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/456/chunks/789").mock(
             return_value=Response(200, json=mock_chunk)
         )
 
@@ -162,3 +164,96 @@ class TestGetChunk:
         assert isinstance(chunk_json, str)
         assert "789" in chunk_json
         assert "chunk" in chunk_json
+
+
+class TestAddChunks:
+    """Test add_chunks method."""
+
+    @respx.mock
+    def test_add_chunks_basic(self, client, base_url):
+        """Test adding chunks to a document."""
+        respx.post(f"{base_url.rstrip('/')}/documents/456/chunks").mock(
+            return_value=Response(201)
+        )
+
+        client.add_chunks(
+            document_id=456,
+            chunks=[
+                ChunkInput(content="First chunk.", metadata={"page": 1}),
+                ChunkInput(content="Second chunk.", metadata={"page": 2}),
+            ],
+        )
+
+    @respx.mock
+    def test_add_chunks_verifies_request_body(self, client, base_url):
+        """Test that add_chunks sends correct JSON body."""
+        mock_route = respx.post(f"{base_url.rstrip('/')}/documents/456/chunks").mock(
+            return_value=Response(201)
+        )
+
+        client.add_chunks(
+            document_id=456,
+            chunks=[ChunkInput(content="Hello world.", metadata={"page": 1})],
+        )
+
+        request_body = mock_route.calls.last.request.content.decode()
+        assert "Hello world." in request_body
+        assert "page" in request_body
+
+    @respx.mock
+    def test_add_chunks_without_metadata(self, client, base_url):
+        """Test adding chunks without metadata."""
+        mock_route = respx.post(f"{base_url.rstrip('/')}/documents/456/chunks").mock(
+            return_value=Response(201)
+        )
+
+        client.add_chunks(
+            document_id=456,
+            chunks=[ChunkInput(content="Plain chunk, no metadata.")],
+        )
+
+        request_body = mock_route.calls.last.request.content.decode()
+        assert "Plain chunk" in request_body
+        # metadata key should be excluded when None (exclude_none=True in model_dump)
+        # Parse JSON to avoid substring false positives from the chunk content itself
+        parsed = json.loads(request_body)
+        assert "metadata" not in parsed[0]
+
+    @respx.mock
+    def test_add_chunks_http_error(self, client, base_url):
+        """Test add_chunks with HTTP error."""
+        respx.post(f"{base_url.rstrip('/')}/documents/999/chunks").mock(
+            return_value=Response(
+                404, json={"error": {"message": "Document not found"}}
+            )
+        )
+
+        with pytest.raises(Exception):  # httpx.HTTPStatusError
+            client.add_chunks(
+                document_id=999,
+                chunks=[ChunkInput(content="Some content.")],
+            )
+
+
+class TestDeleteChunk:
+    """Test delete_chunk method."""
+
+    @respx.mock
+    def test_delete_chunk(self, client, base_url):
+        """Test deleting a specific chunk."""
+        respx.delete(f"{base_url.rstrip('/')}/documents/456/chunks/789").mock(
+            return_value=Response(204)
+        )
+
+        # Should not raise
+        client.delete_chunk(document_id=456, chunk_id=789)
+
+    @respx.mock
+    def test_delete_chunk_not_found(self, client, base_url):
+        """Test deleting non-existent chunk."""
+        respx.delete(f"{base_url.rstrip('/')}/documents/456/chunks/999").mock(
+            return_value=Response(404, json={"error": {"message": "Chunk not found"}})
+        )
+
+        with pytest.raises(Exception):  # httpx.HTTPStatusError
+            client.delete_chunk(document_id=456, chunk_id=999)

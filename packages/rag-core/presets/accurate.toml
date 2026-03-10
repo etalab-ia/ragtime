@@ -12,7 +12,7 @@ target_samples = 100  # More samples for better coverage
 output_format = "jsonl"
 
 [ingestion]
-provider = "albert"
+provider = "local"
 file_types = [".pdf", ".md", ".txt"]
 
 [ingestion.ocr]

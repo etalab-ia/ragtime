@@ -189,7 +189,7 @@ class TestAsyncDocuments:
 
         result = await client.list_documents(collection_id=123)
 
-        assert mock_route.calls.last.request.url.params.get("collection") == "123"
+        assert mock_route.calls.last.request.url.params.get("collection_id") == "123"
         assert isinstance(result, DocumentList)
 
     @respx.mock
@@ -233,7 +233,7 @@ class TestAsyncChunks:
     @respx.mock
     async def test_list_chunks(self, client, base_url, mock_chunk):
         """Test async list chunks."""
-        respx.get(f"{base_url.rstrip('/')}/chunks/456").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/456/chunks").mock(
             return_value=Response(200, json={"object": "list", "data": [mock_chunk]})
         )
 
@@ -246,7 +246,7 @@ class TestAsyncChunks:
     @respx.mock
     async def test_get_chunk(self, client, base_url, mock_chunk):
         """Test async get chunk."""
-        respx.get(f"{base_url.rstrip('/')}/chunks/456/789").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/456/chunks/789").mock(
             return_value=Response(200, json=mock_chunk)
         )
 
@@ -259,7 +259,7 @@ class TestAsyncChunks:
     @respx.mock
     async def test_chunks_context_manager(self, api_key, base_url, mock_chunk):
         """Test async chunks with context manager."""
-        respx.get(f"{base_url.rstrip('/')}/chunks/456/789").mock(
+        respx.get(f"{base_url.rstrip('/')}/documents/456/chunks/789").mock(
             return_value=Response(200, json=mock_chunk)
         )
 

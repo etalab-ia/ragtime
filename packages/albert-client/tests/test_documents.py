@@ -128,7 +128,7 @@ class TestListDocuments:
         result = client.list_documents(collection_id=123)
 
         # Verify collection filter was sent
-        assert mock_route.calls.last.request.url.params.get("collection") == "123"
+        assert mock_route.calls.last.request.url.params.get("collection_id") == "123"
 
         assert isinstance(result, DocumentList)
         assert len(result.data) == 2
