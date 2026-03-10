@@ -63,7 +63,9 @@ CREATE INDEX IF NOT EXISTS idx_traces_created
 -- the RAGAS evaluation framework (user_input, retrieved_contexts,
 -- response, reference).
 
-CREATE OR REPLACE VIEW ragas_export AS
+CREATE OR REPLACE VIEW ragas_export
+    WITH (security_invoker = on)
+AS
 SELECT
     t.id,
     t.query              AS user_input,
