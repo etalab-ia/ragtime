@@ -1,182 +1,166 @@
 #!/usr/bin/env bash
-# RAG Facile installer for Unix / macOS / WSL / Git Bash
-# Prerequisites: curl, unzip (auto-installed on apt/dnf/yum systems if missing)
-# Installs: uv, just, then downloads and sets up the latest RAG Facile workspace.
+# Installateur RAG Facile pour Unix / macOS / WSL / Git Bash
+# Prérequis : curl
+# Installe : uv, just, puis la commande rag-facile en tant qu'outil global.
 #
-# Usage:
+# Utilisation :
 #   curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 #
-# Environment variables:
-#   RAG_FACILE_LOCAL_ASSET  Path to a local zip asset (for CI — skips GitHub download)
-#   RAG_FACILE_DIR          Target directory name (default: my-rag-app)
+# Variables d'environnement :
+#   RAG_FACILE_VERSION  Version spécifique à installer (par défaut : dernière version)
 
 set -e
 
-WORKSPACE_DIR="${RAG_FACILE_DIR:-my-rag-app}"
 LOCAL_BIN="$HOME/.local/bin"
 
 echo ""
-echo "==> RAG Facile Installer"
+echo "==> Installateur RAG Facile"
 echo ""
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Fonctions utilitaires ──────────────────────────────────────────────────────
 
-check_tool() {
+outil_disponible() {
     command -v "$1" &>/dev/null
 }
 
-ensure_bin_on_path() {
-    # Make ~/.local/bin available in this session (uv and just land there)
+ajouter_au_path() {
+    # Rendre ~/.local/bin disponible dans cette session
     if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
         export PATH="$LOCAL_BIN:$PATH"
     fi
 }
 
-# ── 0. Ensure prerequisites ───────────────────────────────────────────────────
+spinner_start() {
+    # Lance un spinner (points toutes les 2 secondes) en arrière-plan.
+    # Utilisation : spinner_start ; ... ; spinner_stop
+    while true; do
+        printf '.'
+        sleep 2
+    done &
+    SPINNER_PID=$!
+}
 
-if ! check_tool unzip; then
-    echo "==> Installing prerequisite: unzip"
-    if [[ "$(uname)" == "Linux" ]]; then
-        if command -v apt-get &>/dev/null; then
-            if [[ $EUID -eq 0 ]]; then
-                apt-get update -qq && apt-get install -y -qq unzip
-            else
-                sudo apt-get update -qq && sudo apt-get install -y -qq unzip
-            fi
-        elif command -v dnf &>/dev/null; then
-            sudo dnf install -y unzip 2>/dev/null || dnf install -y unzip
-        elif command -v yum &>/dev/null; then
-            sudo yum install -y unzip 2>/dev/null || yum install -y unzip
-        else
-            echo "ERROR: 'unzip' is required but could not be installed automatically."
-            echo "       Please install it manually, then re-run this script."
-            exit 1
-        fi
-    fi
-    if ! check_tool unzip; then
-        echo "ERROR: 'unzip' is required but is not available."
-        exit 1
-    fi
-    echo "✓ unzip installed"
-fi
+spinner_stop() {
+    kill "$SPINNER_PID" 2>/dev/null
+    wait "$SPINNER_PID" 2>/dev/null || true
+    printf '\n'
+}
 
-# ── 1. Install uv ─────────────────────────────────────────────────────────────
+# ── 1. Installation de uv ─────────────────────────────────────────────────────
 
-ensure_bin_on_path
+ajouter_au_path
 
-if check_tool uv; then
-    echo "✓ uv already installed"
+if outil_disponible uv; then
+    echo "✓ uv déjà installé"
 else
-    echo "==> Installing uv..."
+    echo "==> Installation de uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    ensure_bin_on_path
-    if ! check_tool uv; then
-        echo "ERROR: uv installation failed"
+    ajouter_au_path
+    if ! outil_disponible uv; then
+        echo "ERREUR : l'installation de uv a échoué"
         exit 1
     fi
-    echo "✓ uv installed"
+    echo "✓ uv installé"
 fi
 
-# ── 2. Install just ───────────────────────────────────────────────────────────
+# ── 2. Installation de just ───────────────────────────────────────────────────
 
-if check_tool just; then
-    echo "✓ just already installed"
+if outil_disponible just; then
+    echo "✓ just déjà installé"
 else
-    echo "==> Installing just..."
-    # Official just installer — downloads a single static binary to ~/.local/bin
-    curl -LsSf https://just.systems/install.sh | bash -s -- --to "$LOCAL_BIN"
-    ensure_bin_on_path
-    if ! check_tool just; then
-        echo "ERROR: just installation failed"
+    UV_LOG=$(mktemp)
+    printf "==> Installation de just "
+    spinner_start
+
+    uv tool install rust-just >"$UV_LOG" 2>&1 \
+        || { UV_FAILED=true; }
+
+    spinner_stop
+
+    if [[ "${UV_FAILED:-}" == "true" ]]; then
+        cat "$UV_LOG"
+        rm -f "$UV_LOG"
+        echo "ERREUR : l'installation de just a échoué"
         exit 1
     fi
-    echo "✓ just installed"
+    rm -f "$UV_LOG"
+    ajouter_au_path
+    if ! outil_disponible just; then
+        echo "ERREUR : la commande just n'est pas disponible après installation"
+        exit 1
+    fi
+    echo "✓ just installé"
 fi
 
-# ── 3. Download the release workspace zip ─────────────────────────────────────
+# ── 3. Récupération de la version ─────────────────────────────────────────────
 
-if [[ -n "${RAG_FACILE_LOCAL_ASSET:-}" ]]; then
-    # CI mode: use a pre-built local asset (no GitHub API call needed)
-    echo "==> Using local asset: $RAG_FACILE_LOCAL_ASSET"
-    ASSET_PATH="$RAG_FACILE_LOCAL_ASSET"
+if [[ -n "${RAG_FACILE_VERSION:-}" ]]; then
+    LATEST_TAG="$RAG_FACILE_VERSION"
+    echo "==> Utilisation de la version : $LATEST_TAG"
 else
-    echo "==> Fetching latest release..."
+    echo "==> Récupération de la dernière version..."
     LATEST_TAG=$(curl -fsSL "https://api.github.com/repos/etalab-ia/rag-facile/releases/latest" \
         2>/dev/null | sed -n -E 's/.*"tag_name": *"([^"]+)".*/\1/p')
 
     if [[ -z "$LATEST_TAG" ]]; then
-        echo "ERROR: Could not fetch latest release tag from GitHub API."
-        echo "       Check your network connection or set RAG_FACILE_LOCAL_ASSET for offline use."
+        echo "ERREUR : impossible de récupérer la dernière version depuis l'API GitHub."
+        echo "         Vérifiez votre connexion ou définissez RAG_FACILE_VERSION manuellement."
         exit 1
     fi
 
-    echo "   Latest release: $LATEST_TAG"
-    ASSET_URL="https://github.com/etalab-ia/rag-facile/releases/download/${LATEST_TAG}/rag-facile-workspace-${LATEST_TAG}.zip"
-    ASSET_PATH="/tmp/rag-facile-workspace-$$.zip"
-
-    echo "==> Downloading workspace..."
-    if ! curl -fsSL "$ASSET_URL" -o "$ASSET_PATH"; then
-        echo "ERROR: Could not download $ASSET_URL"
-        echo "       Make sure the release has the workspace zip attached."
-        rm -f "$ASSET_PATH"
-        exit 1
-    fi
+    echo "   Dernière version : $LATEST_TAG"
 fi
 
-# ── 4. Extract ────────────────────────────────────────────────────────────────
+# ── 4. Installation de rag-facile ─────────────────────────────────────────────
 
-if [[ -d "$WORKSPACE_DIR" ]]; then
-    echo "ERROR: Directory '$WORKSPACE_DIR' already exists."
-    echo "       Move it aside or set RAG_FACILE_DIR to a different name:"
-    echo "         RAG_FACILE_DIR=my-app bash install.sh"
-    # Clean up temp asset if we downloaded it
-    [[ -z "${RAG_FACILE_LOCAL_ASSET:-}" ]] && rm -f "$ASSET_PATH"
+UV_LOG=$(mktemp)
+printf "==> Installation de rag-facile %s " "$LATEST_TAG"
+spinner_start
+
+uv tool install \
+    "rag-facile-cli @ git+https://github.com/etalab-ia/rag-facile.git@${LATEST_TAG}#subdirectory=apps/cli" \
+    --force >"$UV_LOG" 2>&1 \
+    || { UV_FAILED=true; }
+
+spinner_stop
+
+if [[ "${UV_FAILED:-}" == "true" ]]; then
+    cat "$UV_LOG"
+    rm -f "$UV_LOG"
+    echo "ERREUR : l'installation de rag-facile a échoué"
     exit 1
 fi
 
-echo "==> Extracting to ./$WORKSPACE_DIR/ ..."
-# The zip contains a single top-level dir (my-rag-app/).
-# We extract to a temp dir then rename to the chosen WORKSPACE_DIR.
-EXTRACT_TMP="/tmp/rag-facile-extract-$$"
-mkdir -p "$EXTRACT_TMP"
-unzip -q "$ASSET_PATH" -d "$EXTRACT_TMP"
+# Afficher uniquement la ligne de résumé (ex. "Installed 1 executable: rag-facile")
+SUMMARY=$(grep -E "^Installed [0-9]+ executable" "$UV_LOG" | tail -1)
+[[ -n "$SUMMARY" ]] && echo "   $SUMMARY"
+rm -f "$UV_LOG"
 
-# Find the extracted directory (should be exactly one)
-EXTRACTED_DIR=$(ls -1 "$EXTRACT_TMP" | head -n1)
-mv "$EXTRACT_TMP/$EXTRACTED_DIR" "$WORKSPACE_DIR"
-rm -rf "$EXTRACT_TMP"
+ajouter_au_path
 
-# Clean up temp asset if we downloaded it
-[[ -z "${RAG_FACILE_LOCAL_ASSET:-}" ]] && rm -f "$ASSET_PATH"
+if ! outil_disponible rag-facile; then
+    echo "ERREUR : la commande rag-facile n'est pas disponible après installation"
+    exit 1
+fi
 
-echo "✓ Extracted to ./$WORKSPACE_DIR/"
+echo "✓ rag-facile installé"
 
-# ── 5. Install dependencies ───────────────────────────────────────────────────
-
-echo "==> Installing dependencies (this may take a minute on first run)..."
-cd "$WORKSPACE_DIR"
-uv sync
-cd - >/dev/null
-
-# ── 6. Terminé ────────────────────────────────────────────────────────────────
+# ── 5. Terminé ────────────────────────────────────────────────────────────────
 
 echo ""
 echo "✅ RAG Facile est prêt !"
 echo ""
-echo "Prochaines étapes :"
-echo ""
-echo "  1. Ajoutez votre clé API Albert :"
-echo "       cd $WORKSPACE_DIR"
-echo "       cp .env.template .env"
-echo "       # Modifiez .env et définissez OPENAI_API_KEY=<votre-clé>"
-echo "       # Obtenez une clé sur : https://albert.sites.beta.gouv.fr/"
-echo ""
-echo "  2. Lancez votre application :"
-echo "       cd $WORKSPACE_DIR && just run"
-echo ""
 cat <<EOF
+Prochaines étapes :
+
+  1. Créez votre projet RAG :
+       rag-facile setup mon-projet
+
+  2. Lancez votre application :
+       cd mon-projet && just run
+
   3. Apprenez, explorez et configurez avec votre assistant IA :
-       cd $WORKSPACE_DIR && just learn
+       cd mon-projet && just learn
 
      Votre assistant peut vous aider à :
        • Comprendre le projet que vous venez d'installer
@@ -192,9 +176,8 @@ cat <<EOF
 
 EOF
 
-# Guidance for shell profiles (so just/uv are found after terminal restart)
+# Mise à jour du profil shell si ~/.local/bin n'est pas encore dans le PATH permanent
 if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
-    # Detect shell profile
     if [[ -n "$ZSH_VERSION" ]] || [[ "$SHELL" == */zsh ]]; then
         PROFILE="$HOME/.zshrc"
     elif [[ -f "$HOME/.bash_profile" ]]; then
@@ -203,7 +186,6 @@ if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
         PROFILE="$HOME/.bashrc"
     fi
 
-    # Add to profile if not already there
     if ! grep -q "$LOCAL_BIN" "$PROFILE" 2>/dev/null; then
         echo "" >> "$PROFILE"
         echo "# Ajouté par l'installateur RAG Facile" >> "$PROFILE"
@@ -211,16 +193,16 @@ if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
     fi
 
     echo "  ⚠️  Redémarrez votre terminal (ou lancez : source $PROFILE)"
-    echo "     pour que 'just' et 'uv' soient disponibles dans les prochaines sessions."
+    echo "     pour que 'just', 'uv' et 'rag-facile' soient disponibles."
     echo ""
 fi
 
-# Export to GitHub Actions CI environment if applicable
+# Export vers l'environnement GitHub Actions si applicable
 if [[ -n "${GITHUB_PATH:-}" ]]; then
     echo "$LOCAL_BIN" >> "$GITHUB_PATH"
 fi
 
-# ── 7. Rejoindre la communauté ALLiaNCE ───────────────────────────────────────
+# ── 6. Rejoindre la communauté ALLiaNCE ───────────────────────────────────────
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

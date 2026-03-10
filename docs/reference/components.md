@@ -42,7 +42,7 @@ results = client.search(
 
 | App | Description | Default Port |
 |-----|-------------|--------------|
-| **Chainlit Chat** | Chat interface with file upload support | 8000 |
+| **Chainlit Chat** | Chat interface for querying ingested documents | 8000 |
 | **Reflex Chat** | Interactive chat with modern UI | 3000 |
 
 Both are available during `rag-facile setup` and are pre-configured to work with the Albert API out of the box.

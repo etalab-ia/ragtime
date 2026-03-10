@@ -8,7 +8,6 @@
 			"changelog-path": "CHANGELOG.md",
 			"version-file": "pyproject.toml",
 			"bump-minor-pre-major": true,
-			"bump-patch-for-minor-pre-major": true,
 			"extra-files": [
 				"apps/cli/pyproject.toml",
 				"apps/chainlit-chat/pyproject.toml",

@@ -24,10 +24,10 @@ git remote add upstream https://github.com/etalab-ia/rag-facile.git
 
 ### 2. Install the Development Toolchain
 
-Using PowerShell (recommended):
+Using Git Bash:
 
-```powershell
-irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
+```bash
+curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 ```
 
 Or Git Bash:
@@ -130,7 +130,7 @@ rag-facile/
 ├── .prototools                    # Proto version pinning
 ├── justfile                       # Development commands
 ├── install.sh                     # Unix/Linux installer
-├── install.ps1                    # Windows PowerShell installer
+├── install.sh                     # Installer (macOS/Linux/Windows Git Bash)
 └── README.md
 ```
 
@@ -147,10 +147,9 @@ uv run rag-facile --help
 
 ### Testing on Windows
 
-When testing on Windows, ensure your changes work in both PowerShell and Git Bash:
+When testing on Windows, use Git Bash:
 
-```powershell
-# PowerShell
+```bash
 just format-check
 just lint
 ```

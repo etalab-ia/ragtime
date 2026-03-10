@@ -2,8 +2,8 @@
 
 ## 📋 Prerequisites
 
-- **Operating System**: macOS, Linux (Ubuntu/Debian recommended), or Windows (PowerShell).
-- **Tools**: `curl` (pre-installed on macOS/Linux/WSL).
+- **Operating System**: macOS, Linux (Ubuntu/Debian recommended), or Windows (Git Bash).
+- **Tools**: `curl` (pre-installed on macOS/Linux/WSL/Git Bash).
 - **Environment**: A clean directory for testing (e.g., `~/tmp/rf-testing`).
 - **Albert API key** — [request one here](https://albert.sites.beta.gouv.fr/).
 
@@ -15,25 +15,19 @@
 
 ### Step 1: Run the Installer
 
-**macOS/Linux/WSL:**
+**macOS/Linux/WSL/Windows (Git Bash):**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
 ```
 
-**Windows (PowerShell):**
-```powershell
-irm https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.ps1 | iex
-```
-
 **Expected installer output:**
-- [ ] `✓ uv already installed` (or installs uv)
-- [ ] `✓ just already installed` (or installs just)
-- [ ] `==> Fetching latest release...` → `Latest release: vX.Y.Z`
-- [ ] `==> Downloading workspace...`
-- [ ] `==> Extracting to ./my-rag-app/ ...`
-- [ ] `✓ Extracted to ./my-rag-app/`
-- [ ] `==> Installing dependencies...`
-- [ ] `✅ RAG Facile is ready!`
+- [ ] `✓ uv déjà installé` (or installs uv)
+- [ ] `✓ just déjà installé` (or installs just)
+- [ ] `==> Récupération de la dernière version...` → `Dernière version : vX.Y.Z`
+- [ ] `==> Installation de rag-facile vX.Y.Z .......`
+- [ ] `   Installed 1 executable: rag-facile`
+- [ ] `✓ rag-facile installé`
+- [ ] `✅ RAG Facile est prêt !`
 
 ### Step 2: Verify the Workspace
 
@@ -72,7 +66,7 @@ just run
 
 - [ ] Chainlit starts without errors
 - [ ] App accessible at http://localhost:8000
-- [ ] Can upload a PDF
+- [ ] No upload button visible in the input bar
 - [ ] Can ask questions and receive answers
 
 ### Step 5: RAG Learning Assistant

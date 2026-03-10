@@ -15,7 +15,7 @@ Welcome to the RAG Facile documentation. Whether you're setting up your first ap
 
 | Guide | Description |
 |-------|-------------|
-| **[Windows Setup](guides/windows-setup.md)** | Install on Windows (PowerShell or Git Bash) |
+| **[Windows Setup](guides/windows-setup.md)** | Install on Windows via Git Bash |
 | **[Developer Setup (Windows)](guides/developer-setup-windows.md)** | Contribute to RAG Facile on Windows |
 | **[Proxy & Network Setup](guides/proxy-setup.md)** | Install behind corporate proxies and VPNs |
 

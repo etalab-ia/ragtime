@@ -67,8 +67,7 @@ rag-facile/
 │   ├── reference/                 # Reference docs (ragfacile.toml, components)
 │   └── troubleshooting/           # Problem-solving guides
 ├── pyproject.toml                 # Root workspace config
-├── install.sh                     # Installation script (macOS/Linux)
-├── install.ps1                    # Installation script (Windows)
+├── install.sh                     # Installation script (macOS/Linux/Windows via Git Bash)
 └── README.md                      # Main project documentation
 ```
 

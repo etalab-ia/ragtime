@@ -42,19 +42,6 @@ _EXPERIENCE_CHOICES = [
 ]
 
 
-# ── Language detection ────────────────────────────────────────────────────────
-
-
-def _detect_language() -> str:
-    """Return the default language for this tool.
-
-    Always 'fr' — rag-facile targets French government users.
-    The locale is not used: a developer with an English-locale machine
-    should still get a French-speaking assistant by default.
-    """
-    return "fr"
-
-
 # ── Template generators ───────────────────────────────────────────────────────
 
 
@@ -162,15 +149,12 @@ def run_init_wizard(workspace: Path) -> str:
     )
     console.print()
 
-    # Language is detected from the system locale — no need to ask.
-    language = _detect_language()
-
-    # ── Ask one question ──────────────────────────────────────────────────────
-    # questionary returns None on Ctrl+C — fall back to default.
+    # ── Ask 1 question (language is always French) ────────────────────────────
+    language = "fr"
     experience = "new"
     try:
         result = questionary.select(
-            "Votre expérience avec RAG\u00a0?",
+            "Votre niveau d'expérience avec RAG ?",
             choices=_EXPERIENCE_CHOICES,
             style=_STYLE,
         ).ask()

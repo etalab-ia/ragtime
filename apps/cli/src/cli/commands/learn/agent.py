@@ -40,6 +40,7 @@ from cli.commands.learn.tools import (
     get_recent_git_activity,
     memory_edit,
     memory_read,
+    memory_search,
     memory_write,
     run_rag_facile,
     set_available_skills,
@@ -106,6 +107,10 @@ MEMORY PROTOCOL:
 2. memory_read("MEMORY.md")  → read your curated facts
 3. Work on the user's task
 4. memory_write() or memory_edit() → save important facts proactively
+
+SEARCH BEFORE READ: When you need a specific fact but don't know which file it's in, \
+use memory_search("query") FIRST. It returns ranked snippets with file:line references \
+that you can drill into with memory_read("file:start-end").
 
 ASSUME INTERRUPTION: Your context window might be reset at any moment. \
 Record progress to memory so future sessions can pick up where you left off.
@@ -253,6 +258,11 @@ Step 3 — Only if the user replies with a clear yes ("oui", "yes", "ok", "vas-y
 
 If the user's original message already sounds like a confirmation ("mets top_k à 15"), \
 treat it as a REQUEST, not a confirmation — still ask the explicit question in Step 1.
+
+## Language
+
+Respond in **French** by default. If the user writes in a different language, \
+adapt and respond in their language for the rest of the conversation.
 """
 
 # ── Newbie format enforcement ─────────────────────────────────────────────────
@@ -420,6 +430,7 @@ _TOOL_ICONS: dict[str, str] = {
     "get_agents_md": "📋",
     "get_recent_git_activity": "📜",
     "get_docs": "📖",
+    "memory_search": "🔍",
     "run_rag_facile": "🖥️",
 }
 
@@ -603,6 +614,7 @@ def start_chat(debug: bool = False) -> None:
             memory_read,
             memory_write,
             memory_edit,
+            memory_search,
         ]
     ] + [_wrap_activate_skill(activate_skill)]
 

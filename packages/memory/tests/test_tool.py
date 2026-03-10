@@ -1,4 +1,4 @@
-"""Tests for the standard file-operation memory tools (read / write / edit)."""
+"""Tests for the standard file-operation memory tools (read / write / edit / search)."""
 
 import pytest
 
@@ -6,6 +6,7 @@ from rag_facile.memory.tool import (
     _safe_resolve,
     memory_edit,
     memory_read,
+    memory_search,
     memory_write,
     set_workspace_root,
 )
@@ -188,3 +189,99 @@ class TestMemoryEdit:
         (agent_dir / "subdir").mkdir()
         result = memory_edit.forward("subdir", "old", "new")
         assert "directory" in result.lower()
+
+
+# ── memory_search ─────────────────────────────────────────────────────────────
+
+
+class TestMemorySearch:
+    def test_no_workspace(self):
+        set_workspace_root(None)
+        result = memory_search.forward("anything")
+        assert "unavailable" in result.lower()
+
+    def test_search_finds_content(self, memory_file):
+        result = memory_search.forward("Luis Developer")
+        assert "result" in result.lower()
+        assert "MEMORY.md" in result
+
+    def test_search_no_results(self, memory_file):
+        result = memory_search.forward("kubernetes orchestration")
+        assert "no results" in result.lower()
+
+    def test_search_returns_line_references(self, memory_file):
+        result = memory_search.forward("balanced preset")
+        # Should contain file:line-line references
+        assert "MEMORY.md:" in result
+
+    def test_search_across_multiple_files(self, agent_dir):
+        """Search should find content in different files."""
+        # MEMORY.md
+        (agent_dir / "MEMORY.md").write_text(
+            "## Key Facts\n- Albert is an API\n", encoding="utf-8"
+        )
+        # Log file
+        logs = agent_dir / "logs"
+        logs.mkdir()
+        (logs / "2026-03-01.md").write_text(
+            "## 14:30\nAlbert API returned an error\n", encoding="utf-8"
+        )
+        result = memory_search.forward("Albert API")
+        assert "MEMORY.md" in result
+        assert "logs/" in result
+
+    def test_search_output_format(self, memory_file):
+        result = memory_search.forward("Luis")
+        # Should have numbered results with scores
+        assert "1." in result
+        # Should have the drill-in hint
+        assert "memory_read" in result
+
+    def test_search_empty_agent_dir(self, agent_dir):
+        result = memory_search.forward("anything")
+        assert "no results" in result.lower()
+
+    def test_search_uses_albert_when_credentials_present(
+        self, memory_file, monkeypatch
+    ):
+        """When OPENAI_API_KEY is set, Albert semantic results are fused in."""
+        sem_result = {
+            "file": "MEMORY.md",
+            "line_start": 3,
+            "line_end": 5,
+            "score": 0.9,
+            "snippet": "Albert semantic hit",
+        }
+
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+
+        import rag_facile.memory.tool as tool_mod
+
+        # Reset singleton so _get_albert_index creates a fresh one
+        tool_mod._albert_index = None
+
+        mock_index = __import__("unittest.mock", fromlist=["MagicMock"]).MagicMock()
+        mock_index.search.return_value = [sem_result]
+
+        with __import__("unittest.mock", fromlist=["patch"]).patch(
+            "rag_facile.memory.tool._get_albert_index", return_value=mock_index
+        ):
+            result = memory_search.forward("Albert")
+
+        assert "result" in result.lower()
+        mock_index.search.assert_called_once()
+
+    def test_search_falls_back_to_keyword_when_no_credentials(
+        self, memory_file, monkeypatch
+    ):
+        """When no API key is present, memory_search uses keyword results only."""
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        monkeypatch.delenv("ALBERT_API_KEY", raising=False)
+
+        import rag_facile.memory.tool as tool_mod
+
+        tool_mod._albert_index = None
+
+        result = memory_search.forward("Luis Developer")
+        # Keyword search still finds content
+        assert "result" in result.lower()

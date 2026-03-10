@@ -51,21 +51,12 @@ favorites = false
 # Add emoji reaction when message is received (requires reactions:write OAuth scope)
 reaction_on_message_received = false
 
-# Authorize users to spontaneously upload files with messages
+# File upload is disabled — documents are ingested at setup time, not mid-conversation
 [features.spontaneous_file_upload]
-    enabled = true
-    # Define accepted file types using MIME types
-    # Examples:
-    # 1. For specific file types:
-    #    accept = ["image/jpeg", "image/png", "application/pdf"]
-    # 2. For all files of certain type:
-    #    accept = ["image/*", "audio/*", "video/*"]
-    # 3. For specific file extensions:
-    #    accept = { "application/octet-stream" = [".xyz", ".pdb"] }
-    # Restrict to formats supported by the Albert parse API
-    accept = ["application/pdf", "text/markdown", "text/html"]
-    max_files = 20
-    max_size_mb = 500
+    enabled = false
+    accept = []
+    max_files = 0
+    max_size_mb = 0
 
 [features.audio]
     # Enable audio features

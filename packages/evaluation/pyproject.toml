@@ -1,6 +1,6 @@
 [project]
 name = "evaluation"
-version = "0.18.3" # x-release-please-version
+version = "0.19.1" # x-release-please-version
 description = "RAG evaluation with Inspect AI - recall@k, precision@k, faithfulness"
 readme = "README.md"
 requires-python = ">=3.13"
