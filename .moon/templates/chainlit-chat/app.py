@@ -8,6 +8,7 @@ import chainlit as cl
 import engineio
 import engineio.payload
 from chainlit.input_widget import Switch
+from chainlit.types import ThreadDict
 from dotenv import load_dotenv
 from supabase import create_client
 from supabase_auth.errors import AuthApiError
@@ -73,7 +74,7 @@ async def auth_callback(username: str, password: str) -> Optional[cl.User]:
 
 
 @cl.on_chat_resume
-async def on_chat_resume(thread: cl.ThreadDict) -> None:
+async def on_chat_resume(thread: ThreadDict) -> None:
     """Restore conversation history when resuming a thread."""
     # Defense-in-depth: verify the thread belongs to the current user.
     # Chainlit's data layer does not enforce per-user filtering on get_thread(),
