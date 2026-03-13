@@ -63,9 +63,15 @@ async def auth_callback(username: str, password: str) -> Optional[cl.User]:
         return None
     # Use the stable Supabase UUID as identifier for reliable user tracking.
     # Email can change; the UUID is immutable and unique across all users.
+    #
+    # display_name priority: user_metadata["display_name"] > email > login username.
+    # Set display_name in Supabase Studio → Auth → Users → Edit user metadata
+    # to show a friendly name (e.g. full name) instead of the email address.
+    user_meta = user.user_metadata or {}
+    display_name = user_meta.get("display_name") or user.email or username
     return cl.User(
         identifier=str(user.id),
-        display_name=user.email or username,
+        display_name=display_name,
         metadata={
             "role": "user",
             "provider": "supabase",
