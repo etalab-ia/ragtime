@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS "Thread" (
     "tags"           TEXT[],
     "metadata"       JSONB,
     "createdAt"      TIMESTAMPTZ DEFAULT now(),
-    "updatedAt"      TIMESTAMPTZ DEFAULT now()
+    "updatedAt"      TIMESTAMPTZ DEFAULT now(),
+    "deletedAt"      TIMESTAMPTZ
 );
 
 CREATE INDEX IF NOT EXISTS idx_thread_user ON "Thread" ("userId");
