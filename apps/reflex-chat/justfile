@@ -5,6 +5,11 @@ default:
 sync:
     uv sync --python 3.13.11
 
-# Run the Reflex application (opens browser when ready)
+# Run the Reflex application (opens browser when ready, portless proxy if available)
 run:
-    sh -c 'uv run python scripts/open_browser.py & uv run reflex run'
+    #!/usr/bin/env sh
+    if [ "$PORTLESS" != "0" ] && command -v portless >/dev/null 2>&1; then
+        exec portless run --name reflex --app-port 3000 -- sh -c 'uv run python scripts/open_browser.py & uv run reflex run'
+    else
+        exec sh -c 'uv run python scripts/open_browser.py & uv run reflex run'
+    fi

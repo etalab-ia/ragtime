@@ -30,6 +30,32 @@ On macOS:
 brew install unzip
 ```
 
+### Portless (optional)
+
+[Portless](https://github.com/vercel-labs/portless) replaces port numbers with stable `.localhost` URLs for local development. When installed, `just run` automatically proxies through portless, giving you URLs like `http://chainlit.localhost:1355` instead of `http://localhost:8000`.
+
+In [bare repo worktrees](https://worktrunk.dev), portless auto-prefixes the branch name as a subdomain — each worktree gets its own URL with zero configuration:
+
+```
+# Main worktree
+just run  # -> http://chainlit.localhost:1355
+
+# Feature worktree on branch feat/dark-mode
+just run  # -> http://feat-dark-mode.chainlit.localhost:1355
+```
+
+Install globally (do not add as a project dependency):
+
+```bash
+npm install -g portless
+```
+
+Portless is entirely optional. Without it, `just run` starts the dev server on its default port as usual. To temporarily bypass portless even when installed:
+
+```bash
+PORTLESS=0 just run
+```
+
 ### 2. Clone and setup
 
 ```bash

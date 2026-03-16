@@ -5,9 +5,14 @@ default:
 sync:
     uv sync
 
-# Run the Chainlit application
+# Run the Chainlit application (portless proxy if available)
 run:
-    uv run chainlit run app.py -w
+    #!/usr/bin/env sh
+    if [ "$PORTLESS" != "0" ] && command -v portless >/dev/null 2>&1; then
+        exec portless run --name chainlit -- sh -c 'uv run chainlit run app.py -w --port "$PORT"'
+    else
+        exec uv run chainlit run app.py -w
+    fi
 
 # Open the interactive RAG learning assistant
 learn:

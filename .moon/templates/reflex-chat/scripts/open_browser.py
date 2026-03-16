@@ -1,11 +1,12 @@
 """Wait for the Reflex frontend to be ready, then open the browser."""
 
+import os
 import socket
 import time
 import webbrowser
 
 PORT = 3000
-URL = f"http://localhost:{PORT}"
+URL = os.environ.get("PORTLESS_URL", f"http://localhost:{PORT}")
 TIMEOUT = 60  # seconds
 
 
