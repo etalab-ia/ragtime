@@ -16,7 +16,7 @@ import hashlib
 import json
 import logging
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from ._base import TracingProvider
@@ -403,3 +403,17 @@ class SQLiteProvider(TracingProvider):
 
         if updates:
             self.update_trace(trace_id, **updates)
+
+    def delete_traces(self, *, older_than_days: int) -> int:
+        """Delete traces older than N days. Returns count deleted."""
+        cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
+        conn = self._connect()
+        try:
+            cursor = conn.execute(
+                "DELETE FROM traces WHERE created_at < ?",
+                (_dt_to_iso(cutoff),),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        return cursor.rowcount

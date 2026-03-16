@@ -93,3 +93,15 @@ class TracingProvider(ABC):
             tags: Structured feedback tags.
             comment: Free-text feedback.
         """
+
+    @abstractmethod
+    def delete_traces(self, *, older_than_days: int) -> int:
+        """Delete traces older than N days.
+
+        Args:
+            older_than_days: Delete traces whose ``created_at`` is older
+                than this many days from now (UTC).
+
+        Returns:
+            Number of traces deleted.
+        """

@@ -16,7 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from ._base import TracingProvider
 from ._models import TraceRecord
@@ -310,3 +310,16 @@ class PostgresProvider(TracingProvider):
 
         if updates:
             self.update_trace(trace_id, **updates)
+
+    def delete_traces(self, *, older_than_days: int) -> int:
+        """Delete traces older than N days. Returns count deleted."""
+        import psycopg
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
+        with psycopg.connect(self._conninfo) as conn:
+            cursor = conn.execute(
+                "DELETE FROM traces WHERE created_at < %s",
+                (cutoff,),
+            )
+            conn.commit()
+        return cursor.rowcount

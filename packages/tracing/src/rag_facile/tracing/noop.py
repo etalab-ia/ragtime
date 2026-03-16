@@ -48,3 +48,7 @@ class NoopProvider(TracingProvider):
         comment: str | None = None,
     ) -> None:
         """No-op feedback."""
+
+    def delete_traces(self, *, older_than_days: int) -> int:
+        """No-op delete. Returns 0."""
+        return 0
