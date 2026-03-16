@@ -30,6 +30,15 @@ load_dotenv()
 # Load RAG configuration
 rag_config = get_config()
 
+
+@cl.on_app_startup
+async def on_app_startup():
+    """Print the access URL when the app starts."""
+    portless_url = os.getenv("PORTLESS_URL")
+    if portless_url:
+        cl.logger.info(f"🌐 Access your app at: {portless_url}")
+
+
 # Configure OpenAI (API credentials still from env vars)
 api_key = os.getenv("OPENAI_API_KEY")
 base_url = os.getenv("OPENAI_BASE_URL")
