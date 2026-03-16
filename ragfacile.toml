@@ -92,3 +92,11 @@ language = "fr"
 enabled = true
 style = "inline"
 include_sources = true
+
+# ==============================================================================
+# TRACING & OBSERVABILITY
+# ==============================================================================
+[tracing]
+enabled = true
+provider = "sqlite"
+database = ".rag-facile/traces.db"

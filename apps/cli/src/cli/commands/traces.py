@@ -24,7 +24,7 @@ err_console = Console(stderr=True)
 _NO_TRACER_HINT = (
     "[dim]💡 Tracing stores every RAG query for inspection and debugging.\n"
     "   Enable it in ragfacile.toml:\n"
-    "   [tracing]\n"
+    "   \\[tracing]\n"
     "   enabled = true\n"
     '   provider = "sqlite"   # or "postgres"[/dim]'
 )
