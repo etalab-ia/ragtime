@@ -1,6 +1,6 @@
 [project]
 name = "{{ project_name }}"
-version = "0.20.0" # x-release-please-version
+version = "0.21.0" # x-release-please-version
 description = "{{ description }}"
 readme = "README.md"
 requires-python = ">=3.13"

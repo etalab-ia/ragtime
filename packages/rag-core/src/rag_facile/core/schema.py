@@ -547,6 +547,33 @@ class TracingConfig(BaseModel):
 
 
 # ==============================================================================
+# PERSISTENCE (Conversation & Data Layer)
+# ==============================================================================
+
+
+class PersistenceConfig(BaseModel):
+    """Configuration for conversation persistence and data layer.
+
+    Persistence stores conversation history, user sessions, and feedback
+    in a PostgreSQL database (e.g., Supabase). This enables multi-user
+    support, conversation resumption, and audit trails.
+
+    The connection string should be set via the DATABASE_URL environment
+    variable for security (keeps credentials out of config files).
+    """
+
+    provider: Literal["none", "postgres"] = Field(
+        default="none",
+        description='Persistence provider ("none" disabled, "postgres" for Supabase/PostgreSQL)',
+    )
+    connection_string: str = Field(
+        default="",
+        description="PostgreSQL connection string (used when provider is 'postgres'). "
+        "Typically set via DATABASE_URL environment variable.",
+    )
+
+
+# ==============================================================================
 # ROOT CONFIG
 # ==============================================================================
 
@@ -622,6 +649,10 @@ class RAGConfig(BaseModel):
     tracing: TracingConfig = Field(
         default_factory=TracingConfig,
         description="Pipeline tracing and observability",
+    )
+    persistence: PersistenceConfig = Field(
+        default_factory=PersistenceConfig,
+        description="Conversation persistence and data layer",
     )
 
     model_config = {
@@ -748,6 +779,13 @@ PIPELINE_STAGES: list[PipelineStage] = [
         description="Log queries, retrieved context, responses, and user feedback for pipeline improvement.",
         emoji="\U0001f50d",
         model=TracingConfig,
+    ),
+    PipelineStage(
+        key="persistence",
+        title="Persistence & Data Layer",
+        description="Store conversation history, user sessions, and feedback in PostgreSQL for multi-user support.",
+        emoji="\U0001f4be",
+        model=PersistenceConfig,
     ),
     PipelineStage(
         key="hallucination",

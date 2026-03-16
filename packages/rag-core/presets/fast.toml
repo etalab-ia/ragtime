@@ -106,3 +106,9 @@ include_sources = false  # Skip for speed
 enabled = true
 provider = "sqlite"
 database = ".rag-facile/traces.db"
+
+# ==============================================================================
+# PERSISTENCE & DATA LAYER
+# ==============================================================================
+[persistence]
+provider = "none"

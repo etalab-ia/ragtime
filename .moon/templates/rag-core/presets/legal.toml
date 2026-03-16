@@ -111,3 +111,9 @@ include_sources = true  # Show all sources consulted
 enabled = true
 provider = "sqlite"
 database = ".rag-facile/traces.db"
+
+# ==============================================================================
+# PERSISTENCE & DATA LAYER
+# ==============================================================================
+[persistence]
+provider = "none"
