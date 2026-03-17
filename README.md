@@ -1,6 +1,6 @@
 # RAG Facile — Technology Preview (Archived)
 
-> ⚠️ **This repository is archived.** It was a technology preview to validate the RAG architecture for the French government. A new repository with a more focused scope is now available at [github.com/etalab-ia/rag-facile](https://github.com/etalab-ia/rag-facile).
+> ⚠️ **This repository is archived.** It was a technology preview to validate the RAG architecture for the French government. A new repository with a more focused scope is now available at [etalab-ia/rag-facile](https://github.com/etalab-ia/rag-facile).
 
 [![Release](https://img.shields.io/github/v/release/etalab-ia/rag-facile-tech-preview?sort=date&style=flat-square)](https://github.com/etalab-ia/rag-facile-tech-preview/releases)
 [![License](https://img.shields.io/github/license/etalab-ia/rag-facile-tech-preview?style=flat-square)](LICENSE)
@@ -24,7 +24,7 @@ This was a RAG application toolkit for the French government, powered by the [Al
 
 ## Install
 
-> ⚠️ **This repository is archived.** For the latest version, see [github.com/etalab-ia/rag-facile](https://github.com/etalab-ia/rag-facile).
+> ⚠️ **This repository is archived.** For the latest version, see [etalab-ia/rag-facile](https://github.com/etalab-ia/rag-facile).
 
 Linux / macOS / WSL / Windows (Git Bash):
 
