@@ -1,7 +1,10 @@
-# RAG Facile
+# RAG Facile — Technology Preview (Archived)
 
-[![Release](https://img.shields.io/github/v/release/etalab-ia/rag-facile?sort=date&style=flat-square)](https://github.com/etalab-ia/rag-facile/releases)
-[![License](https://img.shields.io/github/license/etalab-ia/rag-facile?style=flat-square)](LICENSE)
+> ⚠️ **This repository is archived.** It was a technology preview to validate the RAG architecture for the French government. A new repository with a more focused scope is now available at [github.com/etalab-ia/rag-facile](https://github.com/etalab-ia/rag-facile).
+
+[![Release](https://img.shields.io/github/v/release/etalab-ia/rag-facile-tech-preview?sort=date&style=flat-square)](https://github.com/etalab-ia/rag-facile-tech-preview/releases)
+[![License](https://img.shields.io/github/license/etalab-ia/rag-facile-tech-preview?style=flat-square)](LICENSE)
+[![Status](https://img.shields.io/badge/status-archived-red?style=flat-square)](https://github.com/etalab-ia/rag-facile)
 
 ```
  ██████╗  █████╗  ██████╗     ███████╗ █████╗  ██████╗██╗██╗     ███████╗
@@ -12,7 +15,7 @@
  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     ╚═╝     ╚═╝  ╚═╝ ╚═════╝╚═╝╚══════╝╚══════╝
 ```
 
-Build a RAG application for the French government in under 5 minutes, powered by the [Albert API](https://albert.sites.beta.gouv.fr/).
+This was a RAG application toolkit for the French government, powered by the [Albert API](https://albert.sites.beta.gouv.fr/).
 
 ## Prerequisites
 
@@ -21,10 +24,12 @@ Build a RAG application for the French government in under 5 minutes, powered by
 
 ## Install
 
+> ⚠️ **This repository is archived.** For the latest version, see [github.com/etalab-ia/rag-facile](https://github.com/etalab-ia/rag-facile).
+
 Linux / macOS / WSL / Windows (Git Bash):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile-tech-preview/main/install.sh | bash
 ```
 
 ## Quick Start
@@ -49,7 +54,7 @@ just learn
 Re-run the installer to get the latest version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/etalab-ia/rag-facile-tech-preview/main/install.sh | bash
 ```
 
 ## Documentation
