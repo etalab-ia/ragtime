@@ -288,21 +288,6 @@ def render_template_file(template_path: Path, variables: dict[str, str | bool]) 
     return content
 
 
-def _print_no_serve_message(target_display: str) -> None:
-    """Print app location and skip dev server message."""
-    console.print()
-    console.print(f"[dim]Your app is at: {target_display}[/dim]")
-    console.print()
-    console.print(
-        f"🚀 [bold]Start your app:[/bold]  "
-        f"[cyan]cd[/cyan] {target_display} [cyan]&&[/cyan] [bold]just run[/bold]"
-    )
-    console.print(
-        f"💬 [bold]Chat with your assistant:[/bold]  "
-        f"[cyan]cd[/cyan] {target_display} [cyan]&&[/cyan] [bold]ragtime[/bold]"
-    )
-
-
 def generate_config_file(
     workspace_root: Path,
     preset: str,
@@ -382,7 +367,6 @@ def generate_standalone(
     env_config: dict[str, str],
     preset: str,
     preset_config: PresetConfig,
-    no_serve: bool = False,
 ) -> None:
     """Generate a standalone (non-monorepo) project structure."""
     templates_dir = get_templates_dir()
@@ -436,13 +420,18 @@ py-modules = ["app"]
 
 [tool.setuptools.packages.find]
 where = ["src"]"""
+        # Chainlit uses supabase for auth and asyncpg for data layer
+        extra_deps = """\
+    "supabase>=2.0.0",
+    "asyncpg>=0.29.0",
+"""
     else:
         frontend_dep = '"reflex>=0.7.0",'
         # App package at root, src/ for additional user code
-        setuptools_block = f"""\
-[tool.setuptools.packages.find]
+        setuptools_block = f"""\n[tool.setuptools.packages.find]
 include = ["{snake_name}*"]
 where = [".", "src"]"""
+        extra_deps = ""
 
     pyproject_content = f'''[project]
 name = "{project_name}"
@@ -454,7 +443,7 @@ dependencies = [
     "ragtime-lib",
     {frontend_dep}
     "python-dotenv>=1.0.0",
-]
+{extra_deps}]
 
 [dependency-groups]
 dev = [
@@ -519,7 +508,7 @@ package = true
 
     # Create src/<project_name>/ for user's own modules
     src_dir = target_path / "src" / snake_name
-    src_dir.mkdir(parents=True)
+    src_dir.mkdir(parents=True, exist_ok=True)
     (src_dir / "__init__.py").write_text("")
     console.print(f"[dim]  ✓ src/{snake_name}/__init__.py[/dim]")
 
@@ -557,26 +546,47 @@ OPENAI_BASE_URL={env_config["openai_base_url"]}
 
     _initial_git_commit(target_path)
 
-    # Step 5: Start the dev server (unless --no-serve)
-    if no_serve:
-        _print_no_serve_message(target_display)
-        return
-
+    # Step 5: Print next steps (don't auto-start)
     console.print()
-    console.print(
-        f"[bold green]Step 5:[/bold green] Starting {frontend_choice} dev server..."
-    )
+    console.print("[bold green]✨ Setup complete![/bold green]")
     console.print()
     console.print(f"[dim]Your app is at: {target_display}[/dim]")
     console.print()
 
-    # Run dev server with uv (no moon in standalone mode)
     if frontend_choice == "Chainlit":
-        dev_cmd = ["uv", "run", "chainlit", "run", "app.py", "-w"]
+        console.print("[bold]Next steps:[/bold]")
+        console.print()
+        console.print("  1. [cyan]Start the app:[/cyan]")
+        console.print(f"     [dim]cd {target_display} && just run[/dim]")
+        console.print()
+        console.print(
+            "  2. [cyan](Optional) Enable Supabase auth and data persistence:[/cyan]"
+        )
+        console.print("     [dim]• Run 'supabase init' to set up local Supabase[/dim]")
+        console.print("     [dim]• Run 'supabase start' to start services[/dim]")
+        console.print(
+            "     [dim]• Add SUPABASE_URL and SUPABASE_ANON_KEY to .env[/dim]"
+        )
+        console.print(
+            "     [dim]• Run 'chainlit create-secret' and add CHAINLIT_AUTH_SECRET to .env[/dim]"
+        )
+        console.print(
+            "     [dim]• Create your first user in Supabase Studio (http://127.0.0.1:54323)[/dim]"
+        )
+        console.print()
+        console.print(
+            "  [dim]Note: The app works without Supabase (auth disabled).[/dim]"
+        )
+        console.print(
+            "  [dim]Enable it to persist conversations across sessions.[/dim]"
+        )
     else:
-        dev_cmd = ["uv", "run", "reflex", "run"]
-
-    subprocess.run(dev_cmd, cwd=target_path)
+        console.print("[bold]Next steps:[/bold]")
+        console.print()
+        console.print("  [cyan]Start the app:[/cyan]")
+        console.print(f"     [dim]cd {target_display} && just run[/dim]")
+        console.print()
+        console.print("  [dim]The app will open in your browser automatically.[/dim]")
 
 
 def _init_git_repo(target_path: Path) -> None:
@@ -641,13 +651,6 @@ def run(
     force: Annotated[
         bool,
         typer.Option("--force", "-f", help="Overwrite existing files"),
-    ] = False,
-    no_serve: Annotated[
-        bool,
-        typer.Option(
-            "--no-serve",
-            help="Skip launching the dev server after setup",
-        ),
     ] = False,
     preset: Annotated[
         str | None,
@@ -770,13 +773,31 @@ def run(
         )
         console.print()
 
-        env_config["openai_api_key"] = questionary.text(
-            "OpenAI/Albert API Key:",
-            default=os.getenv("OPENAI_API_KEY", ""),
-        ).ask()
-        if env_config["openai_api_key"] is None:
-            console.print("[red]Aborted.[/red]")
-            raise typer.Exit(1)
+        # Prompt for API key without displaying it in clear text
+        existing_key = os.getenv("OPENAI_API_KEY", "")
+        use_existing_key = False
+        if existing_key:
+            use_existing = questionary.confirm(
+                "Use existing OPENAI_API_KEY from environment?",
+                default=True,
+            ).ask()
+            if use_existing is None:
+                console.print("[red]Aborted.[/red]")
+                raise typer.Exit(1)
+            if use_existing:
+                use_existing_key = True
+                env_config["openai_api_key"] = existing_key
+
+        if not use_existing_key:
+            message = (
+                "Enter new OpenAI/Albert API Key:"
+                if existing_key
+                else "OpenAI/Albert API Key:"
+            )
+            env_config["openai_api_key"] = questionary.password(message).ask()
+            if env_config["openai_api_key"] is None:
+                console.print("[red]Aborted.[/red]")
+                raise typer.Exit(1)
 
     # Use base URL from preset
     env_config["openai_base_url"] = preset_config["openai_base_url"]
@@ -806,5 +827,4 @@ def run(
         env_config=env_config,
         preset=preset,
         preset_config=preset_config,
-        no_serve=no_serve,
     )

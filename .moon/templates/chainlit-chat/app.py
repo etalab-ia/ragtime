@@ -39,6 +39,8 @@ model = os.getenv("OPENAI_MODEL") or rag_config.generation.model
 client = AsyncAlbertClient(api_key=api_key, base_url=base_url)
 
 # Supabase Auth configuration (optional)
+# Set SUPABASE_URL and SUPABASE_ANON_KEY to enable authentication.
+# Also run `chainlit create-secret` and add CHAINLIT_AUTH_SECRET to .env.
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 
@@ -46,11 +48,10 @@ SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 # for persistence. No decorator needed - just set DATABASE_URL in .env.
 
 
-@cl.password_auth_callback
+# Only register auth callback when Supabase is configured
+# This allows the app to run without auth setup for quick experimentation
 async def auth_callback(username: str, password: str) -> Optional[cl.User]:
     """Authenticate against Supabase Auth (GoTrue)."""
-    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-        return None  # Auth disabled when Supabase not configured
     sb = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
     try:
         response = sb.auth.sign_in_with_password(
@@ -78,6 +79,11 @@ async def auth_callback(username: str, password: str) -> Optional[cl.User]:
             "email": user.email or username,
         },
     )
+
+
+# Register auth callback only when Supabase is configured
+if SUPABASE_URL and SUPABASE_ANON_KEY:
+    cl.password_auth_callback(auth_callback)
 
 
 @cl.on_chat_resume
