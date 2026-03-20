@@ -771,7 +771,7 @@ class TestStructureSelectionPrompt:
         """Without --expert, should ask no select questions (all choices use silent defaults)."""
         mock_q = mocker.patch("cli.commands.setup.questionary")
         mock_q.text.return_value.ask.return_value = "test-key"
-        mock_q.confirm.return_value.ask.return_value = False  # Abort at confirmation
+        mock_q.confirm.return_value.ask.return_value = True  # Confirm proceeding
 
         runner.invoke(main_app, ["setup", "/tmp/test"])
 
@@ -783,7 +783,7 @@ class TestStructureSelectionPrompt:
         mock_q = mocker.patch("cli.commands.setup.questionary")
         # No select calls in non-expert mode — all choices use silent defaults
         mock_q.text.return_value.ask.return_value = "test-key"
-        mock_q.confirm.return_value.ask.return_value = False  # Abort at confirmation
+        mock_q.confirm.return_value.ask.return_value = True  # Confirm proceeding
 
         result = runner.invoke(main_app, ["setup", "/tmp/test"])
 
