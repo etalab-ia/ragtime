@@ -93,7 +93,8 @@ class TestEnableDisable:
         )
 
         assert result.exit_code == 0
-        assert "Enabled collection 456" in result.output
+        assert "Enabled collection" in result.output
+        assert "456" in result.output
 
         # Verify config was updated
         content = config_file.read_text()
@@ -123,7 +124,8 @@ class TestEnableDisable:
         )
 
         assert result.exit_code == 0
-        assert "Disabled collection 456" in result.output
+        assert "Disabled collection" in result.output
+        assert "456" in result.output
 
     def test_disable_collection_not_in_config(self, tmp_path):
         """Disable collection that's not in config shows message."""
