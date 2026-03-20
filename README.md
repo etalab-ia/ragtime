@@ -1,10 +1,8 @@
-# Ragtime — Technology Preview (Archived)
+# Ragtime — A modular RAG pipeline (alpha)
 
-> ⚠️ **This repository is archived.** It was a technology preview to validate the RAG architecture for the French government. A new repository with a more focused scope is now available at [etalab-ia/ragtime](https://github.com/etalab-ia/ragtime).
-
-[![Release](https://img.shields.io/github/v/release/etalab-ia/ragtime-tech-preview?sort=date&style=flat-square)](https://github.com/etalab-ia/ragtime-tech-preview/releases)
-[![License](https://img.shields.io/github/license/etalab-ia/ragtime-tech-preview?style=flat-square)](LICENSE)
-[![Status](https://img.shields.io/badge/status-archived-red?style=flat-square)](https://github.com/etalab-ia/ragtime)
+[![Release](https://img.shields.io/github/v/release/etalab-ia/ragtime?sort=date&style=flat-square)](https://github.com/etalab-ia/ragtime/releases)
+[![License](https://img.shields.io/github/license/etalab-ia/ragtime?style=flat-square)](LICENSE)
+[![Status](https://img.shields.io/badge/status-alpha-orange?style=flat-square)](https://github.com/etalab-ia/ragtime#ragtime--a-modular-rag-pipeline-alpha)
 
 ```
  ██████╗  █████╗  ██████╗████████╗██╗███╗   ███╗███████╗
@@ -15,7 +13,7 @@
  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝   ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝
 ```
 
-This was a RAG application toolkit for the French government, powered by the [Albert API](https://albert.sites.beta.gouv.fr/).
+A modular RAG pipeline for the French government, powered by the [Albert API](https://albert.sites.beta.gouv.fr/).
 
 ## Prerequisites
 
@@ -24,12 +22,10 @@ This was a RAG application toolkit for the French government, powered by the [Al
 
 ## Install
 
-> ⚠️ **This repository is archived.** For the latest version, see [etalab-ia/ragtime](https://github.com/etalab-ia/ragtime).
-
 Linux / macOS / WSL / Windows (Git Bash):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/etalab-ia/ragtime-tech-preview/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/etalab-ia/ragtime/main/install.sh | bash
 ```
 
 ## Quick Start
@@ -54,7 +50,7 @@ just learn
 Re-run the installer to get the latest version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/etalab-ia/ragtime-tech-preview/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/etalab-ia/ragtime/main/install.sh | bash
 ```
 
 ## Documentation
