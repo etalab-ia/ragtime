@@ -427,10 +427,10 @@ class TestGenerateStandalone:
         uv_sync_calls = [c for c in calls if c[0][0] == ["uv", "sync"]]
         assert len(uv_sync_calls) == 1
 
-    def test_starts_chainlit_dev_server(
-        self, standalone_target, mock_standalone_deps, preset_config
+    def test_prints_next_steps_for_chainlit(
+        self, standalone_target, mock_standalone_deps, preset_config, capsys
     ):
-        """Should start Chainlit dev server with uv run."""
+        """Should print next steps including Supabase setup instructions."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -446,10 +446,12 @@ class TestGenerateStandalone:
             preset_config=preset_config,
         )
 
-        # Check subprocess.run was called: git add + git commit + chainlit server
-        calls = mock_standalone_deps["subprocess"].call_args_list
-        cmds = [c[0][0] for c in calls]
-        assert ["uv", "run", "chainlit", "run", "app.py", "-w"] in cmds
+        # Check that next steps are printed (not auto-starting dev server)
+        captured = capsys.readouterr()
+        assert "Setup complete" in captured.out
+        assert "Next steps" in captured.out
+        assert "supabase" in captured.out.lower()
+        assert "just run" in captured.out
 
     def _run_generate_standalone(self, standalone_target, preset_config):
         """Helper: invoke generate_standalone with default Chainlit/balanced args."""
@@ -603,10 +605,10 @@ class TestGenerateStandaloneReflex:
 
         assert (standalone_target / "rxconfig.py").exists()
 
-    def test_starts_reflex_dev_server(
-        self, standalone_target, mock_standalone_deps, preset_config
+    def test_prints_next_steps_for_reflex(
+        self, standalone_target, mock_standalone_deps, preset_config, capsys
     ):
-        """Should start Reflex dev server with uv run."""
+        """Should print next steps for Reflex app."""
         from cli.commands.setup import generate_standalone
 
         generate_standalone(
@@ -622,10 +624,12 @@ class TestGenerateStandaloneReflex:
             preset_config=preset_config,
         )
 
-        calls = mock_standalone_deps["subprocess"].call_args_list
-        cmds = [c[0][0] for c in calls]
-        cmd = cmds[-1]  # last call is the dev server
-        assert cmd == ["uv", "run", "reflex", "run"]
+        # Check that next steps are printed (not auto-starting dev server)
+        captured = capsys.readouterr()
+        assert "Setup complete" in captured.out
+        assert "Next steps" in captured.out
+        assert "just run" in captured.out
+        assert "browser" in captured.out.lower()
 
 
 class TestStandaloneWorkspaceCommand:
