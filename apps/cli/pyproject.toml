@@ -1,6 +1,6 @@
 [project]
 name = "ragtime-cli"
-version = "0.23.0" # x-release-please-version
+version = "0.24.0" # x-release-please-version
 description = "Ragtime CLI - Generate RAG workspaces for French Government"
 readme = "README.md"
 requires-python = ">=3.13"

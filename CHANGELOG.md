@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0](https://github.com/etalab-ia/ragtime/compare/v0.23.0...v0.24.0) (2026-03-20)
+
+
+### Features
+
+* add full collections management CLI ([98a0c04](https://github.com/etalab-ia/ragtime/commit/98a0c04e2c72df20c6b3b8059a9311445de8d606))
+* add full collections management CLI ([809140d](https://github.com/etalab-ia/ragtime/commit/809140d80bb383c6827e39fb42d4a9dc2e1fbeec))
+* **setup:** print next steps instead of auto-starting dev server ([aa27c6a](https://github.com/etalab-ia/ragtime/commit/aa27c6a92b98471d73342c09b468e8a9c50a9cc7))
+
+
+### Bug Fixes
+
+* **chainlit:** make auth conditional on Supabase configuration ([2d59249](https://github.com/etalab-ia/ragtime/commit/2d592496d9e940ea9e804849918d789c53119a02))
+* correct test to confirm instead of abort ([713e88a](https://github.com/etalab-ia/ragtime/commit/713e88aa417f43a88646bcbb632f9f94a3f111ed))
+* handle ANSI codes in collection enable/disable tests ([198a31e](https://github.com/etalab-ia/ragtime/commit/198a31e2d24115a0d7f96c8f189c25e6fbb76edf))
+* **setup:** add supabase and asyncpg dependencies for Chainlit ([2ea3d88](https://github.com/etalab-ia/ragtime/commit/2ea3d882a9b94ad1d5cdbdc44fcb98523fd69d22))
+* **setup:** handle existing src directory in generate_standalone ([da51390](https://github.com/etalab-ia/ragtime/commit/da51390821b67f530e9f4a66dd2a290da4398d8a))
+* **setup:** use password prompt for API key input ([5f1e12d](https://github.com/etalab-ia/ragtime/commit/5f1e12d81f3effa582714d0f642650ce265782a6))
+* **setup:** use password prompt for API key input ([f613f6f](https://github.com/etalab-ia/ragtime/commit/f613f6f275506ca8884d064085eb09caa128e840))
+* support PR testing in install.sh workflow ([ff88374](https://github.com/etalab-ia/ragtime/commit/ff88374aa50113119af8986cb04dc318124ba84e))
+
 ## [0.23.0](https://github.com/etalab-ia/ragtime/compare/v0.22.0...v0.23.0) (2026-03-20)
 
 
