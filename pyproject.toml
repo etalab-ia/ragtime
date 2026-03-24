@@ -18,7 +18,6 @@ dependencies = [
     "retrieval",
     "reflex-chat",
     "storage",
-    "memory",
     "tracing",
     "evaluation",
 ]
@@ -28,7 +27,6 @@ albert-client = { workspace = true }
 chainlit-chat = { workspace = true }
 context = { workspace = true }
 ingestion = { workspace = true }
-memory = { workspace = true }
 pipelines = { workspace = true }
 query = { workspace = true }
 rag-core = { workspace = true }
@@ -64,8 +62,6 @@ exclude = [
     "apps/cli/tests",
     "packages/evaluation/tests",
     "packages/tracing",
-    "packages/memory",
-    "apps/cli/src/cli/commands/learn",
 ]
 
 [tool.ty.rules]

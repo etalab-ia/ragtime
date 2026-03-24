@@ -161,9 +161,6 @@ sync:
 run:
     uv run chainlit run app.py -w
 
-# Open the interactive RAG learning assistant
-learn:
-    uv run ragtime learn
 """
     (target_dir / "justfile").write_text(justfile)
     console.print("[dim]  ✓ justfile[/dim]")
@@ -280,10 +277,6 @@ and the [Albert API](https://albert.sites.beta.gouv.fr/).
    ```
    Your Chainlit app opens at http://localhost:8000.
 
-4. **Chat with the RAG assistant**:
-   ```bash
-   just learn
-   ```
 
 ## Available Commands
 

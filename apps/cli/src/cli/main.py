@@ -11,7 +11,6 @@ from cli.commands import (
     config,
     eval,
     generate_dataset,
-    learn,
     setup,
     traces,
 )
@@ -31,10 +30,6 @@ BANNER = """[magenta]
 # Getting Started command definitions — single source of truth for both
 # panel registration and sort-key logic in PanelAlphabeticalGroup.
 _GETTING_STARTED_DEFS: dict[str, tuple] = {
-    "learn": (
-        learn.run,
-        "Open the interactive RAG learning assistant",
-    ),
     "setup": (setup.run, "Scaffold a new workspace (advanced)"),
 }
 

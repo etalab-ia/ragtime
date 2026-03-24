@@ -75,7 +75,6 @@ just run
 just learn
 ```
 
-- [ ] `ragtime learn` starts the chat assistant
 - [ ] Welcome message (French) is shown
 - [ ] Can ask RAG-related questions
 - [ ] Type `q` or `quit` to exit cleanly

@@ -51,7 +51,6 @@ Run `just` inside `my-rag-app/` to see all available commands:
 | Command | Description |
 |---------|-------------|
 | `just run` | Start the Chainlit web application |
-| `just learn` | Open the interactive RAG learning assistant |
 | `just sync` | Install / update dependencies |
 
 ## Using the Ragtime CLI
@@ -68,8 +67,6 @@ Common commands:
 # Create a new RAG project
 ragtime setup mon-projet
 
-# Open the interactive RAG learning assistant (inside your project)
-ragtime learn
 
 # View your current RAG configuration
 ragtime config show
