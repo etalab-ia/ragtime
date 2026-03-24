@@ -1,6 +1,6 @@
 [project]
 name = "rag-core"
-version = "0.24.0" # x-release-please-version
+version = "0.25.0" # x-release-please-version
 description = "Core library for Ragtime - configuration, utils, and shared models"
 readme = "README.md"
 requires-python = ">=3.13"
