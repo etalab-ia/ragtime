@@ -44,7 +44,7 @@ dev = [
     "ruff>=0.14.14",
     "ty==0.0.18",  # 0.0.21+ broke namespace package resolution; unpin once fixed upstream
     "pre-commit>=4.0.1",
-    "pytest>=8.0.0",
+    "pytest>=9.0.3",
     "pytest-mock>=3.12.0",
     "pytest-asyncio>=0.21.0",
     "respx>=0.20.0",
