@@ -2764,11 +2764,11 @@ wheels = [
 
 [[package]]
 name = "pypdf"
-version = "6.9.1"
+version = "6.12.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f9/fb/dc2e8cb006e80b0020ed20d8649106fe4274e82d8e756ad3e24ade19c0df/pypdf-6.9.1.tar.gz", hash = "sha256:ae052407d33d34de0c86c5c729be6d51010bf36e03035a8f23ab449bca52377d", size = 5311551, upload-time = "2026-03-17T10:46:07.876Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/ba/f82d1cb35b04041b5f796d4eedbaecafcbf99e83b7a2542b44a936959dd7/pypdf-6.12.0.tar.gz", hash = "sha256:061f135db8934503ed301c2d4cfaccb12f0a2ef1db11c5d0768a72a5ab4097d8", size = 6466074, upload-time = "2026-05-21T09:21:42.621Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f9/f4/75543fa802b86e72f87e9395440fe1a89a6d149887e3e55745715c3352ac/pypdf-6.9.1-py3-none-any.whl", hash = "sha256:f35a6a022348fae47e092a908339a8f3dc993510c026bb39a96718fc7185e89f", size = 333661, upload-time = "2026-03-17T10:46:06.286Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/fa/3597fb3fb28f40bf8291fdddbc4dcd51ce52fccaf1cbfca10ee9db09c69a/pypdf-6.12.0-py3-none-any.whl", hash = "sha256:a8e104ab950e655d0bcf5fa5e71317c06474bc707987335da44a210f73a8883b", size = 343457, upload-time = "2026-05-21T09:21:40.852Z" },
 ]
 
 [[package]]
@@ -2993,7 +2993,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "pydantic", specifier = ">=2.0.0" },
-    { name = "pypdf", specifier = ">=5.0.0" },
+    { name = "pypdf", specifier = ">=6.12.0" },
     { name = "tomli-w", specifier = ">=1.0.0" },
 ]
 
@@ -3105,7 +3105,7 @@ requires-dist = [
     { name = "letta-client", specifier = ">=0.1.0" },
     { name = "libcst", specifier = ">=1.8.6" },
     { name = "pipelines", editable = "packages/pipelines" },
-    { name = "pypdf", specifier = ">=5.0.0" },
+    { name = "pypdf", specifier = ">=6.12.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "questionary", specifier = ">=2.0.0" },
@@ -3136,7 +3136,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "albert-client", editable = "packages/albert-client" },
-    { name = "pypdf", specifier = ">=5.0.0" },
+    { name = "pypdf", specifier = ">=6.12.0" },
     { name = "tomli-w", specifier = ">=1.0.0" },
 ]
 
